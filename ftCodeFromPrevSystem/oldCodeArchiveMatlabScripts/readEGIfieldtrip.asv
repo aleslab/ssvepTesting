@@ -1,0 +1,57 @@
+%%readEGIfieldtrip
+clear all
+
+%correct for powerdivaVideo sampling rate
+timingCorrection = 432/1000;
+
+%read in dataset
+cfg1 = [];
+%cfg1.dataset = 'JY_CPT4_11022009.raw';
+cfg1.dataset = 'AP_amblyCPT4_12032009.raw';
+
+[data] = ft_preprocessing(cfg1);
+
+cfg1.trialdef.eventtype = 'trigger';
+cfg1.trialdef.eventvalue = 'c003';
+cfg1.trialdef.prestim = 0 * timingCorrection;
+cfg1.trialdef.poststim = 2 * timingCorrection;
+
+
+[cfg1] = ft_definetrial(cfg1);
+
+
+%%
+%artifact labeling
+data.hdr.label{17} = 'EOG';
+data.label = data.hdr.label;
+
+cfg1.artfctdef.eog.feedback = 'yes';
+
+[cfg1, artifact] = ft_artifact_eog(cfg1, data);
+cfg1.artfctdef.muscle.channel =  { 'e6' 'e7' 'e70' 'e71' 'e72' 'e73' 'e74' 'e75' 'e76' 'e77' 'e78' 'e79' 'e80' 'e81' 'e82' 'e83' 'e84' 'e85' 'e86' 'e87' };
+cfg1.artfctdef.muscle.feedback = 'yes';
+[cfg1, artifact] = ft_artifact_muscle(cfg1, data);
+
+%trial definition
+cfg1.trialdef.eventtype = 'trigger';
+cfg1.trialdef.eventvalue = 'c003';
+cfg1.trialdef.prestim = 0 * timingCorrection;
+cfg1.trialdef.poststim = 2 * timingCorrection;
+cfg1.trialfun = 'lock2din';
+
+[cfg1] = ft_definetrial(cfg1);
+
+
+%filtering, segmenting and artifact rejection
+cfg1.lpfilter = 'no';
+cfg1.lpfreq = 50;
+[trlData] = ft_redefinetrial(cfg1, data);
+cfg1.artfctdef.reject = 'partial';
+cleanData = ft_rejectartifact(cfg1, trlData);
+
+%timelock averagin
+cfg1.keeptrials = 'yes';
+cfg1.vartrllength = 1;
+[avgData] = ft_timelockanalysis(cfg1, cleanData);
+
+

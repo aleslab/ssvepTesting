@@ -1,0 +1,172 @@
+function [cfg, data, condList] = ft_readEGI2(dataset, polhemus)
+
+
+%set timing Correction based on sampling rate of project
+%timingCorrection = PowerDiva samplingrate / netstation sampling rate
+warning('Check sampling rate from powerDiva video')
+timingCorrection = 432/1000;
+cfg = [];
+cfg.dataset = dataset;
+elecfile = polhemus;
+
+%setting eventype and event value to '?' tells fieldtrip to search for all
+%events
+cfg.trialdef.eventtype = '?';
+cfg.trialdef.eventvalue = '?';
+
+[cfg1] = ft_definetrial(cfg);
+
+%make list of conditions based on events found 
+condList = {cfg1.event(:).value};
+condList = unique(condList(2:end));
+results = regexp(condList, 'c\d\d\d');
+resIdx = ~cellfun('isempty', results);
+
+
+condList = condList(resIdx);
+clear results; clear resIdx; clear cfg1;
+
+
+%lock condition segments to DIN4
+cfg.trialdef.eventtype = 'trigger';
+cfg.trialdef.eventvalue = condList;
+cfg.trialdef.prestim = 0 * timingCorrection;
+cfg.trialdef.poststim = 2 * timingCorrection;
+cfg.trialfun = 'lock2dinCPT';
+
+
+[cfg] = ft_definetrial(cfg);
+
+%read elp and convert it into electrode structure for fieldtrip
+elp  = readelp(elecfile);
+
+
+%check to make sure axis are correct
+
+temppnt = [elp.Y; elp.X; elp.Z]';
+elec.pnt(1:128,:) = temppnt(5:end,:);
+elec.pnt(129,:) = temppnt(4,:);
+
+templabel = strcat('e', {elp.labels});
+
+elec.label = templabel(5:end);
+elec.label{129} = templabel{4};
+
+cfg.elec = elec;
+clear elp; clear tmppnt; clear templabel; clear elec; clear elecfile;
+
+%Reference settings
+%get rid of channel 129 
+%rereference to the average
+cfg.feedback = 'yes';
+cfg.reref = 'yes';
+numChannels = cfg.elec.label';
+numChannels(129)= [];
+cfg.channel = numChannels;
+cfg.refchannel = numChannels;
+cfg.trackconfig = 'on';
+cfg.blc = 'yes';
+
+%read data into workspace			
+[data] = ft_preprocessing(cfg);
+
+%artifact rejection settings
+%can be by 'trial', 'channel', or 'summary'
+cfg.method = 'summary';
+%setting keepchannel to 'nan' fills bad channels with nan -- this is good
+%because then we can locate and interpolate those channels instead of just
+%deleting them
+cfg.keepchannel = 'nan';
+data.elec = cfg.elec;
+
+
+%reject data by summary
+[cleanData] = ft_rejectvisual(cfg, data);
+
+%interpolate rejected channels
+numChans = length(cleanData.label);
+badchannels = [];
+for i = 1:numChans
+	if isnan(cleanData.trial{1}(i,1))
+		badchannels = [badchannels, cleanData.label(i,1)];
+	end
+end
+
+cfg = cleanData.cfg;
+cfg.badchannel = badchannels;
+cfg.elec = data.elec;
+
+[cleanData] = ft_channelrepair(cfg, cleanData);
+
+%correct condition labels so they line up with the correct samples
+cfg.eventold = cfg.event;
+cfg.event = cell(1,size(cfg.trl,1));
+
+newTrials = size(cfg.trl,1);
+
+for n = 1:newTrials
+	
+	oldTrialNum = find((cfg.trl(n,1) >= cfg.trlold(:,1)) & (cfg.trl(n,1) <= cfg.trlold(:,2)));
+	cfg.event{n} = cfg.eventold{oldTrialNum};
+		
+
+end
+
+%Eye blink detection and rejection
+%settings based on modified field trip defaults.
+%almost no padding is required for CPT because there is no prelude or
+%postlude.
+cfg.artfctdef.eog.trlpadding   = 0.1;
+cfg.artfctdef.eog.fltpadding   = 0.1;
+cfg.artfctdef.eog.artpadding   = 0.1;
+cfg.artfctdef.eog.channel = 'e17';
+cfg.artfctdef.eog.feedback = 'yes';
+
+cfg.eventstart = cfg.trl(:,1,1);
+
+[cfg, artifact] = ft_artifact_eog(cfg);
+
+cfg.artfctdef.reject = 'partial';
+[cleanData] = ft_rejectartifact(cfg, cleanData);
+
+%correct for condition labels
+cfg.eventold = cfg.event;
+cfg.event = cell(1,size(cfg.trl,1));
+
+for nNew=1:size(cfg.trl,1)
+	
+	oldTrialNum = find((cfg.trl(nNew,1) >= cfg.trlold(:,1)) & (cfg.trl(nNew,1) <= cfg.trlold(:,2)));
+	cfg.event{nNew} = cfg.eventold{oldTrialNum};
+		
+
+end
+
+
+
+
+%check for channels that exceed uV thresholds in each trial and
+%interpolates them
+[cfg, cleanData, chanSubs, interpData] = ft_channelThreshold(cfg, cleanData);
+
+
+
+cfg = rmfield(cfg, 'method');
+
+
+%prepare electrode layout -- not really necessary, might want to eliminate
+%the need for an elp file by taking this out
+layout = ft_prepare_layout(cfg, data);
+layout.label = data.label;
+cfg.layout = layout;
+clear layout; clear newTrials; 
+
+cfg.elec = cleanData.elec;
+data.elec = cleanData.elec;
+
+%keeptrials -- trial data isn't used again, but the structure is kept
+%because the dimensions are used to fill in Axx info
+cfg.keeptrials = 'yes';
+cfg.vartrllength = 1;
+data = cleanData;
+
+
