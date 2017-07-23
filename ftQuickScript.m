@@ -1,7 +1,8 @@
-clear cfg;
+clear all;
 % To facilitate data-handling and distributed computing you can use
 cfg.dataset   =  '/Users/ales/data/ssvepTesting/SSVEPtest3.bdf'
 
+%cfg.dataset   =  '/Users/ales/data/ssvepTesting/testTrigger4/testTrigger4.bdf'
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length (in seconds) to which the trials are padded for filtering (default = 0)
@@ -17,9 +18,9 @@ cfg.dataset   =  '/Users/ales/data/ssvepTesting/SSVEPtest3.bdf'
 % cfg.demean        ='yes';
 % cfg.reref         = 'yes';
 % cfg.refchannel    = {'A1'};
-cfg.lowpassfilter = 'yes';
+cfg.lowpassfilter = 'no';
 cfg.lpfreq        = 100;
-cfg.demean        ='yes';
+cfg.demean        ='no';
 cfg.reref         = 'no';
 
 [data] = ft_preprocessing(cfg)
@@ -68,8 +69,31 @@ data = create_epochs(cfg,data)
 
 cfg.vartrllength = 2;
 [timelockEpoch] = ft_timelockanalysis(cfg, data)
- 
 
-[Axx] = ft_steadystateanalysis(cfg, data)
+%remove the extra channels. 
+cfg.channel =  {'all','-GSR1', '-GSR2', '-Erg1','-Erg2','-Resp','-Plet','-Temp', '-Status'};
+dataEeg = ft_selectdata(cfg,data);
+%Do the steadystate analysis
+[Axx] = ft_steadystateanalysis(cfg, dataEeg)
 
+
+%Now do a quick spectrum of the 12th channel:
+figure(101);
 pdSpecPlot(Axx.freq(2:80),Axx.Amp(12,2:80)',Axx.tCircPval(12,2:80)<.05)
+title('Channel 12')
+
+%Now setup an interactive plot
+cfg.layout = 'biosemi32.lay';
+cfg.channel = {'all'};
+figure(201);clf;
+interactiveTopoSpecPlot(cfg,Axx)
+
+
+%Now lets look at the photodiode:
+figure(102);
+cfg.channel = { 'Erg1'}
+dataPhotodiode = ft_selectdata(cfg,data);
+[AxxPhotoDiode] = ft_steadystateanalysis(cfg, dataPhotodiode)
+pdSpecPlot(AxxPhotoDiode.freq(2:80),AxxPhotoDiode.Amp(1,2:80)',AxxPhotoDiode.tCircPval(1,2:80)<.05)
+title('PhotoDiode')
+

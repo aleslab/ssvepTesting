@@ -24,6 +24,7 @@ end
 cfg.trimdur    = ft_getopt(cfg, 'trimdur',    1); %Time to trim from front and back
 cfg.epochdur   = ft_getopt(cfg, 'epochdur',   2); %~2s
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
+cfg.channel      = ft_getopt(cfg, 'channel',     'all');
 
 % check if the input data is valid for this function
 %data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp'}, 'hassampleinfo', 'yes');
@@ -162,7 +163,9 @@ for iChan = 1:nChan,
     aveWave=mean(aveWave,1);
 
     %Now assign the mean cycle waveform to the time domain average:
-    Axx.Wave(iChan,:)= aveWave;
+    %We are going to remove the mean.  We almost never want to plot it. If
+    %we need it it's available in the DC component of Cos. 
+    Axx.Wave(iChan,:)= aveWave-mean(aveWave);
     
     %Now lets calculate statistcs
     
@@ -206,6 +209,6 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
-ft_postamble provenance freq
-ft_postamble history    freq
-ft_postamble savevar    freq
+ft_postamble provenance steadystate
+ft_postamble history    steadystate
+ft_postamble savevar    steadystate

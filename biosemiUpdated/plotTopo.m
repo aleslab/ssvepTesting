@@ -32,6 +32,8 @@ if isempty(netList),
         'FaceColor', 'interp');
     axis equal;
     axis off;
+    curAx= axis;
+    axis(curAx*1.1); % increases axis limit by 10%
 else
     handle = netList;
 end
