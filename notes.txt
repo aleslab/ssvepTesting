@@ -1,0 +1,4 @@
+
+Currently using extra columns of the trl structure and trialinfo to encode important
+information. Figure out the best way to move from using trialinfo to fields that are more clear
+

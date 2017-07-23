@@ -75,7 +75,10 @@ barH = bar(freqs,amps,barWidth,'w');
 hold on
 set(barH,'edgecolor','k')
 
-axis([0 max(freqs)+1 0 max(amps)*1.1 ]);
+if max(amps)~=0
+    
+axis([0 40 0 max(amps)*1.1 ]);
+end
 
 colorVec = zeros(size(amps));
 
