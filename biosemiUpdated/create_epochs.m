@@ -68,7 +68,7 @@ for iTrial = 1:length(trialList),
     for iEpoch = 1:nEpochs
         
         cycleIndices = ((iEpoch-1)*nCyclesPerEpoch + 1):iEpoch*nCyclesPerEpoch; %Count 1:n, n+1:2n, 2n+1:3n:
-        cycleIndices = trimCycleInd(cycleIndices)
+        cycleIndices = trimCycleInd(cycleIndices);
         data.trial{trlIdx} = cat(2,datain.trial{cycleIndices});
         data.time{trlIdx}  = (0:(length(data.trial{trlIdx})-1))./datain.fsample;
         data.trialinfo(trlIdx,1) = datain.trialinfo(cycleIndices(1),1);

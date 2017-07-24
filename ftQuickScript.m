@@ -5,7 +5,7 @@ cfg.dataset   =  '/Users/ales/data/ssvepTesting/SSVEPtest3.bdf'
 
 %These paramaters are going to be applied to the raw continous data
 %before clipping out trials. 
-cfg.lowpassfilter = 'yes';
+cfg.lpfilter  = 'yes';
 cfg.lpfreq        = 100;
 cfg.demean        ='yes';
 cfg.reref         = 'no'; 
@@ -70,7 +70,7 @@ data = resample_steadystate(cfg,data);
 cfg.trimdur = 6*.2117; %Trim 6 cycles from front and back.
 cfg.epochdur   = 9*.2117; %For an epoch duration of 1.9
 
-data = create_epochs(cfg,data)
+data = create_epochs(cfg,data);
 
 
 %DO EPOCH ARTIFACT REJECTION HERE
