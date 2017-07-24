@@ -1,0 +1,16 @@
+Shift events by 1 video frame to account for bitssharp delay. 
+
+Currently using extra columns of the trl structure and trialinfo to encode important
+information. Figure out the best way to move from using trialinfo to fields that are more clear
+
+
+Make the steadystate structure use a uniform naming scheme.  Currently it has 
+a mix of fieldtrip names and powerdiva names (Axx struct).  This makes using some of the previous
+code simpler but makes the data structure confusing. 
+
+Add in using the sessionInfo data from ptbCorgi to get accurate stimulus information
+
+Check resample code to see if samples are being calculated in the best way.
+The photodiode has a bit of out of frequency energy. But it has a very high
+slew rate so might not be possible to get 100% without a hardware sample clock lock.
+

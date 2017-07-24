@@ -73,9 +73,13 @@ end
 barWidth = .8;
 barH = bar(freqs,amps,barWidth,'w');
 hold on
-set(barH,'edgecolor','k')
+set(barH,'edgecolor','k');
 
-axis([0 max(freqs)+1 0 max(amps)*1.1 ]);
+if max(amps)~=0 && min(freqs)<40
+    
+axis([freqs(1) 40 0 max(amps(2:end))*1.1 ]);
+
+end
 
 colorVec = zeros(size(amps));
 
@@ -93,7 +97,7 @@ if plotErrorBar
     errorbar(freqs(sig),amps(sig),zeros(size(noiseEst)),noiseEst,'.k');
 end
 
-set(sigH,'facecolor',barcolor)
+set(sigH,'facecolor',barcolor);
 hold off
 
 ylabel('Amplitude (uV)')

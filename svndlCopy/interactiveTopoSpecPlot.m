@@ -1,33 +1,31 @@
-function [] = interactiveTopoSpecPlot(data,allFreqs,sigFreqs)
-%function [] = interactiveTopoPlot(data,x)
+function [] = interactiveTopoSpecPlot(cfg, Axx)
+%function [] = interactiveTopoPlot(cfg,Axx)
 %
 % helpful help here
 %
 
 
 
-%Do some sanity checks here
-%if wrong
-%dosomething
-%end
-if nargin<2
-    x = 1:size(data,1);
+% prepare the layout, this should be done only once
+tmpcfg     = removefields(cfg, 'inputfile');
+cfg.layout = ft_prepare_layout(tmpcfg);
+
+x = Axx.freq;
+data = Axx.Amp;
+if ~isfield(Axx,'tCircPval')
     sigFreqs = [];
-elseif nargin<3
-    sigFreqs = [];
-    x = allFreqs;
-else    
-    x = allFreqs;
+else
+    sigFreqs = Axx.tCircPval<=.01;
 end
 
 
-
-
-
-iElec = 75;
+iElec = 1;
 iFr = 1;
+%figH= figure; %Render a new figure.
+
 topoAx = subplot(10,1,1:8);
-topoH = plotOnEgi(squeeze(data(1,:)));
+topoH = plotTopo(squeeze(data(:,1)),cfg.layout);
+
 set(gcf,'KeyPressFcn',@keyInput)
 colormap(hot);
 axis off;
@@ -37,7 +35,7 @@ markH = plot(elecVerts(iElec,1),elecVerts(iElec,2),'ko','markersize',10,'linewid
 elecNumH = text(-.05,1.35,num2str(iElec));
 
 
-freqs = x;
+freq = x;
 
 %sigFreqs = (handles.data.i1F1:handles.data.i1F1:handles.data.nFr-1)+1;
 specAx = subplot(10,1,9:10);
@@ -55,7 +53,7 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
     function drawSpec()
         
         axes(specAx)
-        [barH sigH] = pdSpecPlot(freqs,data(:,iElec),sigFreqs);
+        [barH sigH] = pdSpecPlot(freq,data(iElec,:),sigFreqs(iElec,:));
         title(specAx,['Frequency: ' num2str(x(iFr)) ' Hz'])
         
         %Set up the function to call when the plots are clicked on
@@ -76,8 +74,8 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
         
         if iFr>=1 && iFr<=length(x)
 
-            set(topoH,'facevertexCData',data(iFr,:)')
-            caxis(topoAx,[0 max(abs(data(iFr,:)))])
+            set(topoH,'facevertexCData',data(:,iFr))
+            caxis(topoAx,[0 max(abs(data(:,iFr)))])
             title(specAx,['Frequency: ' num2str(x(iFr)) ' Hz'])
 
         else
@@ -104,6 +102,7 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
             delete(markH);
             markH = plot(elecVerts(iElec,1),elecVerts(iElec,2),'ko','markersize',10,'linewidth',2);
             set(elecNumH,'String',num2str(iElec));
+            title(topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}])
             drawSpec;
 
         end
@@ -122,8 +121,8 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
         end
         
         
-          set(topoH,'facevertexCData',data(iFr,:)')
-          caxis(topoAx,[0 max(abs(data(iFr,:)))])
+          set(topoH,'facevertexCData',data(:,iFr))
+          caxis(topoAx,[0 max(abs(data(:,iFr)))])
           title(specAx,['Frequency: ' num2str(x(iFr)) ' Hz'])
             
         
