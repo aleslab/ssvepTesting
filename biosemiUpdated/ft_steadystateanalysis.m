@@ -79,18 +79,24 @@ for iChan = 1:nChan,
     %On the first iteration let's initialize things    
     if iChan ==1
        
-        
+        Axx.fsample = data.fsample;
         Axx.nFr = floor(epochLengthSamp/2)+1; %Number of unique frequency in fourier transform. The +1 is for the DC component.  
         dft = dftmtx(epochLengthSamp); 
         %Using a dft to analyze the data. Using dft insted of FFT for
         %historical reasons. In ancient history fft required data to be
         %power of 2 length, and could do odd things if it wasn't 
+        
+        %Setup the time domain representation, this is a single CYCLE, not
+        %a singly Epoch. 
         Axx.nT = cycleLengthSamp;
+        Axx.dTSec = 1/data.fsample;
+        Axx.dTms  = Axx.dTSec*1000;
+        Axx.time = 0:Axx.dTSec:(Axx.nT-1)*Axx.dTSec;
         Axx.Wave = NaN(nChan,cycleLengthSamp);
+        
         Axx.Amp  = NaN(nChan,Axx.nFr);
         Axx.Sin  = NaN(nChan,Axx.nFr);
-        Axx.Cos  = NaN(nChan,Axx.nFr);
-        
+        Axx.Cos  = NaN(nChan,Axx.nFr);        
         Axx.freq = (data.fsample/2)*linspace(0,1,Axx.nFr);% freq values.  
         Axx.dFhz = mean(diff(Axx.freq));
         

@@ -96,7 +96,7 @@ for iTrial = 1:length(condEventIdx)-1,
         else
             endsample     = trial(iTrial).cycleStarts(iCycle+1)-1;%One sample before the next cycle.
         end
-        
+                 
         offset        = 0;
         condNum       = trial(iTrial).condNum;
         trialNum      = condTrialCount(condIdx); 
