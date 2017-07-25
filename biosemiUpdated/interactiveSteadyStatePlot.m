@@ -35,6 +35,14 @@ topoAx = axes('Parent',figH,'Position',[0.05 .6 .3 .3]);
 topoH = plotTopo(squeeze(Amp(:,iFr)),cfg.layout);
 colormap(hot);
 
+colorbarH = colorbar('peer',topoAx,'WestOutside')
+
+colorbarH.Label.String = 'Microvolts';
+
+cpos = colorbarH.Position;
+cpos(3) = 0.5*cpos(3);
+colorbarH.Position = cpos;
+
 set(gcf,'KeyPressFcn',@keyInput)
 
 
@@ -51,7 +59,7 @@ specAx = axes('Parent',figH,'Position',[.4 .65 .5 .27]);
 drawSpec();
 
 %Setup the time domain plot
-waveAx = axes('Parent',figH,'Position',[.4 .25 .5 .27]);
+waveAx = axes('Parent',figH,'Position',[.4 .1 .5 .27]);
 timeLine = [];
 butterflyH = [];
 selectedLineH = [];
@@ -59,7 +67,8 @@ drawWave();
 
 
 %Setup complex phasor plot
-%phasorAx = axes('Parent',figH,'Position',[0.05 .1 .3 .3]);
+phasorAx = axes('Parent',figH,'Position',[0.05 .1 .3 .3]);
+drawPhase();
 
 set(topoH,'ButtonDownFcn',@clickedTopo)
 set(topoAx,'ButtonDownFcn',@clickedTopo)
@@ -95,12 +104,10 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
 
             set(topoH,'facevertexCData',Amp(:,iFr))
             caxis(topoAx,[0 max(abs(Amp(:,iFr)))])
-            title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])
-            colormap(hot);
-            
-%             axes(phasorAx);
-%             cla;
-%             pdPhasePlot( complex( Axx.Cos(iElec,iFr), Axx.Cos(iElec,iFr)),Axx.tCircStdErr(iElec,iFr))
+            title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])            
+            colormap(hot);            
+            drawPhase();
+
         else
             disp('clicked out of bounds')
         end
@@ -125,9 +132,10 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
             delete(markH);
             markH = plot(elecVerts(iElec,1),elecVerts(iElec,2),'ko','markersize',15,'linewidth',2);
             set(elecNumH,'String',num2str(iElec));
-            title(topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}])
-            drawSpec;
+            title(topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}]);
+            drawSpec();
             drawWave();
+            drawPhase();
 
         end
         
@@ -181,16 +189,23 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
             %           caxis(topoAx,[-max(abs(data(iT,:))) max(abs(data(iT,:)))])
             
             colormap(jmaColors('arizona'));
-            caxis(topoAx,[-max(abs(Wave(:))) max(abs(Wave(:)))])            
+            caxis(topoAx,[-max(abs(Wave(:))) max(abs(Wave(:)))]);            
             
-            set(timeLine,'XData',[time(iT) time(iT)],'YData',[yLo yHi])
-            title(waveAx,['Time: ' num2str(time(iT),4) ' ms'])
+            set(timeLine,'XData',[time(iT) time(iT)],'YData',[yLo yHi]);
+            title(waveAx,['Time: ' num2str(time(iT),4) ' ms']);
             
         else
             disp('clicked out of bounds')
         end
     end
 
+
+    function drawPhase()
+        axes(phasorAx);
+        delete(allchild(phasorAx)); %pdPhasePlot uses weird plotting functions so all it's objects need to be cleared to delete the scale. 
+        pdPhasePlot( complex( Axx.Cos(iElec,iFr), Axx.Sin(iElec,iFr)),Axx.tCircStdErr(iElec,iFr));
+        
+    end
 
     function keyInput(src,evnt)
         

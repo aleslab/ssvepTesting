@@ -1,26 +1,32 @@
 clear all;
 nBoot=10000;
-nSamp = 10;
+nSamp = 50;
 effectSize = 1;
 pTcirc = zeros(nBoot,1);
-stdErr = zeros(nBoot,1);
+stdDev = zeros(nBoot,1);
+vecMean= zeros(nBoot,1);
 pT2 = zeros(nBoot,1);
 pChi = zeros(nBoot,1);
 pZ = zeros(nBoot,1);
 pZPooled = zeros(nBoot,1);
+pTcircTrue = zeros(nBoot,1);
+stdDevTrue = zeros(nBoot,1);
+pT2True = zeros(nBoot,1);
+pChiTrue = zeros(nBoot,1);
 
 disp(['Running ' num2str(nBoot) ' bootstrap samples']);
 for iBoot=1:nBoot
 
     %For null distribution
-    complexVector = complex(randn(nSamp,1),randn(nSamp,1));    
-    [pTcirc(iBoot) stdErr(iBoot) pT2(iBoot) pChi(iBoot) ] = tcirc(complexVector);
+    complexVector = complex(randn(nSamp,1),randn(nSamp,1));
+    vecMean(iBoot) = mean(complexVector);
+    [pTcirc(iBoot) stdDev(iBoot) pT2(iBoot) pChi(iBoot) ] = tcirc(complexVector);
 %    [pZ(iBoot) pZPooled(iBoot)] = zGilles(complex(randn,randn),complexVector);
     
     %For true positive distribution
 %    [pZTrue(iBoot) pZPooledTrue(iBoot)] = zGilles(complex(effectSize+randn,randn),complexVector);
     complexVector = complex(randn(nSamp,1)+effectSize,randn(nSamp,1));
-    [pTcircTrue(iBoot) stdErrTrue(iBoot) pT2True(iBoot) pChiTrue(iBoot) ] = tcirc(complexVector);
+    [pTcircTrue(iBoot) stdDevTrue(iBoot) pT2True(iBoot) pChiTrue(iBoot) ] = tcirc(complexVector);
     
 end
 

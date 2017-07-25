@@ -43,14 +43,16 @@ end
 
 
 
-axis equal;
 
-%This finds how big the axis is.
-maxComp = max(abs(axis));
 maxComp=max(abs(phasorData));
 
-rmax = maxComp*1.;
-rmax = floor(20*rmax)/20;
+if maxComp ==0;
+    maxComp = 1;
+end
+rmax = max(maxComp,.1);
+rmax = rmax*1.5;
+%rmax = ceil(10*rmax)/10;
+rmax = round(rmax,1,'significant');
 rmin = 0;
 rticks = 2;
 tc = 'k';
@@ -73,9 +75,10 @@ ls = '--';
 % draw radial circles
     c82 = cos(78*pi/180);
     s82 = sin(78*pi/180);
+    
     rinc = (rmax-rmin)/rticks;
     
-    circList = round(20*[(rmin+rinc):rinc:(rmax-rinc)])./20;
+    circList = round([(rmin+rinc):rinc:(rmax-rinc)],2,'significant');
     circList = [circList rmax];
 
     for i=circList;
@@ -93,7 +96,7 @@ ls = '--';
     cs = [-cst; cst];
     sn = [-snt; snt];
     line(rmax*cs,rmax*sn,'linestyle',ls,'color',tc,'linewidth',1,...
-         'handlevisibility','off','parent',cax)
+         'handlevisibility','off','parent',cax);
 
 % annotate spokes in degrees
     rt = 1.13*rmax;
@@ -117,7 +120,8 @@ ls = '--';
 
 
 %axH = line([-maxComp maxComp; 0 0]',[0 0; -maxComp maxComp]','color','k');
-
+axis tight;
+axVal = axis;
 %set(axH,'linewidth',1);
 for iDat = 1:length(phasorData),
     
@@ -132,15 +136,16 @@ for iDat = 1:length(phasorData),
 %     'Curvature',[1,1],...
 %     'FaceColor',thisCol,'EdgeColor',thisCol,'Clipping','off','FaceAlpha',.25);
     
-[cH fH] = circle(real(phasorData(iDat)),imag(phasorData(iDat)),noiseEst(iDat),thisCol,thisCol);
 
-    set(fH,'facealpha',.25)
-    set(cH,'linewidth',2);
+[cH fH] = circle(real(phasorData(iDat)),imag(phasorData(iDat)),noiseEst(iDat),thisCol,thisCol);
+     set(fH,'facealpha',.25);
+     set(cH,'linewidth',2);
     set(lH,'linewidth',2);
 
     %patch( tXE, tYE, tColorOrderMat( iCmp, : ), 'facealpha', .25, 'edgecolor', tColorOrderMat( iCmp, : ), 'linewidth', 2 );
 
 end
 
-axis tight
+axis(axVal); %plotting the circle can shift the nice circles above.  Reset the value to what it was before the errorbar.
+
 axis off

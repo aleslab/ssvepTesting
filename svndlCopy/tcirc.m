@@ -1,6 +1,6 @@
 function [pVal stdDev pT2 pChi] = tcirc(complexVector)
 % tcirc - Calculate the Test statistic from Victor and Mast
-%function [pVal stdErr pT2 pChi] = tcirc(complexVector)
+%function [pVal stdDev pT2 pChi] = tcirc(complexVector)
 %
 %Input:
 %compexVector: A vector of complex coefficients
@@ -29,8 +29,8 @@ M=vectorLength;
 realPart = real(complexVector);
 imagPart = imag(complexVector);
 
-realVar = var(realPart);
-imagVar = var(imagPart);
+realVar = var(realPart,0);
+imagVar = var(imagPart,0);
 
 %Equivalent to equation 1 in Victor and Mast
 Vindiv =(realVar+imagVar)/2;
@@ -64,10 +64,11 @@ v2=n-p;  %Denominator degrees of freedom.
 %Probability that null Ho: is true. Test using F distribution
 pT2=1-fcdf(F,v1,v2);  
 % 
-% 
-%Probability that null Ho: is true. Test using Chi^2 distribution
-v=p; %Degrees of freedom.
-pChi=1-chi2cdf(T2,v);
 
+if nargout==4
+    %Probability that null Ho: is true. Test using Chi^2 distribution
+    v=p; %Degrees of freedom.
+    pChi=1-chi2cdf(T2,v);
+end
 
 end
