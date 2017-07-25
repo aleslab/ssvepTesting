@@ -188,7 +188,9 @@ for iChan = 1:nChan,
             continue
         end
         
-        [Axx.tCircPval(iChan,iFr)  Axx.tCircStdErr(iChan,iFr)] = tcirc(dftData(:,iFr));
+        [Axx.tCircPval(iChan,iFr) pooledStdDev ] = tcirc(dftData(:,iFr));
+        Axx.tCircStdErr(iChan,iFr) = pooledStdDev/sqrt(size(dftData,1));
+        
     end
     
     
