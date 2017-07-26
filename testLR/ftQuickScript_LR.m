@@ -4,7 +4,6 @@
 % baseline window? No need? (detrending?)
 % 
 
-
 clear all
 
 % addpath D:\GitHubRepo\fieldtrip
@@ -12,6 +11,8 @@ clear all
 % cfg.dataset   = 'D:\StAndrews\testSSVEP\SSVEPtest3.bdf';
 
 addpath /Users/marleneponcet/Documents/Git/fieldtrip
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 ft_defaults
 cfg.dataset = '/Users/marleneponcet/Documents/ssvep/test/testSSVEP/SSVEPtestLR.bdf';
 
@@ -28,6 +29,8 @@ cfg.trialdef.bitmask = 2^9-1;%Values to keep.
 cfg.trialdef.condRange = [101 165];
 cfg.trialdef.ssvepTagVal = 1;
 cfg.trialdef.epochLength = 2; 
+cfg.channel = 1:32;
+cfg.layout = 'biosemi32.lay';
 cfg.trialfun = 'lock2SsvepTag_LR'; 
 
 [cfg] = ft_definetrial(cfg);
@@ -35,15 +38,17 @@ cfg.trialfun = 'lock2SsvepTag_LR';
 cfg.demean        ='yes';
 cfg.reref         = 'yes';
 cfg.refchannel    = {'A32'}; % 32=Cz?
+cfg.lpfilter  = 'yes';
+cfg.lpfreq        = 100;
 [data] = ft_preprocessing(cfg);
 
-% %%% A bit of visualization
-% % plot the same channel over all epochs ( = cycles + trials)
-% figure; hold on;
-% for nbtrials = 1:5%length(data.trial)
-%     test = data.trial{1,nbtrials};
-%     plot(test(1,:),'Color',[rand(1) rand(1) rand(1)])
-% end
+%%% A bit of visualization
+% plot the same channel over all epochs ( = cycles + trials)
+figure; hold on;
+for nbtrials = 1:5%length(data.trial)
+    test = data.trial{1,nbtrials};
+    plot(test(1,:),'Color',[rand(1) rand(1) rand(1)])
+end
 
 cfg = [];
 [timelock] = ft_timelockanalysis(cfg, data); % computes the timelocked average ERP/ERF
@@ -68,10 +73,10 @@ figure; hold on; plot(freqs(freqs<80),spectrumChan(freqs<80),'r');
 pdSpecPlot_copy(freqs(1:80),spectrumChan(1:80),[]);
 
 
-%%% Below uses dfmtx BUT
-%%%   If X is a column vector of length N, then
-%%%   DFTMTX(N)*X yields the same result as FFT(X); however, 
-%%%   FFT(X) is more efficient.
+% %%% Below uses dfmtx BUT
+% %%%   If X is a column vector of length N, then
+% %%%   DFTMTX(N)*X yields the same result as FFT(X); however, 
+% %%%   FFT(X) is more efficient.
 % Axx.Wave = timelock.avg(1:32,:)';
 % Axx.nT = size(Axx.Wave,1);
 % Axx.nFr = round(size(Axx.Wave,1)/2);
@@ -92,10 +97,7 @@ pdSpecPlot_copy(freqs(1:80),spectrumChan(1:80),[]);
 % Axx.Cos = 2*real(dftDat)/Axx.nFr;
 % Axx.Sin = -2*imag(dftDat)/Axx.nFr;
 % 
-% 
-% 
 % freqs = 0:Axx.dFHz:(Axx.dFHz*(Axx.nFr-1));
-% 
 % pdSpecPlot(freqs(1:80),Axx.Amp(1:80,16)',[])
 
 
@@ -104,12 +106,12 @@ pdSpecPlot_copy(freqs(1:80),spectrumChan(1:80),[]);
 %%%% depending on condition (saved in data.trialinfo)
 %%%%%%%%%%%%%%%%%%
 
-allcond = unique(data.trialinfo);
+allcond = unique(data.trialinfo(:,1));
 for cond = 1 : length(allcond)
     cfg = [];
     cfg.trials = find(data.trialinfo == allcond(cond));
     condAverage(cond).data = ft_timelockanalysis(cfg, data);
-    fftDat = fft(condAverage(cond).data.avg(16,:)'); % for the 32 channels
+    fftDat = fft(condAverage(cond).data.avg(16,:)'); 
     spectrumDat = abs(fftDat(2:floor(end/2))); % discard the second half of the signal (since it's symetric).
     condSpect(cond,:) = spectrumDat*2/length(fftDat); % estimate of the power amplitude = 2*A/N because N sample data amplitude A results in a DFT peak of AN/2
 end
@@ -120,4 +122,18 @@ figure; hold on;
 for cond = 1 : length(allcond)
     subplot(3,3,cond)
     plot(freqs(freqs<40),condSpect(cond,freqs<40),'r');
+end
+
+
+%%%%% follow up
+allcond = unique(data.trialinfo(:,1));
+for cond=1:length(allcond)
+    cfg.trials = find(data.trialinfo(:,1) == allcond(cond));
+%     cfg.channel =  {'all','-GSR1', '-GSR2', '-Erg1','-Erg2','-Resp','-Plet','-Temp', '-Status'};
+    % dataEeg = ft_selectdata(cfg,data);
+    [Axx(cond)] = ft_steadystateanalysis(cfg, data)
+%     cfg.channel = {'all'};
+    figure;clf;
+    % interactiveTopoSpecPlot(cfg,Axx(cond))
+    interactiveSteadyStatePlot(cfg,Axx(cond))
 end
