@@ -100,7 +100,7 @@ end
 set(sigH,'facecolor',barcolor);
 hold off
 
-ylabel('Amplitude (uV)')
+ylabel('uV')
 xlabel('Frequency (Hz)')
 
 

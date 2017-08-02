@@ -121,6 +121,7 @@ ls = '--';
 
 %axH = line([-maxComp maxComp; 0 0]',[0 0; -maxComp maxComp]','color','k');
 axis tight;
+axis equal;
 axVal = axis;
 %set(axH,'linewidth',1);
 for iDat = 1:length(phasorData),
