@@ -1,198 +1,299 @@
-function [] = interactiveTopoSpecPlot(cfg, Axx)
+function [] = interactiveSteadyStatePlot(cfg, steadyState)
 %function [] = interactiveTopoPlot(cfg,Axx)
 %
 % helpful help here
 %
 
 
+%Setup default condition choices.
+configOptions.idxCondA = 1;
+configOptions.idxCondB = 1;
+if length(steadyState)>=2, %If 2 or more conditions default to showing cond 2. 
+    configOptions.idxCondB = 2;
+end
 
+configOptions.pValThresh = .01;
+
+%TODO: Clarify and check this code. 
 % prepare the layout, this should be done only once
 tmpcfg     = removefields(cfg, 'inputfile');
 cfg.layout = ft_prepare_layout(tmpcfg);
 
-freq = Axx.freq;
-time = 1000*Axx.time; %TODO: Make time units more explicit. 
-Amp = Axx.Amp;
-Wave = Axx.Wave;
 
-if ~isfield(Axx,'tCircPval')
-    sigFreqs = [];
-else
-    sigFreqs = Axx.tCircPval<=.01;
-end
 
-%Set default plot to show first:
+%
+%plotConfig - A structure containing the different options to use for
+%             displaying data
+
+
+%Using condData to hold th 2 conditions to plot. 
+condData(1) = initPlotData(steadyState(configOptions.idxCondA));
+condData(2) = initPlotData(steadyState(configOptions.idxCondB));
+
+condData(1).color = [1 0 0];
+condData(2).color = [0 0 1];
+
 iElec = 1;
-iFr = 1;
-iT = 1;
+
+%Initialize figure;
+figH= figure('units','normalized','outerposition',[0 1 .8 1]); %Render a new figure.
 
 
-figH= figure('units','normalized','outerposition',[0 1 .6 .5]); %Render a new figure.
+
+
+%%%%% Setup plot option GUI controls
+% Create pop-up menu
+
+%Quickie Just label conditions with numbers:
+conditionList = cellstr(num2str([1:length(steadyState)]'));
+
+selCondAPopupH = uicontrol('Style', 'popup','units','normalized',...
+    'String',conditionList,'Value',configOptions.idxCondA,...
+    'Position', [.9 .95 .05 .01],...
+    'Callback', {@selCond,1});
+
+selCondBPopupH = uicontrol('Style', 'popup','units','normalized',...
+    'String',conditionList,'Value',configOptions.idxCondB,...
+    'Position', [.95 .95 .05 .01],...
+    'Callback', {@selCond,2});
+
+
+
+
+
+infoPanel = uipanel('Title','Info','FontSize',12,...
+             'BackgroundColor','white',...
+             'Position',[.85 .4 .15 .4])
+
+
+%%%%%%% Setup data plot axes.
 
 %Default Topography is spec. 
 %topoAx = subplot(10,1,1:8);
-topoAx = axes('Parent',figH,'Position',[0.05 .6 .3 .3]);
-topoH = plotTopo(squeeze(Amp(:,iFr)),cfg.layout);
-colormap(hot);
+condData(1).topoAx = axes('Parent',figH,'Position',[0.05 .6 .3 .3]);
+initTopo(1);
 
-colorbarH = colorbar('peer',topoAx,'WestOutside')
-
-colorbarH.Label.String = 'Microvolts';
-
-cpos = colorbarH.Position;
-cpos(3) = 0.5*cpos(3);
-colorbarH.Position = cpos;
-
-set(gcf,'KeyPressFcn',@keyInput)
-
-
-axis off;
-elecVerts = get(topoH,'Vertices');
-hold on;
-markH = plot(elecVerts(iElec,1),elecVerts(iElec,2),'ko','markersize',10,'linewidth',2);
-elecNumH = text(-.05,1.35,num2str(iElec));
-
+condData(2).topoAx = axes('Parent',figH,'Position',[0.05 .25 .3 .3]);
+initTopo(2);
 
 %Setup the frequency domain plot
-%sigFreqs = (handles.data.i1F1:handles.data.i1F1:handles.data.nFr-1)+1;
-specAx = axes('Parent',figH,'Position',[.4 .65 .5 .27]);
-drawSpec();
+%For condition A
+condData(1).specAx = axes('Parent',figH,'Position',[.4 .82 .4 .12]);
+drawSpec(1);
+
+%For condition B
+condData(2).specAx = axes('Parent',figH,'Position',[.4 .57 .4 .12]);
+drawSpec(2);
 
 %Setup the time domain plot
-waveAx = axes('Parent',figH,'Position',[.4 .1 .5 .27]);
-timeLine = [];
-butterflyH = [];
-selectedLineH = [];
-drawWave();
+condData(1).waveAx = axes('Parent',figH,'Position',[.4 .35 .4 .12]);
+drawWave(1);
+
+condData(2).waveAx = axes('Parent',figH,'Position',[.4 .1 .4 .12]);
+drawWave(2);
+
 
 
 %Setup complex phasor plot
-phasorAx = axes('Parent',figH,'Position',[0.05 .1 .3 .3]);
+phasorAx = axes('Parent',figH,'Position',[0.85 .1 .14 .14]);
 drawPhase();
 
-set(topoH,'ButtonDownFcn',@clickedTopo)
-set(topoAx,'ButtonDownFcn',@clickedTopo)
+
 
 
 
 
 %set(topoAx,'ButtonDownFcn',@specUpdate)
 
-    function drawSpec()
+
+    function plotData = initPlotData(steadyState)
+    %This function does the setup needed to take the steadyState fields and
+    %make them into values needed for plotting.
         
-        axes(specAx)
-        [barH sigH] = pdSpecPlot(freq,Amp(iElec,:),sigFreqs(iElec,:));
-        title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])
+    plotData = steadyState;
+    
+    %!!!!!! This is a really, really stupid line.  Just relying on stupidy
+    %being obvious on the plot if units are off by x1000
+    plotData.Time = 1000*steadyState.time; %TODO: Make time units more explicit.        
+    
+    if ~isfield(steadyState,'tCircPval')
+        plotData.sigFreqs = [];
+    else
+        plotData.sigFreqs = steadyState.tCircPval<=configOptions.pValThresh;
+    end
+    
+    %Set default plot options        
+    plotData.iElec = 1;
+    plotData.iFr = 1;
+    plotData.iT = 1;
+    
+    %Handles for plot elements
+    plotData.timeLine = [];
+    plotData.butterflyH = [];
+    plotData.selectedLineH = [];
+        
+    end
+
+    function initTopo(condIdx)
+        
+        
+        condData(condIdx).topoH = plotTopo(squeeze( condData(condIdx).Amp(:, condData(condIdx).iFr)),cfg.layout);
+        colormap(condData(condIdx).topoAx,hot);
+        
+        colorbarH = colorbar('peer',condData(condIdx).topoAx,'WestOutside');
+        
+        colorbarH.Label.String = 'Microvolts';
+        
+        cpos = colorbarH.Position;
+        cpos(3) = 0.5*cpos(3);
+        colorbarH.Position = cpos;
+        
+        set(gcf,'KeyPressFcn',@keyInput)
+        
+        
+        axis off;
+        condData(condIdx).elecVerts = get(condData(condIdx).topoH,'Vertices');
+        hold on;
+        condData(condIdx).markH = plot( condData(condIdx).elecVerts( condData(condIdx).iElec,1), ...
+            condData(condIdx).elecVerts( condData(condIdx).iElec,2),...
+            'ko','markersize',10,'linewidth',2);
+                
+        
+        set(condData(condIdx).topoH,'ButtonDownFcn',{@clickedTopo,condIdx})
+        set(condData(condIdx).topoAx,'ButtonDownFcn',{@clickedTopo,condIdx})
+       
+        
+    end
+
+    function drawSpec(condIdx)
+        
+        plotData = condData(condIdx);
+        
+        axes(plotData.specAx)
+        [plotData.barH plotData.sigH] = pdSpecPlot(plotData.freq,plotData.Amp(plotData.iElec,:),...
+            plotData.sigFreqs(plotData.iElec,:));
+        title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
         
         %Set up the function to call when the plots are clicked on
-        set(barH,'ButtonDownFcn',@clickedSpec)
-        set(sigH,'ButtonDownFcn',@clickedSpec)
-        set(specAx,'ButtonDownFcn',@clickedSpec)
+        set(plotData.barH,'ButtonDownFcn',{@clickedSpec, condIdx})
+        set(plotData.sigH,'ButtonDownFcn',{@clickedSpec, condIdx})
+        set(plotData.specAx,'ButtonDownFcn',{@clickedSpec, condIdx})
         
     end
 
 
-    function clickedSpec(varargin)
+    function clickedSpec(hObject,callbackdata,condIdx)
         
-       tCurPoint = get(specAx,'CurrentPoint');
+        %Get the data to plot
+        plotData = condData(condIdx);
+         
+       tCurPoint = get(plotData.specAx,'CurrentPoint');
         %set( tHline, 'XData', tCurPoint(1,[1 1]) )
         
         %Get the x location of the lick and find the nearest index
-        [distance iFr] = min(abs(freq-tCurPoint(1,1)));
+        [distance plotData.iFr] = min(abs(plotData.freq-tCurPoint(1,1)));
         
-        if iFr>=1 && iFr<=length(freq)
+        if plotData.iFr>=1 && plotData.iFr<=length(plotData.freq)
 
-            set(topoH,'facevertexCData',Amp(:,iFr))
-            caxis(topoAx,[0 max(abs(Amp(:,iFr)))])
-            title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])            
-            colormap(hot);            
-            drawPhase();
+            set(plotData.topoH,'facevertexCData',plotData.Amp(:,plotData.iFr))
+            caxis(plotData.topoAx,[0 max(abs(plotData.Amp(:,plotData.iFr)))])
+            title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])            
+            colormap(plotData.topoAx,hot);            
+            drawPhase(plotData);
 
         else
             disp('clicked out of bounds')
         end
     end
 
-    function clickedTopo(varargin)
+    function clickedTopo(hObject,callbackdata,condIdx)
         
-        tCurPoint = get(topoAx,'CurrentPoint');
+        plotData = condData(condIdx);
         
-        dist = bsxfun(@minus,tCurPoint(1,:),elecVerts);
+        tCurPoint = get(plotData.topoAx,'CurrentPoint');
+        
+        dist = bsxfun(@minus,tCurPoint(1,:),plotData.elecVerts);
         
         dist = sqrt(sum(dist.^2,2));
         
         %Get the index to the nearest clicked electrode
         [distance iE] = min(dist);
-        
-        %set( tHline, 'XData', tCurPoint(1,[1 1]) )
-        
-        if iE>=1 && iE<=size(elecVerts,1),
+               
+        if iE>=1 && iE<=size(plotData.elecVerts,1),
             
+            condData(condIdx).iElec = iE;
             iElec = iE;
-            delete(markH);
-            markH = plot(elecVerts(iElec,1),elecVerts(iElec,2),'ko','markersize',15,'linewidth',2);
-            set(elecNumH,'String',num2str(iElec));
-            title(topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}]);
-            drawSpec();
-            drawWave();
-            drawPhase();
+            delete(condData(condIdx).markH);
+            condData(condIdx).markH = plot(plotData.elecVerts(iElec,1),plotData.elecVerts(iElec,2),'ko','markersize',15,'linewidth',2);
+            
+            title(condData(condIdx).topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}]);
+            drawSpec(condIdx);
+            drawWave(condIdx);
+            drawPhase(condIdx);
 
         end
         
     end
 
- function drawWave()
-
-        %cla(waveAx)
+ function drawWave(condIdx)
      
-        axes(waveAx)
-        butterflyH = plot(waveAx,time,Wave','-','color',[.5 .5 .5]);
+        %Get the data to plot
+        plotData = condData(condIdx);
+        
+        axes(condData(condIdx).waveAx)
+        condData(condIdx).butterflyH = plot(condData(condIdx).waveAx,condData(condIdx).Time,condData(condIdx).Wave','-','color',[.5 .5 .5],'linewidth',.1);
         hold on;       
-        delete(selectedLineH);
-        selectedLineH = plot(waveAx,time,Wave(iElec,:),'k','linewidth',2);  
+        delete(condData(condIdx).selectedLineH);
+        condData(condIdx).selectedLineH = plot(condData(condIdx).waveAx,condData(condIdx).Time,...
+            condData(condIdx).Wave(condData(condIdx).iElec,:),'color',condData(condIdx).color,'linewidth',2);  
         
-        yLims = 1.1*[-max(abs(Wave(:))) max(abs(Wave(:)))];
-        axis(waveAx,[0 time(end) yLims])
+        yLims = 1.1*[-max(abs(condData(condIdx).Wave(:)))-eps max(abs(condData(condIdx).Wave(:)))+eps];
         
-        [axLim] = axis(waveAx);
+        axis(condData(condIdx).waveAx,[0 condData(condIdx).Time(end) yLims])
+        
+        [axLim] = axis(condData(condIdx).waveAx);
         yLo = axLim(3);
         yHi = axLim(4);
-        delete(timeLine);
-        timeLine = line([time(iT) time(iT)],[yLo yHi],'linewidth',2,'buttondownFcn',@clickedWave);
+        delete(condData(condIdx).timeLine);
+        condData(condIdx).timeLine = line([condData(condIdx).Time(condData(condIdx).iT) condData(condIdx).Time(condData(condIdx).iT)],[yLo yHi],...
+            'linewidth',2,'buttondownFcn',{@clickedWave,condIdx});
         
-        ylabel('Amplitude (uV)');
+        ylabel('uV');
         xlabel('Time (ms)');
         %Set up the function to call when the plots are clicked on
-        set(waveAx,'ButtonDownFcn',@clickedWave)
-        set(selectedLineH,'ButtonDownFcn',@clickedWave)
-        set(butterflyH,'ButtonDownFcn',@clickedWave)
+        set(condData(condIdx).waveAx,'ButtonDownFcn',{@clickedWave,condIdx})
+        set(condData(condIdx).selectedLineH,'ButtonDownFcn',{@clickedWave,condIdx})
+        set(condData(condIdx).butterflyH,'ButtonDownFcn',{@clickedWave,condIdx})
         
         
     end
 
-    function clickedWave(varargin)
+    function clickedWave(hObject,callbackdata,condIdx)
         
-        tCurPoint = get(waveAx,'CurrentPoint');
+        %Get the data to plot
+        plotData = condData(condIdx);
+        
+        tCurPoint = get(plotData.waveAx,'CurrentPoint');
         %set( tHline, 'XData', tCurPoint(1,[1 1]) )
         
         %Get the x location of the lick and find the nearest index
-        [distance iT] = min(abs(time-tCurPoint(1,1)));
+        [distance iT] = min(abs(plotData.Time-tCurPoint(1,1)));
         
-        [axLim] = axis(waveAx);
+        [axLim] = axis(plotData.waveAx);
         yLo = axLim(3);
         yHi = axLim(4);
         
-        axes(waveAx);
-        if iT>=1 && iT<=size(Amp,2)
+        axes(plotData.waveAx);
+        if iT>=1 && iT<=size(plotData.Amp,2)
             
-            set(topoH,'facevertexCData',Wave(:,iT))
+            set(plotData.topoH,'facevertexCData',plotData.Wave(:,iT))
             %           caxis(topoAx,[-max(abs(data(iT,:))) max(abs(data(iT,:)))])
             
-            colormap(jmaColors('arizona'));
-            caxis(topoAx,[-max(abs(Wave(:))) max(abs(Wave(:)))]);            
+            colormap(plotData.topoAx,jmaColors('arizona'));
+            caxis(plotData.topoAx,[-max(abs(plotData.Wave(:))) max(abs(plotData.Wave(:)))]);            
             
-            set(timeLine,'XData',[time(iT) time(iT)],'YData',[yLo yHi]);
-            title(waveAx,['Time: ' num2str(time(iT),4) ' ms']);
+            set(plotData.timeLine,'XData',[plotData.Time(iT) plotData.Time(iT)],'YData',[yLo yHi]);
+            title(plotData.waveAx,['Time: ' num2str(plotData.Time(iT),4) ' ms']);
             
         else
             disp('clicked out of bounds')
@@ -200,15 +301,30 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
     end
 
 
-    function drawPhase()
+    function drawPhase(condIdx)
+        %Temp disable while working on other plots
+        return;
         axes(phasorAx);
         delete(allchild(phasorAx)); %pdPhasePlot uses weird plotting functions so all it's objects need to be cleared to delete the scale. 
-        pdPhasePlot( complex( Axx.Cos(iElec,iFr), Axx.Sin(iElec,iFr)),Axx.tCircStdErr(iElec,iFr));
+        
+        for iCond = 1:2,
+        iElec = condData(iCond).iElec;
+        iFr = lastFr;
+        phaseDataToPlot(iCond) = complex( condData(iCond).Cos(iElec,iFr), condData(iCond).Sin(iElec,iFr));
+        end
+        
+        
+        steadyState.tCircStdErr(iElec,iFr)
+        
+        pdPhasePlot( phaseDataToPlot,steadyState.tCircStdErr(iElec,iFr));
         
     end
 
+
     function keyInput(src,evnt)
-        
+    
+        %disabled while working on other plots. 
+        return;
         switch(lower(evnt.Key))
             case 'leftarrow'
                 iFr = max(iFr-1,1);
@@ -219,11 +335,47 @@ set(topoAx,'ButtonDownFcn',@clickedTopo)
         end
         
         
-          set(topoH,'facevertexCData',Amp(:,iFr))
-          caxis(topoAx,[0 max(abs(Amp(:,iFr)))])
+          set(topoH,'facevertexCData',pdAmp(:,iFr))
+          caxis(topoAx,[0 max(abs(pdAmp(:,iFr)))])
           title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])
             
         
     end
+
+
+    function selCond(hObject,callbackdata,condIdx)
+        
+        selectedCond = get(hObject,'Value');
+        condData(condIdx) = updateStruct(condData(condIdx),steadyState(selectedCond));
+
+        if condIdx ==1
+            configOptions.condIdxA = selectedCond;
+        else
+            configOptions.condIdxB = selectedCond;
+        end
+        
+        plotData = condData(condIdx);
+        set(plotData.topoH,'facevertexCData',plotData.Amp(:,plotData.iFr))
+        caxis(plotData.topoAx,[0 max(abs(plotData.Amp(:,plotData.iFr)))])
+        title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
+        colormap(plotData.topoAx,hot);
+        
+
+
+%         cla(condData(condIdx).topoAx);        
+%         initTopo(condIdx);
+
+        cla(condData(condIdx).specAx);        
+        drawSpec(condIdx);
+        
+        cla(condData(condIdx).waveAx);        
+        drawWave(condIdx);
+        
+        drawPhase(condIdx);
+        
+    end
+
+
+
         
 end
