@@ -1,5 +1,5 @@
 function [steadystate] = ft_steadystateanalysis(cfg, data)
-
+%function [steadystate] = ft_steadystateanalysis(cfg, data)
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -79,9 +79,14 @@ for iChan = 1:nChan,
     %On the first iteration let's initialize things    
     if iChan ==1
        
+        Axx.nChan = nChan;
         Axx.fsample = data.fsample;
         Axx.nFr = floor(epochLengthSamp/2)+1; %Number of unique frequency in fourier transform. The +1 is for the DC component.  
-        dft = dftmtx(epochLengthSamp); 
+        Axx.nDft = epochLengthSamp; %This keeps track of how long the original dft was. 
+        dft = dftmtx(Axx.nDft);        
+        %dft = dft(:,1:Axx.nFr); %Just keep the portion of the transform
+        %that is unique for real signals. 
+        %
         %Using a dft to analyze the data. Using dft insted of FFT for
         %historical reasons. In ancient history fft required data to be
         %power of 2 length, and could do odd things if it wasn't 
