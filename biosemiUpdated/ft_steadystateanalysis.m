@@ -142,7 +142,7 @@ for iChan = 1:nChan,
     dftData(:,freqsToDouble) = 2*dftData(:,freqsToDouble);
     %Now we normalize by the number of points in the fourier transform to
     %get the expected amplitude value instead of the raw dot product. 
-    dftData = dftData/Axx.nFr;
+    dftData = dftData/Axx.nDft;
    
     %Take the mean over trials of the complex valued fourier transform data
     %Note: This is IDENTICAL to taking the time down average and then
