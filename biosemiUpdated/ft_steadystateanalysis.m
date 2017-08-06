@@ -24,7 +24,8 @@ end
 cfg.trimdur    = ft_getopt(cfg, 'trimdur',    1); %Time to trim from front and back
 cfg.epochdur   = ft_getopt(cfg, 'epochdur',   2); %~2s
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
-cfg.channel      = ft_getopt(cfg, 'channel',     'all');
+cfg.channel    = ft_getopt(cfg, 'channel',     'all');
+cfg.f1hz       = ft_getopt(cfg, 'f1hz',  []);
 
 % check if the input data is valid for this function
 %data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp'}, 'hassampleinfo', 'yes');
@@ -92,18 +93,28 @@ for iChan = 1:nChan,
         %power of 2 length, and could do odd things if it wasn't 
         
         %Setup the time domain representation, this is a single CYCLE, not
-        %a singly Epoch. 
+        %a single Epoch. 
         Axx.nT = cycleLengthSamp;
         Axx.dTSec = 1/data.fsample;
         Axx.dTms  = Axx.dTSec*1000;
         Axx.time = 0:Axx.dTSec:(Axx.nT-1)*Axx.dTSec;
         Axx.Wave = NaN(nChan,cycleLengthSamp);
+
+        
         
         Axx.Amp  = NaN(nChan,Axx.nFr);
         Axx.Sin  = NaN(nChan,Axx.nFr);
         Axx.Cos  = NaN(nChan,Axx.nFr);        
         Axx.freq = (data.fsample/2)*linspace(0,1,Axx.nFr);% freq values.  
         Axx.dFhz = mean(diff(Axx.freq));
+        
+        %TODO: Fix i1F1 spec. This just makes it up based on cycleLength or
+        %finds nearest bin. 
+        if isempty(cfg.f1hz)
+            Axx.i1F1 = (Axx.nDft/cycleLengthSamp) + 1;
+        else
+            [~,Axx.i1F1] = min(abs(cfg.f1hz-Axx.freq).^2)
+        end
         
         Axx.tCircPval   = NaN(nChan, Axx.nFr);
         Axx.tCircStdErr = NaN(nChan, Axx.nFr);
