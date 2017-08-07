@@ -4,7 +4,7 @@ function [ filteredWave ] = filterSteadyState( cfg, steadyState )
 %
 %
 %
-
+%activeFreq is a matrix same size as Amp/Sin/Cos selecting active elements
 %Create the component matrix
 %First determine the length of the fourier transform components.
 
@@ -33,11 +33,11 @@ end
 dft = dftmtx(nDft);
 dft = dft(:,1:steadyState.nFr); %Just grab the frequency components we need. Do not include DC by default. 
 filteredWave = NaN(size(steadyState.Wave));
-selFr = cfg.keepFreqIdx;
+
 
 for iChan = 1:steadyState.nChan,
     
-    
+    selFr = cfg.activeFreq(iChan,:);
     %Recon: Wave = real(theta)*Cos(theta) - imag(theta)*Sin(theta)
     %We're going to recon the full fourier transform sized waveform.
     %Then reduce it down the the single cycle length. This way we can

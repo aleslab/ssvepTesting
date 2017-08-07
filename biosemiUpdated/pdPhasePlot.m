@@ -81,6 +81,7 @@ ls = '--';
     circList = round([(rmin+rinc):rinc:(rmax-rinc)],2,'significant');
     circList = [circList rmax];
 
+    whiteBackH = patch(xunit*circList(end),yunit*circList(end),'w');
     for i=circList;
         hhh = line(xunit*i,yunit*i,'linestyle',ls,'color',tc,'linewidth',1,...
                    'handlevisibility','off','parent',cax);
