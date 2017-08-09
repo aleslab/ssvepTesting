@@ -82,19 +82,19 @@ cfg.vartrllength = 2;
 cfg.channel =  {'all','-GSR1', '-GSR2', '-Erg1','-Erg2','-Resp','-Plet','-Temp', '-Status'};
 dataEeg = ft_selectdata(cfg,data);
 %Do the steadystate analysis
+cfg.f1hz = 4.722; %TODO: pull this from session files. 
 [Axx] = ft_steadystateanalysis(cfg, dataEeg)
 
 
 %Now do a quick spectrum of the 12th channel:
 figure;
-pdSpecPlot(Axx.freq(2:80),Axx.Amp(12,2:80)',Axx.tCircPval(12,2:80)<.05)
+pdSpecPlot(Axx.freq(2:80),Axx.amp(12,2:80)',Axx.pval(12,2:80)<.05)
 title('Channel 12')
 
 %Now setup an interactive plot
 cfg.layout = 'biosemi32.lay';
 cfg.channel = {'all'};
 figure;clf;
-interactiveTopoSpecPlot(cfg,Axx)
 
 interactiveSteadyStatePlot(cfg,Axx)
 
@@ -105,10 +105,10 @@ cfgErgo.channel = { 'Erg1'}
 dataPhotodiode = ft_selectdata(cfgErgo,data);
 [AxxPhotoDiode] = ft_steadystateanalysis(cfgErgo, dataPhotodiode)
 subplot(3,1,1);
-pdSpecPlot(AxxPhotoDiode.freq(2:80),AxxPhotoDiode.Amp(1,2:80)',AxxPhotoDiode.tCircPval(1,2:80)<.05)
+pdSpecPlot(AxxPhotoDiode.freq(2:80),AxxPhotoDiode.amp(1,2:80)',AxxPhotoDiode.pval(1,2:80)<.05)
 title('PhotoDiode')
 subplot(3,1,2);
-pdSpecPlot(AxxPhotoDiode.freq(80:200),AxxPhotoDiode.Amp(1,80:200)',AxxPhotoDiode.tCircPval(1,80:200)<.05);
+pdSpecPlot(AxxPhotoDiode.freq(80:200),AxxPhotoDiode.amp(1,80:200)',AxxPhotoDiode.pval(1,80:200)<.05);
 subplot(3,1,3);
-plot(AxxPhotoDiode.time,AxxPhotoDiode.Wave)
+plot(AxxPhotoDiode.time,AxxPhotoDiode.wave)
 

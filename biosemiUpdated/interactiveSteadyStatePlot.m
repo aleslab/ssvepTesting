@@ -204,14 +204,14 @@ drawInfoPane()
     %being obvious on the plot if units are off by x1000
     plotData.time = 1000*steadyState.time; %TODO: Make time units more explicit.        
     
-    if ~isfield(steadyState,'tCircPval')
+    if ~isfield(steadyState,'pval')
         plotData.sigFreqs = [];
     else
-        plotData.sigFreqs = steadyState.tCircPval<=configOptions.pValThresh;
+        plotData.sigFreqs = steadyState.pval<=configOptions.pValThresh;
     end
     
     plotData.filterName = 'None';
-    plotData.activeFreq = true(size(plotData.Amp)); 
+    plotData.activeFreq = true(size(plotData.amp)); 
     plotData.activeFreq(:,1) = false;%Turn OFF DC by default;
     
     %Set default plot options        
@@ -235,8 +235,8 @@ drawInfoPane()
         
         for iCond = 1:2,
             condIdx = configOptions.selCondIdx(iCond);
-            waveMax(iCond) = max(abs(steadyState(condIdx).Wave(:)));
-            specMax(iCond) = max(abs(steadyState(condIdx).Amp(:)));
+            waveMax(iCond) = max(abs(steadyState(condIdx).wave(:)));
+            specMax(iCond) = max(abs(steadyState(condIdx).amp(:)));
         end
         
         %If we want global max, replace values with global max
@@ -258,7 +258,7 @@ drawInfoPane()
     function initTopo(condIdx)
         
         
-        condData(condIdx).topoH = plotTopo(squeeze( condData(condIdx).Amp(:, condData(condIdx).iFr)),cfg.layout);
+        condData(condIdx).topoH = plotTopo(squeeze( condData(condIdx).amp(:, condData(condIdx).iFr)),cfg.layout);
         colormap(condData(condIdx).topoAx,hot);
         
         colorbarH = colorbar('peer',condData(condIdx).topoAx,'WestOutside');
@@ -306,9 +306,9 @@ drawInfoPane()
         infoPaneData = [...
             condData(1).iElec condData(2).iElec;...
             condData(1).freq(condData(1).iFr) condData(2).freq(condData(2).iFr);...
-            condData(1).Amp(condData(1).iElec,condData(1).iFr) condData(2).Amp(condData(2).iElec,condData(2).iFr);... 
+            condData(1).amp(condData(1).iElec,condData(1).iFr) condData(2).amp(condData(2).iElec,condData(2).iFr);... 
             0 0;
-            condData(1).tCircPval(condData(1).iElec,condData(1).iFr) condData(2).tCircPval(condData(2).iElec,condData(2).iFr);... 
+            condData(1).pval(condData(1).iElec,condData(1).iFr) condData(2).pval(condData(2).iElec,condData(2).iFr);... 
             ];
         
         %infoPaneData(3,:) = round(infoPaneData(3,:),3,'significant');
@@ -330,9 +330,9 @@ drawInfoPane()
         
    
         
-        sigFreqs =  plotData.tCircPval(plotData.iElec,:)<=configOptions.pValThresh;
+        sigFreqs =  plotData.pval(plotData.iElec,:)<=configOptions.pValThresh;
         axes(plotData.specAx)
-        [plotData.barH plotData.sigH] = pdSpecPlot(plotData.freq,plotData.Amp(plotData.iElec,:),...
+        [plotData.barH plotData.sigH] = pdSpecPlot(plotData.freq,plotData.amp(plotData.iElec,:),...
             sigFreqs);
         title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
         
@@ -407,7 +407,7 @@ drawInfoPane()
         switch lower(condData(condIdx).topoMode)
             case 'amp'
         
-                maxVal = max(abs(plotData.Amp(:,plotData.iFr)));
+                maxVal = max(abs(plotData.amp(:,plotData.iFr)));
                 %                 if strcmpi(configOptions.yScale,'local') %If local use the locally deterrmined maxval
                 %                     yLims = 1.1*[0 maxVal+eps]; %Set the yLimits
                 %                 else
@@ -419,20 +419,20 @@ drawInfoPane()
                 %scaling for now. 
                 yLims = 1.1*[0 maxVal+eps]; %Set the yLimits
 
-                set(plotData.topoH,'facevertexCData',plotData.Amp(:,plotData.iFr));
+                set(plotData.topoH,'facevertexCData',plotData.amp(:,plotData.iFr));
                 caxis(plotData.topoAx,yLims);
                 colormap(plotData.topoAx,hot);
             
             case 'wave'
                 
-                maxVal = max(abs(plotData.Wave(:)));
+                maxVal = max(abs(plotData.wave(:)));
                 if strcmpi(configOptions.yScale,'local') %If local use the locally deterrmined maxval
                     yLims = 1.1*[-maxVal-eps maxVal+eps]; %Set the yLimits
                 else
                     yLims = plotData.globalWaveYLims;
                 end
         
-                set(plotData.topoH,'facevertexCData',plotData.Wave(:,plotData.iT))                                
+                set(plotData.topoH,'facevertexCData',plotData.wave(:,plotData.iT))                                
                 caxis(plotData.topoAx,yLims);
                 colormap(plotData.topoAx,jmaColors('arizona'));
         end
@@ -443,20 +443,20 @@ drawInfoPane()
      
         %Get the data to plot
         plotData = condData(condIdx);
-        condData(condIdx).iT = min(condData(condIdx).nT,condData(condIdx).iT);
+        condData(condIdx).iT = min(condData(condIdx).nt,condData(condIdx).iT);
         
         axes(condData(condIdx).waveAx)
         delete(condData(condIdx).butterflyH);
         delete(condData(condIdx).selectedLineH);
         delete(condData(condIdx).overlayLineH);
        
-        selectedWave = condData(condIdx).Wave(condData(condIdx).iElec,:);
+        selectedWave = condData(condIdx).wave(condData(condIdx).iElec,:);
         maxVal = max(selectedWave);
         
         if strcmp(configOptions.underlay,'butterfly')
-            condData(condIdx).butterflyH = plot(condData(condIdx).waveAx,condData(condIdx).time,condData(condIdx).Wave','-','color',[.5 .5 .5],'linewidth',.1);
+            condData(condIdx).butterflyH = plot(condData(condIdx).waveAx,condData(condIdx).time,condData(condIdx).wave','-','color',[.5 .5 .5],'linewidth',.1);
             set(condData(condIdx).butterflyH,'ButtonDownFcn',{@clickedWave,condIdx});
-            maxVal = max(abs(condData(condIdx).Wave(:)));
+            maxVal = max(abs(condData(condIdx).wave(:)));
         end
         
         
@@ -466,7 +466,7 @@ drawInfoPane()
         
         if configOptions.compareWave
             overlayIdx = -condIdx+3; %Tricky way to change between 2 and 1 
-            overlayWave = condData(overlayIdx).Wave(condData(overlayIdx).iElec,:);
+            overlayWave = condData(overlayIdx).wave(condData(overlayIdx).iElec,:);
             condData(condIdx).overlayLineH =plot(condData(condIdx).waveAx,condData(overlayIdx).time,...
                 overlayWave,'color',condData(overlayIdx).color,'linewidth',2);
         end
@@ -517,7 +517,7 @@ drawInfoPane()
         yHi = axLim(4);
         
         axes(plotData.waveAx);
-        if iT>=1 && iT<=size(plotData.Wave,2)
+        if iT>=1 && iT<=size(plotData.wave,2)
             
             
             set(plotData.timeLine,'XData',[plotData.time(iT) plotData.time(iT)],'YData',[yLo yHi]);
@@ -543,15 +543,15 @@ drawInfoPane()
         for iCond = 1:2,
             iElec = condData(iCond).iElec;
             iFr   = condData(iCond).iFr;
-            phaseDataToPlot(iCond) = complex( condData(iCond).Cos(iElec,iFr), condData(iCond).Sin(iElec,iFr));
+            phaseDataToPlot(iCond) = complex( condData(iCond).cos(iElec,iFr), condData(iCond).sin(iElec,iFr));
             
             %TODO: Fix this! this is an underestimate of the 95% confidence
             %intervals!
-            confIntRadius(iCond) = 2*condData(iCond).tCircStdErr(iElec,iFr);
+            confRadius(iCond) = condData(iCond).confradius(iElec,iFr);
         end
                       
         
-        pdPhasePlot( phaseDataToPlot,confIntRadius);
+        pdPhasePlot( phaseDataToPlot,confRadius);
         
     end
 
@@ -592,8 +592,8 @@ drawInfoPane()
         configOptions.selCondIdx(condIdx) = selectedCond;
         
         plotData = condData(condIdx);
-        set(plotData.topoH,'facevertexCData',plotData.Amp(:,plotData.iFr))
-        caxis(plotData.topoAx,[0 max(abs(plotData.Amp(:,plotData.iFr)))])
+        set(plotData.topoH,'facevertexCData',plotData.amp(:,plotData.iFr))
+        caxis(plotData.topoAx,[0 max(abs(plotData.amp(:,plotData.iFr)))])
         title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
         colormap(plotData.topoAx,hot);
         
@@ -712,21 +712,21 @@ drawInfoPane()
         
         
         %Create a logical matrix selecting significant components.
-        sigFreqs =  condData(condIdx).tCircPval<=configOptions.pValThresh;
+        sigFreqs =  condData(condIdx).pval<=configOptions.pValThresh;
         
         
         %Determine what filter values to keep.
         %This does different things if 'none' is chosen.
         if strcmpi(condData(condIdx).filterName,'none')
-            filtIdx = 2:condData(condIdx).nFr; %Do not include DC.
-            condData(condIdx).Wave = steadyState(condData(condIdx).selectedCond).Wave;
+            filtIdx = 2:condData(condIdx).nfr; %Do not include DC.
+            condData(condIdx).wave = steadyState(condData(condIdx).selectedCond).wave;
         else
             filtIdx = determineFilterIndices(condData(condIdx).filterName,...
-                condData(condIdx).freq, condData(condIdx).i1F1);
+                condData(condIdx).freq, condData(condIdx).i1f1);
         end
         
         %Create a logical matrix selecting frequency components.
-        filtMat = false(size(condData(condIdx).Amp));
+        filtMat = false(size(condData(condIdx).amp));
         filtMat(:,filtIdx) = true;
         
         
@@ -739,9 +739,9 @@ drawInfoPane()
         %if 'none' is chosen don't apply any filter
         if strcmpi(condData(condIdx).filterName,'none')
             
-            condData(condIdx).Wave = steadyState(condData(condIdx).selectedCond).Wave;
+            condData(condIdx).wave = steadyState(condData(condIdx).selectedCond).wave;
         else
-            condData(condIdx).Wave = filterSteadyState(cfg,steadyState(condData(condIdx).selectedCond));
+            condData(condIdx).wave = filterSteadyState(cfg,steadyState(condData(condIdx).selectedCond));
         end
         
         
