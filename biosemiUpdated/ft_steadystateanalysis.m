@@ -1,6 +1,50 @@
 function [steadystate] = ft_steadystateanalysis(cfg, data)
 %function [steadystate] = ft_steadystateanalysis(cfg, data)
-
+% ft_steadystateanalysis Computes steady-state evoked potential data
+%
+% Use as
+%   [steadystate] = ft_steadystateanalysis(cfg, data)
+%
+% The data should be organized so each fieldtrip "trial" is actual a
+% steady-state "epoch". Each epoch should be divisable into an integer
+% number of "cycles" each with identical number of samples. 
+%
+%
+% Important note about magnitude of frequency domain coefficients: The Sine
+% and Cosine components are not the coefficients of the Fourier transform.
+% They are the coefficients for the Inverse fourier transform. That allows
+% the coefficients to be more intuitively understood because they directly
+% relate to the time domain representation of the data. 
+%
+%
+% The output has the following fields:
+%            
+%    Data fields:
+%            wave: Time domain waveform
+%             amp: Frequency domain amplitude.
+%             sin: Frequency domain amplitude of the sin component
+%             cos: Frequency domain amplitude of the cos component
+%      
+%             pval: The pvalue for the frequency component as calculated by the tcirc algorithm
+%     stderrradius: [32x649 double]
+%     confradius: The radius of the confidence interval assuming symettric error (defaults to 95%)
+%             
+%    Various values describing the data. 
+%            i1f1: Frequency index of the first driven frequency
+%           nchan: Number of channels
+%         fsample: Sampling rate of time domain in Hz. 
+%             nfr: Number of frequency components in 
+%            ndft: Number of coefficients in fourier transform (usually (nfr-1)*2)
+%              nt: Number of timepoints in time domain representation.
+%            dtms: Time between samples in milliseconds.
+%            dfhz: Frequency difference between spectrum values in Hz.           
+%            freq: Frequency values
+%            time: time values
+%           label: channel labels
+%      wavedimord: dimension order for wave
+%          dimord: dimension order for all other data fields
+%             cfg: fieldtrip config structure
+%             
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
@@ -70,22 +114,22 @@ end
 
 
 nTrials = length(data.trial);
-nChan  = size(data.trial{1},1);
+nchan  = size(data.trial{1},1);
 
 
 %Going to analyze each channel.
-for iChan = 1:nChan,
+for iChan = 1:nchan,
 
     
     %On the first iteration let's initialize things    
     if iChan ==1
        
-        Axx.nChan = nChan;
-        Axx.fsample = data.fsample;
-        Axx.nFr = floor(epochLengthSamp/2)+1; %Number of unique frequency in fourier transform. The +1 is for the DC component.  
-        Axx.nDft = epochLengthSamp; %This keeps track of how long the original dft was. 
-        dft = dftmtx(Axx.nDft);        
-        %dft = dft(:,1:Axx.nFr); %Just keep the portion of the transform
+        steadystate.nchan = nchan;
+        steadystate.fsample = data.fsample;
+        steadystate.nfr = floor(epochLengthSamp/2)+1; %Number of unique frequency in fourier transform. The +1 is for the DC component.  
+        steadystate.ndft = epochLengthSamp; %This keeps track of how long the original dft was. 
+        dft = dftmtx(steadystate.ndft);        
+        %dft = dft(:,1:steadystate.nfr); %Just keep the portion of the transform
         %that is unique for real signals. 
         %
         %Using a dft to analyze the data. Using dft insted of FFT for
@@ -94,30 +138,31 @@ for iChan = 1:nChan,
         
         %Setup the time domain representation, this is a single CYCLE, not
         %a single Epoch. 
-        Axx.nT = cycleLengthSamp;
-        Axx.dTSec = 1/data.fsample;
-        Axx.dTms  = Axx.dTSec*1000;
-        Axx.time = 0:Axx.dTSec:(Axx.nT-1)*Axx.dTSec;
-        Axx.Wave = NaN(nChan,cycleLengthSamp);
+        steadystate.nt = cycleLengthSamp;
+        dTSec = 1/data.fsample;
+        steadystate.dtms  = dTSec*1000;
+        steadystate.time = 0:steadystate.dtms:(steadystate.nt-1)*steadystate.dtms;
+        steadystate.wave = NaN(nchan,cycleLengthSamp);
 
         
         
-        Axx.Amp  = NaN(nChan,Axx.nFr);
-        Axx.Sin  = NaN(nChan,Axx.nFr);
-        Axx.Cos  = NaN(nChan,Axx.nFr);        
-        Axx.freq = (data.fsample/2)*linspace(0,1,Axx.nFr);% freq values.  
-        Axx.dFhz = mean(diff(Axx.freq));
+        steadystate.amp  = NaN(nchan,steadystate.nfr);
+        steadystate.sin  = NaN(nchan,steadystate.nfr);
+        steadystate.cos  = NaN(nchan,steadystate.nfr);        
+        steadystate.freq = (data.fsample/2)*linspace(0,1,steadystate.nfr);% freq values.  
+        steadystate.dfhz = mean(diff(steadystate.freq));
         
         %TODO: Fix i1F1 spec. This just makes it up based on cycleLength or
         %finds nearest bin. 
         if isempty(cfg.f1hz)
-            Axx.i1F1 = (Axx.nDft/cycleLengthSamp) + 1;
+            steadystate.i1f1 = (steadystate.ndft/cycleLengthSamp) + 1;
         else
-            [~,Axx.i1F1] = min(abs(cfg.f1hz-Axx.freq).^2)
+            [~,steadystate.i1f1] = min(abs(cfg.f1hz-steadystate.freq).^2)
         end
         
-        Axx.tCircPval   = NaN(nChan, Axx.nFr);
-        Axx.tCircStdErr = NaN(nChan, Axx.nFr);
+        steadystate.pval   = NaN(nchan, steadystate.nfr);
+        steadystate.stderrradius = NaN(nchan, steadystate.nfr);
+        steadystate.confradius = NaN(nchan, steadystate.nfr);
     
     end
     
@@ -133,7 +178,7 @@ for iChan = 1:nChan,
     dftData = thisChanData*dft;
     
     %Select just the unique frequencies.
-    dftData = dftData(:,1:Axx.nFr);
+    dftData = dftData(:,1:steadystate.nfr);
     
     %Now these lines are inscrutable.
     %1) The fourier transform is complex variance perserving transform
@@ -145,15 +190,15 @@ for iChan = 1:nChan,
     %       
     %The  modulus operator ise used to exclude the nyquist freq(last freq) from 
     %doubling IF an even number of samples is given. That is we go to
-    %Axx.nFr-1 if the sample is even, but to Axx.nFr if odd. 
-    freqsToDouble = 2:(Axx.nFr-1+mod(epochLengthSamp,2)); 
+    %steadystate.nfr-1 if the sample is even, but to steadystate.nfr if odd. 
+    freqsToDouble = 2:(steadystate.nfr-1+mod(epochLengthSamp,2)); 
     
     %Now we double the the amplitude of the freqs that are represented
     %twice in the fourer transform
     dftData(:,freqsToDouble) = 2*dftData(:,freqsToDouble);
     %Now we normalize by the number of points in the fourier transform to
     %get the expected amplitude value instead of the raw dot product. 
-    dftData = dftData/Axx.nDft;
+    dftData = dftData/steadystate.ndft;
    
     %Take the mean over trials of the complex valued fourier transform data
     %Note: This is IDENTICAL to taking the time down average and then
@@ -167,9 +212,9 @@ for iChan = 1:nChan,
     %identical to taking the complex conjugate of the data. But done
     %explictitly for clarity. NB: Always take care in interpreting
     %absolute phase several conventions exist in the field. 
-    Axx.Amp(iChan,:) = abs(meanDftData);
-    Axx.Cos(iChan,:) = real(meanDftData);
-    Axx.Sin(iChan,:) = -imag(meanDftData);
+    steadystate.amp(iChan,:) = abs(meanDftData);
+    steadystate.cos(iChan,:) = real(meanDftData);
+    steadystate.sin(iChan,:) = -imag(meanDftData);
         
     %Let's now create the time-domain representation
     %For this we are going to make a waveform that only 1 cycle long
@@ -187,25 +232,30 @@ for iChan = 1:nChan,
     %Now assign the mean cycle waveform to the time domain average:
     %We are going to remove the mean.  We almost never want to plot it. If
     %we need it it's available in the DC component of Cos. 
-    Axx.Wave(iChan,:)= aveWave-mean(aveWave);
+    steadystate.wave(iChan,:)= aveWave-mean(aveWave);
     
     %Now lets calculate statistcs
     
     %Going to loop over the frequencies to calc the pvalue for each one 
     %The DC component is not a complex phasor so is treated differently.
+    %Using a simple t-test instead of a T2 circ test. 
     
-%     Axx.tCircPval(iChan,1) = 1;
-%     Axx.tCircStdErr(1) = std(dftData(:,1))/sqrt(nTrials);
-    for iFr = 1:Axx.nFr,
+%     steadystate.pval(iChan,1) = 1;
+%     steadystate.stderrradius(1) = std(dftData(:,1))/sqrt(nTrials);
+    for iFr = 1:steadystate.nfr,
         
         if isreal(dftData(:,iFr)),
-            Axx.tCircPval(iChan,iFr) = 1;
-            Axx.tCircStdErr(iChan,iFr) = std(dftData(:,iFr))/sqrt(nTrials);
+            [H,P,CI] = ttest(dftData(:,iFr));
+            steadystate.pval(iChan,iFr) = P;
+            steadystate.stderrradius(iChan,iFr) = std(dftData(:,iFr))/sqrt(nTrials);
+            steadystate.confradius(iChan,iFr)   = CI(2)-mean(dftData(:,iFr));
             continue
         end
         
-        [Axx.tCircPval(iChan,iFr) pooledStdDev ] = tcirc(dftData(:,iFr));
-        Axx.tCircStdErr(iChan,iFr) = pooledStdDev/sqrt(size(dftData,1));
+        [steadystate.pval(iChan,iFr), pooledStdDev, confradius] = t2circ(dftData(:,iFr));
+        steadystate.stderrradius(iChan,iFr) = pooledStdDev/sqrt(size(dftData,1));
+        steadystate.confradius(iChan,iFr) = confradius;
+        
         
     end
     
@@ -216,9 +266,10 @@ end
 
 %allTrialMtx =cat(3,data.trial{:});
 % set output variables
-steadystate        = Axx;
+
 steadystate.label  = data.label;
-steadystate.dimord = 'chan_freq';
+steadystate.dimord = 'chan_freq'; %Applies to all fields that don't specify dimord. 
+steadystate.wavedimord = 'chan_time'; %applies to waveform. 
 
 
 % some fields from the input should always be copied over in the output

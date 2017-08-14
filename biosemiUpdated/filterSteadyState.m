@@ -10,11 +10,11 @@ function [ filteredWave ] = filterSteadyState( cfg, steadyState )
 
 if ~isfield(steadyState, 'nDft') %If we're not told the length, have to try and recreate it. 
     
-    nDft = 2*(steadyState.nFr-1); %Close but may be off by 1
+    nDft = 2*(steadyState.nfr-1); %Close but may be off by 1
     
-    if mod(nDft,steadyState.nT)~=0,
+    if mod(nDft,steadyState.nt)~=0,
         nDft = nDft +1;
-        if mod(nDft,steadyState.nT)~=0,
+        if mod(nDft,steadyState.nt)~=0,
             error('Failed to guess nDft. Are nT and nFr compatible?');
         end
     end
@@ -31,11 +31,11 @@ end
 %has already been sign inverted.  Therefore we need to make our own inverse
 %dftmtx. 
 dft = dftmtx(nDft);
-dft = dft(:,1:steadyState.nFr); %Just grab the frequency components we need. Do not include DC by default. 
-filteredWave = NaN(size(steadyState.Wave));
+dft = dft(:,1:steadyState.nfr); %Just grab the frequency components we need. Do not include DC by default. 
+filteredWave = NaN(size(steadyState.wave));
 
 
-for iChan = 1:steadyState.nChan,
+for iChan = 1:steadyState.nchan,
     
     selFr = cfg.activeFreq(iChan,:);
     %Recon: Wave = real(theta)*Cos(theta) - imag(theta)*Sin(theta)
@@ -43,8 +43,8 @@ for iChan = 1:steadyState.nChan,
     %Then reduce it down the the single cycle length. This way we can
     %include the noise bands in the waveform if we want, or we can just use
     %the cycle components. 
-    waveRecon = real(dft(:,selFr))*steadyState.Cos(iChan,selFr)' - imag(dft(:,selFr))*steadyState.Sin(iChan,selFr)';    
-    waveRecon=reshape(waveRecon,steadyState.nT,[])';
+    waveRecon = real(dft(:,selFr))*steadyState.cos(iChan,selFr)' - imag(dft(:,selFr))*steadyState.sin(iChan,selFr)';    
+    waveRecon=reshape(waveRecon,steadyState.nt,[])';
     filteredWave(iChan,:)=mean(waveRecon,1);
 end
 
