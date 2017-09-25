@@ -46,4 +46,15 @@ for cond=9:16
     [Axx(cond)] = ft_steadystateanalysis(cfg, cleanData);
 end
 save('testSplitOdd', 'Axx')
+
+
+
+
+%%%%%%%%%%%%%%%%
+addpath /Users/marleneponcet/Documents/Git/fieldtrip
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+ft_defaults
+cfg.layout = 'biosemi128.lay';
+cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 interactiveSteadyStatePlot(cfg,Axx)

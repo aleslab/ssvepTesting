@@ -1,5 +1,6 @@
 load('longRange_01__20170727_153334.mat')
 % ptbCorgiData = overloadOpenPtbCorgiData('D:\StAndrews\LongRangeSSVEP\longRange_01__20170727_153334.mat')
+load('/Users/marleneponcet/Documents/LongRangeSSVEP/longRange_00__20170913_132721.mat')
 
 tableData = struct2table(experimentData);
 
@@ -30,7 +31,7 @@ for cc=1:length(allCond)
     figure;hold on;
     imagesc(squeeze(matResponse(cc,:,:)));colorbar;
 end
-bar(mean(corResp(:,:),2))
+figure;bar(mean(corResp(:,:),2))
 
 
 
