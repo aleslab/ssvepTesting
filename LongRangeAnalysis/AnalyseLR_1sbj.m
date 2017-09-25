@@ -37,7 +37,7 @@ cfg.trialfun = 'LR_fullTrial';
 
 % pre-processing
 cfg.lpfilter  = 'yes';
-cfg.lpfreq        = 48; % < screen 85Hz
+cfg.lpfreq        = 80; % < screen 85Hz
 cfg.demean        ='yes';
 cfg.reref         = 'yes'; 
 cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1

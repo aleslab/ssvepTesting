@@ -1,6 +1,6 @@
 clear all;
 
-addpath /Users/marleneponcet/Documents/Git/fieldtrip
+addpath /Users/marleneponcet/Documents/Git/fieldtrip20170924
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 ft_defaults
@@ -41,7 +41,7 @@ for ff=1:length(eegFiles)
     
     % pre-processing
     cfg.lpfilter  = 'yes';
-    cfg.lpfreq        = 48; % < screen 85Hz
+    cfg.lpfreq        = 80; % < screen 85Hz
     cfg.demean        ='yes';
     cfg.reref         = 'yes';
     cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
@@ -109,25 +109,33 @@ for ff=1:length(eegFiles)
     end
     
 end
-save('Subj','Subj')
 
+
+%%% call function for prediction save it in the same Subj structure
+for ff=1:length(Subj)
+    Subj(ff).motionPrediction = predictMotion(Subj(ff).Axx);
+    Subj(ff).simultPrediction = predictSimult(Subj(ff).Axx);
+end
+
+save('Subj','Subj')
 
 %%% plot results
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 interactiveSteadyStatePlot(cfg,[Subj(1).Axx Subj(2).Axx])
 interactiveSteadyStatePlot(cfg,[Subj(1).Sweep Subj(2).Sweep])
-
-
-
+interactiveSteadyStatePlot(cfg,[Subj(1).motionPrediction Subj(2).motionPrediction])
+interactiveSteadyStatePlot(cfg,[Subj(1).simultPrediction Subj(2).simultPrediction])
 
 
 
 
 
 %%% Cleaning
-% S01: channels A13 D7 C7  replaced, trial number 280 removed, 
-% 269 trials with blinks removed
-% S02: channeks D1, D2, D10 replaced, trials 3, 88, 227, 363, 453 removed, 
-% 33 trials with blinks removed
+% S01: channels A13 D7 C7  replaced, trial number 284,394 removed, 
+% 267 trials with blinks removed (threshold = 3)
+% resulting in 631 trials
 
+% S02: channeks D1, D2, D10 replaced, trials 88, 227, 363, 453 removed, 
+% 15 trials with blinks removed
+% resulting in 881 trials
