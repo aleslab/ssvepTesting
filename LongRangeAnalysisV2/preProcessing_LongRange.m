@@ -49,7 +49,7 @@ behavFiles = dir([dataDir '*.mat']);
     cfg.reref         = 'yes';
     cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
     cfg.lpfilter  = 'yes';
-    cfg.lpfreq = 85; % < screen 85Hz
+    cfg.lpfreq = 85; % screen 85Hz ...  49 would really clear noise, not 85
     cfg.hpfreq = 1;
     cfg.hpfilter = 'no'; % does NOT work
     cfg.detrend = 'yes';

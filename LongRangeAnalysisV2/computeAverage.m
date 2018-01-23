@@ -16,5 +16,5 @@ cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7',
 for cond=1:6
     gp(cond) = doAverage(dataDir,listData,cond);
 end
-interactiveSteadyStatePlot(cfg,gp)
+interactiveSteadyStatePlot2(cfg,gp)
 
