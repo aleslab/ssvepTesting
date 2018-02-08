@@ -11,8 +11,8 @@ function [Simult] = predictSimult(dataAxx)
 % value for the amp otherwise won't plot the negative 
 % 6 the difference short range
 
-Simult(1) = dataAxx(4);
-Simult(3) = dataAxx(8);
+Simult(1) = dataAxx(4); % original simult LR
+Simult(3) = dataAxx(8); % original simult SR
 
 % stuff needed but does not change
 Simult(2).time =  dataAxx(1).time ;

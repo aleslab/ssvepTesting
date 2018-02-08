@@ -14,7 +14,9 @@ cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
 for cond=1:6
-    gp(cond) = doAverage(dataDir,listData,cond);
+    [gpMotion(cond) gpSimul(cond)] = doAverage(dataDir,listData,cond);
 end
-interactiveSteadyStatePlot2(cfg,gp)
+interactiveSteadyStatePlot2(cfg,gpMotion)
+interactiveSteadyStatePlot2(cfg,gpSimul)
 
+save('average','gpMotion','gpSimul','cfg')

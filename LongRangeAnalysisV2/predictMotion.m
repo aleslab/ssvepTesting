@@ -1,5 +1,11 @@
 function [Motion] = predictMotion(dataAxx)
-
+% 1 is the original long range
+% 2 the prediction long range
+% 3 is the original short range
+% 4 is the prediction short range
+% 5 the difference long range (original - prediction) -> take the absolute
+% value for the amp otherwise won't plot the negative 
+% 6 the difference short range
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% MOTION

@@ -98,7 +98,7 @@ behavFiles = dir([dataDir '*.mat']);
     cfg.artfctdef.reject = 'complete';
     [cleanData] = ft_rejectartifact(cfg, data);
     
-    save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData')
+    save([dataOut eegFiles(ff).name(1:end-4) '_clean2'],'cleanData')
 % end
 
 

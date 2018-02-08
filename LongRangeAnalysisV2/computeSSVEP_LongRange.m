@@ -12,10 +12,10 @@ listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
     
-dataOut = '/Users/marleneponcet/Documents/dataLongRangeV2/AxxFiles/';
+dataOut = '/Users/marleneponcet/Documents/Git/ssvepTesting/LongRangeAnalysisV2';
 
 
-for ff=1:length(listData)
+for ff=1:2%length(listData)
     clear cleanData; clear Axx;
     load([dataDir listData(ff).name]);
     
