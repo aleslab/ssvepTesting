@@ -13,6 +13,12 @@ dataSz = size(data); %Fin
 
 nChan = dataSz(1); %Number of channels in data 
 
+if ischar(layout)
+    tmpcfg.layout = layout
+    layout = ft_prepare_layout(tmpcfg);
+end
+
+
 if isstruct(layout) && isfield(layout,'cfg') %If cfg field is present layout is FT format
        
     tEpos = [ layout.pos(1:nChan,1), layout.pos(1:nChan,2), zeros(nChan,1) ];
