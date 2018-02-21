@@ -34,7 +34,7 @@
 % SR flash right
 
 
-clear all;
+clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip20170924
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated

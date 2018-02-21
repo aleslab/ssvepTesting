@@ -5,12 +5,12 @@ function [Motion] = reconstructTiming(AxxToShift,AxxNoChange)
 
 % compute the new Axx with a shift in time of 200 ms (half cycle)
 % first for the wave
-shiftLR.wave = circshift(AxxToShift.wave,[0 length(AxxToShift.wave)/2]);
+shift.wave = circshift(AxxToShift.wave,[0 length(AxxToShift.wave)/2]);
 % then for the cos and sin
 % for this needs the phase shift calculated for each frequency
 % phase shift = shift (200 ms) / periods * 360 degrees
 periods = 1 ./ AxxToShift.freq;
-phaseShift = 0.200 ./ periods .* 360;
+phaseShift = 0.2 ./ periods .* 360;
 
 % trigonometry.. 
 % cos' = A*cos(theta + phi) = cos(theta)*alpha*cos(phi)
@@ -18,13 +18,13 @@ phaseShift = 0.200 ./ periods .* 360;
 % cos' = cosd(phaseShift) * orignialCos - sind(phaseShift) * orignialSin
 % Similar stuff for sin' but different "identification"
 % sin' = sind(phaseShift) * originalCos + cosd(phaseShift) * originalSin
-shiftLR.sin = sind(phaseShift) .* AxxToShift.cos + cosd(phaseShift) .* AxxToShift.sin;
-shiftLR.cos = cosd(phaseShift) .* AxxToShift.cos - sind(phaseShift) .* AxxToShift.sin;
+shift.sin = sind(phaseShift) .* AxxToShift.cos + cosd(phaseShift) .* AxxToShift.sin;
+shift.cos = cosd(phaseShift) .* AxxToShift.cos - sind(phaseShift) .* AxxToShift.sin;
 
 % now do the addition
-Motion.wave = AxxNoChange.wave +shiftLR.wave;
-Motion.sin = AxxNoChange.sin + shiftLR.sin;
-Motion.cos = AxxNoChange.cos + shiftLR.cos;
+Motion.wave = AxxNoChange.wave +shift.wave;
+Motion.sin = AxxNoChange.sin + shift.sin;
+Motion.cos = AxxNoChange.cos + shift.cos;
 Motion.amp = sqrt(Motion.sin.^2 + Motion.cos.^2);
 Motion.freq =  AxxNoChange.freq; % in this case, same frequencies
 

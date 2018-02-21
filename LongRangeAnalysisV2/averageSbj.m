@@ -26,9 +26,12 @@ groupAv(cond).label = dataSbj(ff,cond).data.label;
 
 % average
 groupAv(cond).wave = mean(dataWave(:,:,cond,:),4);
-groupAv(cond).amp = mean(dataAmp(:,:,cond,:),4);
 groupAv(cond).sin = mean(dataSin(:,:,cond,:),4);
 groupAv(cond).cos = mean(dataCos(:,:,cond,:),4);
+
+groupAv(cond).amp = sqrt(groupAv(cond).sin.^2 + groupAv(cond).cos.^2);
+
+
 end
 
 

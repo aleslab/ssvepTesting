@@ -4,7 +4,7 @@ trl = [];
 preStimDuration = cfg.trialdef.preStimDuration;
 newFs = cfg.newFs;
 epochLengthSecs = cfg.trialdef.epochLength; % 2 s
-trialLengthSecs = cfg.trialdef.trialLength; % 12.4 s
+trialLengthSecs = cfg.trialdef.trialLength; % 14 s
 offset = 0;
 cycleLength = cfg.trialdef.cycleLength*newFs;
 
