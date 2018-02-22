@@ -46,8 +46,9 @@ behavFiles = dir([dataDir '*.mat']);
     
     % pre-processing
     cfg.demean        ='no'; % useless with detrend. applies baseline correction to the entire trial by default (or to the specified window in cfg.baselinewindow)
-    cfg.reref         = 'yes';
+    cfg.reref         = 'no';
     cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
+%    cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
     cfg.lpfilter  = 'yes';
     cfg.lpfreq = 85; % screen 85Hz ...  49 would really clear noise, not 85
     cfg.hpfreq = 1;
