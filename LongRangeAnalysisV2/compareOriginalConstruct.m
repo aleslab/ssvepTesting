@@ -35,7 +35,7 @@
 
 
 clearvars;
-addpath /Users/marleneponcet/Documents/Git/fieldtrip20170924
+addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 ft_defaults
@@ -113,6 +113,7 @@ end
 gpData = averageSbj(sbj);
 gpDataDiff = averageSbj(sbjDiff);
 save('gpCompare','gpData','gpDataDiff','cfg')
+save('sbjResults','sbjDiff','cfg')
 
 
 
