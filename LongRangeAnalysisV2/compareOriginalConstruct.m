@@ -1,39 +1,4 @@
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%% gpData from 1 to 16:
-% Long-range 
-% reconstructed LR motion
-% original LR motion
-% reconstructed LR simultaneous
-% original LR simultaneous
-% reconstructed LR flash left
-% original LR flash left
-% reconstructed LR flash right
-% original LR flash right
-
-% short-range 
-% reconstructed SR motion
-% original SR motion
-% reconstructed SR simultaneous
-% original SR simultaneous
-% reconstructed SR flash left
-% original SR flash left
-% reconstructed SR flash right
-% original SR flash right
-
-%%%%%%%%% gpDataDiff from 1 to 8:
-% get differences between all the reconstructed and original
-% LR motion
-% LR simultaneous
-% LR flash left
-% LR flash right
-% SR motion
-% SR simultaneous
-% SR flash left
-% SR flash right
-
-
 clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
@@ -44,6 +9,8 @@ dataDir = '/Users/marleneponcet/Documents/dataLongRangeV2/AxxFiles/';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+
+
 
 for ff=1:length(listData)
     clear Axx;
@@ -112,6 +79,40 @@ end
 % do the average
 gpData = averageSbj(sbj);
 gpDataDiff = averageSbj(sbjDiff);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% gpData from 1 to 16:
+% Long-range 
+gpData(1).condLabel = 'reconstruct_LRmotion';
+gpData(2).condLabel = 'original_LRmotion';
+gpData(3).condLabel = 'reconstruct_LRsimult';
+gpData(4).condLabel = 'original_LRsimult';
+gpData(5).condLabel = 'reconstruct_LRflashLeft'; % probably right side
+gpData(6).condLabel = 'original_LRflashLeft';
+gpData(7).condLabel = 'reconstruct_LRflashRight';
+gpData(8).condLabel = 'original_LRflashRight';
+
+% short-range 
+gpData(9).condLabel = 'reconstruct_SRmotion';
+gpData(10).condLabel = 'original_SRmotion';
+gpData(11).condLabel = 'reconstruct_SRsimult';
+gpData(12).condLabel = 'original_SRsimult';
+gpData(13).condLabel = 'reconstruct_SRflashLeft'; % probably right side
+gpData(14).condLabel = 'original_SRflashLeft';
+gpData(15).condLabel = 'reconstruct_SRflashRight';
+gpData(16).condLabel = 'original_SRflashRight';
+
+%%%%%%%%% gpDataDiff from 1 to 8:
+% get differences between all the reconstructed and original
+gpDataDiff(1).condLabel = 'LRmotion';
+gpDataDiff(2).condLabel = 'LRsimult';
+gpDataDiff(3).condLabel = 'LRflashLeft';
+gpDataDiff(4).condLabel = 'LRflashRigth';
+gpDataDiff(5).condLabel = 'SRmotion'; % probably right side
+gpDataDiff(6).condLabel = 'SRsimult';
+gpDataDiff(7).condLabel = 'SRflashLeft';
+gpDataDiff(8).condLabel = 'SRflashRight';% LR motion
+
 save('gpCompare','gpData','gpDataDiff','cfg')
 save('sbjResults','sbjDiff','cfg')
 

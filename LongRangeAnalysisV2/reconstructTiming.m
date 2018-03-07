@@ -1,4 +1,4 @@
-function [Motion] = reconstructTiming(AxxToShift,AxxNoChange)
+function [motion] = reconstructTiming(AxxToShift,AxxNoChange)
 % input 2 Axx files, 1st is the one to shift in time, the 2nd is not
 % shifted, then the 2 signals are summed
 % output the sum of the 2 signals
@@ -22,25 +22,24 @@ shift.sin = sind(phaseShift) .* AxxToShift.cos + cosd(phaseShift) .* AxxToShift.
 shift.cos = cosd(phaseShift) .* AxxToShift.cos - sind(phaseShift) .* AxxToShift.sin;
 
 % now do the addition
-Motion.wave = AxxNoChange.wave +shift.wave;
-Motion.sin = AxxNoChange.sin + shift.sin;
-Motion.cos = AxxNoChange.cos + shift.cos;
-Motion.amp = sqrt(Motion.sin.^2 + Motion.cos.^2);
-Motion.freq =  AxxNoChange.freq; % in this case, same frequencies
+motion.wave = AxxNoChange.wave +shift.wave;
+motion.sin = AxxNoChange.sin + shift.sin;
+motion.cos = AxxNoChange.cos + shift.cos;
+motion.amp = sqrt(motion.sin.^2 + motion.cos.^2);
 
 
 % values that do not change
-Motion.nt = AxxNoChange.nt;
-Motion.nfr = AxxNoChange.nfr;
-Motion.time = AxxNoChange.time;
-Motion.pval = NaN(size(AxxNoChange.pval));
-Motion.confradius = NaN(size(AxxNoChange.confradius));
-Motion.i1f1 = AxxNoChange.i1f1;
-Motion.elec = AxxNoChange.elec;
-Motion.dtms = AxxNoChange.dtms;
-Motion.nchan = AxxNoChange.nchan;
-Motion.ndft = AxxNoChange.ndft;
-Motion.freq = AxxNoChange.freq;
-Motion.label = AxxNoChange.label;
+motion.nt = AxxNoChange.nt;
+motion.nfr = AxxNoChange.nfr;
+motion.time = AxxNoChange.time;
+motion.pval = NaN(size(AxxNoChange.pval));
+motion.confradius = NaN(size(AxxNoChange.confradius));
+motion.i1f1 = AxxNoChange.i1f1;
+motion.elec = AxxNoChange.elec;
+motion.dtms = AxxNoChange.dtms;
+motion.nchan = AxxNoChange.nchan;
+motion.ndft = AxxNoChange.ndft;
+motion.freq = AxxNoChange.freq;
+motion.label = AxxNoChange.label;
 
 end

@@ -63,9 +63,12 @@ set(figH,'DefaultAxesColorOrder',[condData(1).color; condData(2).color]);
 
 %%%%% Setup plot option GUI controls
 % Create pop-up menu
-
-%Quickie Just label conditions with numbers:
-conditionList = cellstr(num2str([1:length(steadyState)]'));
+if isfield(steadyState,'condLabel')
+    conditionList = {steadyState.condLabel}';
+else
+    %Quickie Just label conditions with numbers:
+    conditionList = cellstr(num2str([1:length(steadyState)]'));
+end
 
 pValList = {'None','0.05','0.01','1e-3','1e-6'};
 filterList = {'None','nF1','nF1Odd','nF1Even','nF1Low49'};
