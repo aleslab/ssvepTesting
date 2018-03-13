@@ -57,7 +57,7 @@ switch lower(filterName)
     case 'nf1even'
         freqIndices = (2*(i1f1-1):2*(i1f1-1):length(freqValues))+1;
     otherwise
-        freqIndices = 1:length(freqValues);
+        freqIndices = 2:length(freqValues); %Do not include DC
         warning('Unrecognized filter name');
         
 
