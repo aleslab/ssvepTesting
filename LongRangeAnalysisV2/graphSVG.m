@@ -90,3 +90,38 @@ end
 saveas(gcf,['SRfreq_' chanName{plotCh} '.jpg'])
 
 end
+
+
+
+
+
+
+%%% ST
+chan = [23 19]; 
+chanName = {'Oz' 'Pz'};
+
+limERPmin = -1.2;
+limERPmax = 1.2;
+
+colors = {'r','k'};
+
+% because of the pb with pre-processing starting at 1.529, the stimulus
+% appears on the left only 80 ms later. Correction = 1st time point is 42
+% gpCorrection(condIdx).time([42:204 1:41])
+
+for plotCh=1:length(chan)
+channel = chan(plotCh);
+figure; hold on;
+for condIdx=11:12
+    plot(gpCorrection(condIdx).time,gpCorrection(condIdx).filteredWave(channel,[42:204 1:41]),colors{condIdx-10},'LineWidth',2)
+    ylim([limERPmin limERPmax])
+end
+xlabel('time (ms)')
+legend('LR','SR','Location','NorthWest')
+title(['ST ' chanName{plotCh}])
+
+saveas(gcf,['ST_' chanName{plotCh} '.jpg'])
+saveas(gcf,['ST_' chanName{plotCh} '.epsc'])
+saveas(gcf,['ST_' chanName{plotCh} '.m'])
+
+end

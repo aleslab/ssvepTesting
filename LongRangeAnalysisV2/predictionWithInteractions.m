@@ -58,7 +58,6 @@ for ff=1:length(listData)
     poolNonLinearR = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearR),0.5);
     sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx.cond(3),poolNonLinearR),sumAxx(Axx.cond(2),poolNonLinearL));
     
-    
     % original SR motion
     sbj(ff,6).data = Axx.cond(7);
     
@@ -99,10 +98,13 @@ for ff=1:length(listData)
     poolNonLinearL = multiplyAxx(sumAxx(halfNonLinearSpatial,nonLinearL),0.5);
     poolNonLinearR = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearR),0.5);
     sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx.cond(9),poolNonLinearR),sumAxx(Axx.cond(8),poolNonLinearL));
+
+    % on-linear spatio-temporal component
+    % long-range
+    sbj(ff,11).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
+    % short range
+    sbj(ff,12).data = computeDiff(sbj(ff,6).data, sbj(ff,10).data);    
     
-%     % differences
-%     sbj(ff,11).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
-%     sbj(ff,12).data = computeDiff(sbj(ff,6).data, sbj(ff,10).data);    
 end
 
 % do the average
@@ -119,6 +121,8 @@ gpCorrection(7).condLabel = 'SR_linearPred';
 gpCorrection(8).condLabel = 'SR_spatialPred';
 gpCorrection(9).condLabel = 'SR_tempPred';
 gpCorrection(10).condLabel = 'SR_spat&tempPred';
+gpCorrection(11).condLabel = 'LR_SPnl';
+gpCorrection(12).condLabel = 'SR_SPnl';
 
 save('correctionAvRef','gpCorrection','cfg')
 
