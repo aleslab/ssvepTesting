@@ -21,7 +21,7 @@ for ff=1:length(listData)
     sbj(ff,1).data = Axx.cond(1);
     
     % linear prediction
-    sbj(ff,2).data = sumAxxWithShift(Axx.cond(2),Axx.cond(3)); %1st is the one to shift, 2nd does not 
+    sbj(ff,2).data = sumAxxWithShift(Axx.cond(3),Axx.cond(2)); %1st is the one to shift, 2nd does not 
     
     % linear prediction + spatial interaction
     % reconstructed LR simultaneous
@@ -33,37 +33,37 @@ for ff=1:length(listData)
     % get half of the interaction term
     halfNonLinearSpatial = multiplyAxx(nonLinearSpatial,0.5);
     % spatial prediction
-    sbj(ff,3).data = sumAxxWithShift(sumAxx(Axx.cond(2),halfNonLinearSpatial),sumAxx(Axx.cond(3),halfNonLinearSpatial));
+    sbj(ff,3).data = sumAxxWithShift(sumAxx(Axx.cond(3),halfNonLinearSpatial),sumAxx(Axx.cond(2),halfNonLinearSpatial));
     
     % linear prediction + temporal interaction
-    % reconstructed LR flash one side (right?)
+    % reconstructed LR flash left
     linearTemp1 = sumAxxWithShift(Axx.cond(2),Axx.cond(2));   
-    % original LR flash right
+    % original LR flash left
     actualTemp1 = Axx.cond(5);  
     % difference
-    nonLinearT1 = computeDiff(actualTemp1,linearTemp1);
+    nonLinearL = computeDiff(actualTemp1,linearTemp1);
      % get half of the interaction term
-    halfNonLinearT1 = multiplyAxx(nonLinearT1,0.5);
-    % reconstructed LR flash one side (left?)
+    halfNonLinearL = multiplyAxx(nonLinearL,0.5);
+    % reconstructed LR flash right
     linearTemp2 = sumAxxWithShift(Axx.cond(3),Axx.cond(3));   
-    % original LR flash left
+    % original LR flash right
     actualTemp2 = Axx.cond(6);  
     % difference and * 0.5
-    halfNonLinearT2 = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
-    % temporal prediciton
-    sbj(ff,4).data = sumAxxWithShift(sumAxx(Axx.cond(2),halfNonLinearT1),sumAxx(Axx.cond(3),halfNonLinearT2));
+    halfNonLinearR = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
+    % temporal prediction
+    sbj(ff,4).data = sumAxxWithShift(sumAxx(Axx.cond(3),halfNonLinearR),sumAxx(Axx.cond(2),halfNonLinearL));
     
     % linear prediction + spatial interaction + temporal interaction 
-    poolNonLinear1 = multiplyAxx(sumAxx(halfNonLinearSpatial,nonLinearT1),0.5);
-    poolNonLinear2 = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearT2),0.5);
-    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx.cond(2),poolNonLinear1),sumAxx(Axx.cond(3),poolNonLinear2));
+    poolNonLinearL = multiplyAxx(sumAxx(halfNonLinearSpatial,nonLinearL),0.5);
+    poolNonLinearR = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearR),0.5);
+    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx.cond(3),poolNonLinearR),sumAxx(Axx.cond(2),poolNonLinearL));
     
     
     % original SR motion
     sbj(ff,6).data = Axx.cond(7);
     
     % linear prediction
-    sbj(ff,7).data = sumAxxWithShift(Axx.cond(8),Axx.cond(9)); %1st is the one to shift, 2nd does not 
+    sbj(ff,7).data = sumAxxWithShift(Axx.cond(9),Axx.cond(8)); %1st is the one to shift, 2nd does not 
     
     % linear prediction + spatial interaction
     % reconstructed SR simultaneous
@@ -75,7 +75,7 @@ for ff=1:length(listData)
     % get half of the interaction term
     halfNonLinearSpatial = multiplyAxx(nonLinearSpatial,0.5);
     % spatial prediction
-    sbj(ff,8).data = sumAxxWithShift(sumAxx(Axx.cond(8),halfNonLinearSpatial),sumAxx(Axx.cond(9),halfNonLinearSpatial));
+    sbj(ff,8).data = sumAxxWithShift(sumAxx(Axx.cond(9),halfNonLinearSpatial),sumAxx(Axx.cond(8),halfNonLinearSpatial));
     
     % linear prediction + temporal interaction
     % reconstructed SR flash one side (right?)
@@ -83,22 +83,22 @@ for ff=1:length(listData)
     % original LR flash right
     actualTemp1 = Axx.cond(11);  
     % difference
-    nonLinearT1 = computeDiff(actualTemp1,linearTemp1);
+    nonLinearL = computeDiff(actualTemp1,linearTemp1);
      % get half of the interaction term
-    halfNonLinearT1 = multiplyAxx(nonLinearT1,0.5);
+    halfNonLinearL = multiplyAxx(nonLinearL,0.5);
     % reconstructed SR flash one side (left?)
     linearTemp2 = sumAxxWithShift(Axx.cond(9),Axx.cond(9));   
     % original LR flash left
     actualTemp2 = Axx.cond(12);  
     % difference and * 0.5
-    halfNonLinearT2 = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
+    halfNonLinearR = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
     % temporal prediciton
-    sbj(ff,9).data = sumAxxWithShift(sumAxx(Axx.cond(8),halfNonLinearT1),sumAxx(Axx.cond(9),halfNonLinearT2));
+    sbj(ff,9).data = sumAxxWithShift(sumAxx(Axx.cond(9),halfNonLinearR),sumAxx(Axx.cond(8),halfNonLinearL));
     
     % linear prediction + spatial interaction + temporal interaction 
-    poolNonLinear1 = multiplyAxx(sumAxx(halfNonLinearSpatial,nonLinearT1),0.5);
-    poolNonLinear2 = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearT2),0.5);
-    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx.cond(8),poolNonLinear1),sumAxx(Axx.cond(9),poolNonLinear2));
+    poolNonLinearL = multiplyAxx(sumAxx(halfNonLinearSpatial,nonLinearL),0.5);
+    poolNonLinearR = multiplyAxx(sumAxx(halfNonLinearSpatial,halfNonLinearR),0.5);
+    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx.cond(9),poolNonLinearR),sumAxx(Axx.cond(8),poolNonLinearL));
     
 %     % differences
 %     sbj(ff,11).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
