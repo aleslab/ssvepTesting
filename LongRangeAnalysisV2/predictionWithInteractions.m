@@ -107,8 +107,14 @@ for ff=1:length(listData)
     
 end
 
+% 
+save('sbjCorrectionAvRef','sbj','cfg')
+
 % do the average
 gpCorrection = averageSbj(sbj);
+
+% compute some stats
+gpCorrection = gpStatT2(sbj,gpCorrection);
 
 %%%%
 gpCorrection(1).condLabel = 'LR_originalmotion';
