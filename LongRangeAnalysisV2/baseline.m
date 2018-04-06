@@ -30,6 +30,7 @@ for cond = 2:5
 end
 
 
+condName = {'L','LS','LT','LST'};
 
 elec = 19;elec=23;
 % long range
@@ -43,6 +44,8 @@ for compCond = 1:4
         baselineDiff(elec,end:-1:1,compCond)+baselineSTD(elec,end:-1:1,compCond) ...
         baselineDiff(elec,1,compCond)-baselineSTD(elec,1,compCond)], 'k','EdgeColor','none','facealpha',0.1);
     plot(gpCorrection(1).time,gpCorrection(1).wave(elec,:) - gpCorrection(compCond+1).wave(elec,:),'r')
+    ylim([-1 1])
+    title(condName{compCond})
 end
 % short range
 figure; hold on;
@@ -55,6 +58,8 @@ for compCond = 1:4
         baselineDiffSR(elec,end:-1:1,compCond)+baselineSTDSR(elec,end:-1:1,compCond) ...
         baselineDiffSR(elec,1,compCond)-baselineSTDSR(elec,1,compCond)], 'k','EdgeColor','none','facealpha',0.1);
     plot(gpCorrection(1).time,gpCorrection(6).wave(elec,:) - gpCorrection(compCond+6).wave(elec,:),'r')
+    ylim([-1 1])
+    title(condName{compCond})
 end
 
 
