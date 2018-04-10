@@ -6,7 +6,6 @@ newFs = cfg.newFs;
 epochLengthSecs = cfg.trialdef.epochLength; % 1.88 s
 trialLengthSecs = cfg.trialdef.trialLength; % 11.67 s
 offset = 0;
-cycleLength = cfg.trialdef.cycleLength*newFs;
 
 % resample the entire trial
 for iTrial = 1:length(datain.trial)
@@ -23,7 +22,8 @@ dataRes = ft_resampledata(resampleCfg, datain);
 % first remove the pre and post stimulus
 numCyclesPerEpoch = round((trialLengthSecs-preStimDuration*2) / epochLengthSecs); 
 for iTrial = 1:length(datain.trial)
-    condition = datain.trialinfo(iTrial);
+    condition = datain.trialinfo(iTrial,1);
+    cycleLength = trialLengthSecs/datain.trialinfo(iTrial,4)*newFs;
     for iCycle = 1:numCyclesPerEpoch
         begsample = round((preStimDuration*newFs+1)+epochLengthSecs*newFs*(iCycle-1)) + trialLengthSecs*newFs*(iTrial-1);
         endsample = begsample + epochLengthSecs*newFs-1;

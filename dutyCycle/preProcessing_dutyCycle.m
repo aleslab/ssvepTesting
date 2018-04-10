@@ -27,14 +27,16 @@ behavFiles = dir([dataDir '*.mat']);
     
     % read the behavioural file 
     load([dataDir behavFiles(ff).name])
-%     tableData = struct2table(experimentData);
-    
-    % save some of the data from the behavioural file into the cfg
-    cfg.trialdef.nbTotalCycles = experimentData(1).trialData.nbTotalCycles;
+% %     tableData = struct2table(experimentData);
+%     
+%     % save some of the data from the behavioural file into the cfg
+%     cfg.trialdef.nbTotalCycles = experimentData(1).trialData.nbTotalCycles;
+
+%%%%%% ONLY variables that are the same in ALL conditions
     cfg.trialdef.preStimDuration = experimentData(1).condInfo.preStimDuration;
     cfg.trialdef.trialLength = experimentData(1).trialData.trialDuration; % full trial (including pre and post 10 s)
-    cfg.trialdef.freqTag = experimentData(1).condInfo.stimTagFreq;
-    cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag;
+%     cfg.trialdef.freqTag = experimentData(1).condInfo.stimTagFreq;
+%     cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag;
     
     % define trials
     cfg.trialdef.bitmask = 2^9-1; %Values to keep.
@@ -56,11 +58,25 @@ behavFiles = dir([dataDir '*.mat']);
     cfg.detrend = 'yes';
     [data] = ft_preprocessing(cfg);
     
+    
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%% fake channel to test the code
+% cfg.channel = 137; % status channel
+% [data] = ft_preprocessing(cfg);
+% bitmask = 2^9-1;
+% myfun = @(x) double(bitand(int32(x),bitmask)); % transform the data into condition numbers
+% test=cellfun(myfun,data.trial,'UniformOutput',0); % do it for each cell of data.trial
+% data.trial = test;
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    
     % resample the data so we have an integer number of samples per cycle
     % and define the trials (trl) based on the resampled data
     cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
     cfg.trialdef.epochLength = 32/85*5; % size of the window for cutting trials (in seconds)
     data = resample_ssvep(cfg,data);
+    
     
     %%%%%%%%%%%%%%%%%%%
     % artefact rejection
