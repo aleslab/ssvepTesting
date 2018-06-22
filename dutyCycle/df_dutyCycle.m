@@ -54,8 +54,11 @@ for iTrial = 1:length(condEventIdx)-1
         for tt=startCond:endCond
             if strcmp(event(tt).type,'STATUS')
                 condSamples = [condSamples, event(tt).sample];
+            elseif isempty(condSamples)
+                fprintf('trial %d CM out of range before trial \n ',iTrial)
+                event(tt).type  
             else
-                fprintf('trial %d CM out of range \n ',iTrial)
+                fprintf('trial %d CM out of range DURING trial \n ',iTrial)
                 event(tt).type  
             end
         end

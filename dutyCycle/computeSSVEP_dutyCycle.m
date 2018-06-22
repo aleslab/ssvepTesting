@@ -11,16 +11,16 @@ dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/cleanData/';
 listData = dir([dataDir '*.mat']);
 dataOut = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
 
-for ff=1:length(listData)
+for ff=7:length(listData)
     
     clear cleanData; clear Axx; clear cfg;
     load([dataDir listData(ff).name]);
     
-    % reref to average
-    cfg.reref         = 'yes';
-    cfg.refchannel    = {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
-    cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
-    [cleanData] = ft_preprocessing(cfg,cleanData);
+%     % reref to average
+%     cfg.reref         = 'yes';
+%     cfg.refchannel    = {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+%     cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+%     [cleanData] = ft_preprocessing(cfg,cleanData);
     
     % compute steady state
     cleanData=rmfield(cleanData,'cfg'); % clear cfg so that the data does not become too heavy
@@ -39,12 +39,19 @@ for ff=1:length(listData)
     %     end
     
     % 1 Axx per sbj
+    cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+    cfg.layout = 'biosemi128.lay';
     allcond = unique(cleanData.trialinfo(:,1));
+    
+    % correct the epoch length for the motion trials
+    motionTrials = find(cleanData.trialinfo(:,1) > 115);
+    cleanData.trialinfo(motionTrials,3) = cleanData.trialinfo(motionTrials,3)*2;
+    
     for cond=1:length(allcond)
         cfg.trials = find(cleanData.trialinfo(:,1) == allcond(cond));
         [Axx(cond)] = ft_steadystateanalysis(cfg, cleanData); % the field elec is present only if a channel has been replaced
     end
-    
+        
     
     % get the condition labels
     testedFreq = [85/8 85/16 85/32]; % in Hz this is the onset of the single stimulus
@@ -56,17 +63,17 @@ for ff=1:length(listData)
             condNb = condNb+1;
         end
     end
-    
-    testedFreq = [85/32 85/16 85/8 85/16 85/32]; % in Hz this is the onset of the single stimulus
+    testedFreq = [85/32 85/16 85/8 85/16 85/32]; 
     onTime = [1 2 4 6 7];
     for tt = 1:length(testedFreq)
-        Axx(condNb).condLabel = ['motion ' num2str(testedFreq(tt),'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC'];
+        % freq/2 so that it is for the 2 stimuli (only 1 in the experiment) 
+        Axx(condNb).condLabel = ['motion ' num2str(testedFreq(tt)/2,'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC']; 
         condNb = condNb+1;
     end
     
-    Axx(condNb).condLabel = ['motion ' num2str(85/32,'%.1f') 'Hz 50% DC'];
-    Axx(condNb+1).condLabel = ['motion ' num2str(85/16,'%.1f') 'Hz 50% DC'];
-    save([dataOut 'Axx_' listData(ff).name(11:13)],'Axx')
+    Axx(condNb).condLabel = ['motion ' num2str(85/(32*2),'%.1f') 'Hz 50% DC'];
+    Axx(condNb+1).condLabel = ['motion ' num2str(85/(16*2),'%.1f') 'Hz 50% DC'];
+    save([dataOut 'Axx_' listData(ff).name(11:21)],'Axx')
     
 end
 

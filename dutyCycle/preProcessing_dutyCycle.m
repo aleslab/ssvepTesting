@@ -21,12 +21,23 @@ behavFiles = dir([dataDir '*.mat']);
 % channel used for artefact rejection
 % artefactChannel = {'EXG2'};
 
-% for ff=1 % length(eegFiles)
-%     clear data, clear cfg, clear cleanData;
+% for ff=1:length(eegFiles) 
+    clear data, clear cfg, clear cleanData;
     cfg.dataset   =  [dataDir eegFiles(ff).name];
     
     % read the behavioural file 
-    load([dataDir behavFiles(ff).name])
+    % because some sbj have many behav files, cannot just get the ff file
+%     load([dataDir behavFiles(ff).name])
+    
+    ll=0;bb=ff;
+    while ll==0
+        if str2num(behavFiles(bb).name(19:20))== ff+1 % +1 cause there is no S01 (starts at S02)
+            load([dataDir behavFiles(bb).name])
+            ll=1;
+        end
+        bb=bb+1;
+    end
+    
 % %     tableData = struct2table(experimentData);
 %     
 %     % save some of the data from the behavioural file into the cfg
@@ -59,6 +70,16 @@ behavFiles = dir([dataDir '*.mat']);
     [data] = ft_preprocessing(cfg);
     
     
+%     %%%%%%%%% Changing config file is not enough!
+%     data.label{12} = 'A12';
+%     data.label{29} = 'A29';
+    for dd=1:length(data.trial)
+    tmpChan12 = data.trial{1,dd}(12,:);
+    tmpChan29 = data.trial{1,dd}(29,:);
+    data.trial{1,dd}(12,:) = tmpChan29;
+    data.trial{1,dd}(29,:) = tmpChan12;
+    end
+
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % %%% fake channel to test the code
@@ -74,26 +95,28 @@ behavFiles = dir([dataDir '*.mat']);
     % resample the data so we have an integer number of samples per cycle
     % and define the trials (trl) based on the resampled data
     cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
-    cfg.trialdef.epochLength = 32/85*5; % size of the window for cutting trials (in seconds)
+    cfg.trialdef.epochLength = 32/85*6; % size of the window for cutting trials (in seconds)
     data = resample_ssvep(cfg,data);
     
-    
+%     save(['/Users/marleneponcet/Documents/data/dutyCycle/toClean/' eegFiles(ff).name(1:end-4) '_toClean'],'data','cfg')
+% end
+
     %%%%%%%%%%%%%%%%%%%
     % artefact rejection
     % first check for extrem channels/trials
-    cfg.layout = 'biosemi128.lay';
-    cfg.method = 'distance';
-    cfg.neighbours = ft_prepare_neighbours(cfg, data);
-    
-    cfg.method = 'summary';
-    cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
-    [data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
-    
+        cfg.layout = 'biosemi128.lay';
+        cfg.method = 'distance';
+        cfg.neighbours = ft_prepare_neighbours(cfg, data);
+
+        cfg.method = 'summary';
+        cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
+        [data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
+
     %     %Eye blink detection and rejection
     %     cfg.artfctdef.eog.trlpadding   = 0.1;
     %     cfg.artfctdef.eog.fltpadding   = 0.1;
     %     cfg.artfctdef.eog.artpadding   = 0.1;
-    %     cfg.artfctdef.eog.channel = artefactChannel{ff};
+    %     cfg.artfctdef.eog.channel = artefactChannel{ff};  
     %     cfg.artfctdef.eog.interactive = 'yes'; % threshold,
     %     % cfg.artfctdef.eog.bpfreq     = [1 15];
     %     % cfg.artfctdef.eog.bpfiltord  = 4;
@@ -108,16 +131,14 @@ behavFiles = dir([dataDir '*.mat']);
     % %     find(diff>80);
     
     % do the cleaning on 16 channels cap + 4 electrodes around the eyes
-    % (C28,C29,C17,C18)
-    cfg.viewmode = 'vertical';
     cfg.channel =  {'C28','C29','C30','C16','C17','C18','C4','C21','D4','D23','D19','A1','B22','B26','B4','A19','A7','A15','A23','A28','EXG2', 'EXG3','EXG4'}; % {'fp1','fp2','p4','fz','f3','t7','c3','cz','c4','t8','p4','pz','p3','o1','oz','o2'}
+    cfg.viewmode = 'vertical';
     cfg = ft_databrowser(cfg,data);
     cfg.artfctdef.reject = 'complete';
     [cleanData] = ft_rejectartifact(cfg, data);
     
     save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData')
 % end
-
 
 end
 %
