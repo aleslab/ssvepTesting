@@ -27,9 +27,8 @@ end
 % sum all the harmonics and divide by the neighbouring harmonics
 % doesn't give the same results if do the snr per cond then average across
 % cond 
-for ss = 1:size(dataSbj,2)
-    signal=0;noise=0;
-    for cond = 1:length(dataSbj)
+for ss = 1:length(dataSbj)
+    for cond = 1:15
         nbHarm = 0;
         currentHarm=1;
         currentFq = (dataSbj(cond,ss).i1f1-1)*currentHarm+1;
@@ -47,8 +46,8 @@ figure
 for ss=1:size(dataSbj,2)
 subplot(3,5,ss); hold on;
 plotTopo(snr(:,ss),cfg.layout);
-colorbar; 
-% caxis([1 3.5]);
+% colorbar; 
+caxis([1 4.5]);
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 2000 2500])
@@ -57,7 +56,7 @@ saveas(gcf,'snrSbj.jpg')
 
 %% average
 keepSbj = [1:size(dataSbj,2)]; % reject S6?
-keepSbj = [1:5 7:11 13:15]; 
+keepSbj = [1:5 7 9:11 13:15]; 
 
 avData = averageAxx(dataSbj(:,keepSbj));
 
@@ -100,9 +99,9 @@ for cond=1:15
     caxis([0 1.8]); 
 end
 colorbar;
-    set(gcf,'PaperPositionMode','auto')
-    set(gcf, 'Position', [0 0 2000 2500])
-    saveas(gcf,'f2topo.jpg')
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 2000 2500])
+saveas(gcf,'f2topo.jpg')
 % set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
 %% f3
 figure;

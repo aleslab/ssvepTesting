@@ -7,11 +7,11 @@ addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 ft_defaults
 
-dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/cleanData/';
+dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/cleanData/';
 listData = dir([dataDir '*.mat']);
-dataOut = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
+dataOut = '/Users/marleneponcet/Documents/data/LRshortDC/V2/Axx/';
 
-for ff=12:length(listData)
+for ff=7:length(listData)
     
     clear cleanData; clear Axx; clear cfg;
     load([dataDir listData(ff).name]);
@@ -43,9 +43,6 @@ for ff=12:length(listData)
     cfg.layout = 'biosemi128.lay';
     allcond = unique(cleanData.trialinfo(:,1));
     
-    % correct the epoch length for the motion trials
-    motionTrials = find(cleanData.trialinfo(:,1) > 115);
-    cleanData.trialinfo(motionTrials,3) = cleanData.trialinfo(motionTrials,3)*2;
     
     for cond=1:length(allcond)
         cfg.trials = find(cleanData.trialinfo(:,1) == allcond(cond));
@@ -54,26 +51,17 @@ for ff=12:length(listData)
         
     
     % get the condition labels
-    testedFreq = [85/8 85/16 85/32]; % in Hz this is the onset of the single stimulus
-    onTime = [1 2 4 6 7];
-    condNb = 1;
-    for testFq=1:length(testedFreq)
-        for tt = 1:length(onTime)
-            Axx(condNb).condLabel = [num2str(testedFreq(testFq),'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC'];
-            condNb = condNb+1;
-        end
-    end
-    testedFreq = [85/32 85/16 85/8 85/16 85/32]; 
-    onTime = [1 2 4 6 7];
-    for tt = 1:length(testedFreq)
-        % freq/2 so that it is for the 2 stimuli (only 1 in the experiment) 
-        Axx(condNb).condLabel = ['motion ' num2str(testedFreq(tt)/2,'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC']; 
-        condNb = condNb+1;
+    aa = {'Long','Short'}; bb=[0 6];
+    for tt=1:2
+    Axx(1+bb(tt)).condLabel = [aa{tt} 'Motion'];
+    Axx(2+bb(tt)).condLabel = [aa{tt} 'Left'];
+    Axx(3+bb(tt)).condLabel = [aa{tt} 'Right'];
+    Axx(4+bb(tt)).condLabel = [aa{tt} 'Simult'];
+    Axx(5+bb(tt)).condLabel = [aa{tt} 'HalfLeft'];
+    Axx(6+bb(tt)).condLabel = [aa{tt} 'HalfRight'];
     end
     
-    Axx(condNb).condLabel = ['motion ' num2str(85/(32*2),'%.1f') 'Hz 50% DC'];
-    Axx(condNb+1).condLabel = ['motion ' num2str(85/(16*2),'%.1f') 'Hz 50% DC'];
-    save([dataOut 'Axx_' listData(ff).name(11:21)],'Axx')
+    save([dataOut 'Axx_' listData(ff).name(1:15)],'Axx')
     
 end
 
