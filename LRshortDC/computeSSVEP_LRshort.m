@@ -5,13 +5,14 @@ clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
 dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/cleanData/';
 listData = dir([dataDir '*.mat']);
 dataOut = '/Users/marleneponcet/Documents/data/LRshortDC/V2/Axx/';
 
-for ff=7:length(listData)
+for ff=1:length(listData)
     
     clear cleanData; clear Axx; clear cfg;
     load([dataDir listData(ff).name]);

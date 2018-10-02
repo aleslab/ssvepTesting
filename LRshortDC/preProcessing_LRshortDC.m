@@ -50,7 +50,7 @@ behavFiles = dir([dataDir '*.mat']);
     cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
 %    cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
     cfg.lpfilter  = 'yes';
-    cfg.lpfreq = 85; % screen 85Hz ...  49 would really clear noise, not 85
+    cfg.lpfreq = 85; % 85; % screen 85Hz ...  49 would really clear noise, not 85
     cfg.hpfreq = 1;
     cfg.hpfilter = 'no'; % does NOT work anyway
     cfg.detrend = 'yes';
@@ -131,7 +131,7 @@ behavFiles = dir([dataDir '*.mat']);
     % %         diff(tt) = max(abs(data.trial{1,tt}(131,:)-data.trial{1,tt}(132,:))); % EXG3 and 4
     % %     end
     % %     find(diff>80);
-    
+     
     % do the cleaning on 16 channels cap + 4 electrodes around the eyes
     cfg.channel =  {'C28','C29','C30','C16','C17','C18','C4','C21','D4','D23','D19','A1','B22','B26','B4','A19','A7','A15','A23','A28','EXG2', 'EXG3','EXG4'}; % {'fp1','fp2','p4','fz','f3','t7','c3','cz','c4','t8','p4','pz','p3','o1','oz','o2'}
     cfg.viewmode = 'vertical';
