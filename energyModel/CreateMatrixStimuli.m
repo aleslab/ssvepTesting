@@ -6,20 +6,13 @@ stimWidth = 8;
 
 % try a moving stim with same dim as the real stim
 % timeLength=1504ms = 2 left-right cycles in motion
-% small = diag(ones(1,stimWidth));
-% stim=[];
-% while length(stim)<1500
-%     stim = [stim;small];
-% end
-% figure;imagesc(stim)
-cycle=ones(8,8);
-cycle(5:8,5:8)=zeros(4,4);
+small = diag(ones(1,stimWidth));
 stim=[];
-while length(stim)<1500
-    stim = [stim;cycle];
+while length(stim)<100
+    stim = [stim;small];
 end
 figure;imagesc(stim)
-save('test.mat','stim');
+save('test','stim')
 
 
 % STATIC conditions
@@ -65,13 +58,13 @@ for tc=1:length(totalCycle)
             fullcycleL = [fullcycleL;cycleLeft];
             fullcycleR = [fullcycleR;cycleRight];
         end
-        stim = zeros(length(fullcycle),stimWidth);
+        stim = zeros(length(fullcycleL),stimWidth);
         stim(:,3) = fullcycleL;
         stim(:,4) = fullcycleL;
         stim(:,6) = fullcycleR;
         stim(:,7) = fullcycleR;
         figure;imagesc(stim)
-        save(['motion' num2str(condition,'%.2d') '.mat'],'stim');
+%         save(['motion' num2str(condition,'%.2d') '.mat'],'stim');
     end
 end
 % conditions 1,2,4,5,6,10,12,14 were not presented in the experiment
