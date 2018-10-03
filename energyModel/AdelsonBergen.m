@@ -82,7 +82,7 @@ stim_width=4;  %half width in degrees, gives 8 degrees total
 x_stim=-stim_width:dx:round(stim_width-dx);
 
 % TIME: t_stim is a col vector to hold sampled time intervals of the space
-stim_dur=1.5;    %total duration of the stimulus in seconds
+stim_dur=1.6;    %total duration of the stimulus in seconds
 t_stim=(0:dt:round(stim_dur-dt))';
 
 % Step 3b Load a stimulus
