@@ -20,7 +20,11 @@ for i=1:length(event)
         continue;
     end
     
+%     if i==1
+%         thisMaskedVal = 109;
+%     else
     thisMaskedVal = bitand(event(i).value,bitmask);
+%     end
     
     if thisMaskedVal>=condRange(1) && thisMaskedVal<=condRange(2)
         condEventIdx(idx) = i;

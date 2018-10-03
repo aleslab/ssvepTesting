@@ -10,7 +10,7 @@ shift.wave = circshift(AxxToShift.wave,[0 length(AxxToShift.wave)/2]);
 % for this needs the phase shift calculated for each frequency
 % phase shift = shift (200 ms) / periods * 360 degrees
 periods = 1 ./ AxxToShift.freq;
-phaseShift = 0.2 ./ periods .* 360;
+phaseShift = AxxToShift.time(end/2+1)/1000 ./ periods .* 360; 
 
 % trigonometry.. 
 % cos' = A*cos(theta + phi) = cos(theta)*alpha*cos(phi)
