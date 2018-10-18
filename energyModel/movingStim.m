@@ -6,7 +6,10 @@ clearvars;
 
 %%% 2.5 Hz
 f1 = [ones(40,50) zeros(40,150)];
-mouv(:,:,3) = [f1; circshift(f1,50,2); circshift(f1,100,2); circshift(f1,150,2)];
+mouv(:,:,3) = [f1; circshift(f1,20,2); circshift(f1,40,2); circshift(f1,60,2)];
+% test = [mouv(:,:,3) mouv(:,:,3)*0;...
+%     0*mouv(:,:,3) mouv(:,:,3)];
+% figure;imagesc(test)
 figure;imagesc(mouv(:,:,3))
 
 %%% 5 Hz

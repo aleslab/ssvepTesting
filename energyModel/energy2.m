@@ -1,5 +1,5 @@
 
-function [total_energy, motion_energy, energy_flicker, motion_contrast, peak] = energy(stim)
+function [energy_right, energy_left] = energy2(stim)
 
 
 % Implementation of the Adelson & Bergen (1985) motion energy model.
@@ -102,45 +102,45 @@ resp_right_2 = resp_right_2.^2;
 % Calc left and right energy
 energy_right= resp_right_1 + resp_right_2;
 energy_left= resp_left_1 + resp_left_2;
-
-% Calc total energy
-total_energy = sum(sum(energy_right))+sum(sum(energy_left));
-
-% Normalise each directional o/p by total output
-RR1 = sum(sum(resp_right_1))/total_energy;
-RR2 = sum(sum(resp_right_2))/total_energy;
-LR1 = sum(sum(resp_left_1))/total_energy;
-LR2 = sum(sum(resp_left_2))/total_energy;
-%--------------------------------------------------------------------------
-%         STEP 6: Sum the paired filters in each direction
-%--------------------------------------------------------------------------
-right_Total = RR1+RR2;
-left_Total = LR1+LR2;
-%--------------------------------------------------------------------------
-
-%--------------------------------------------------------------------------
-%         STEP 7: Calculate net energy as the R-L difference
-%--------------------------------------------------------------------------
-motion_energy = right_Total - left_Total;
-
-
-% Plot the output:
-%   Generate motion contrast matrix
-energy_opponent = energy_right - energy_left; % L-R difference matrix
-[xv yv] = size(energy_left); % Get the size of the response matrix
-energy_flicker = total_energy/(xv * yv); % A value for average total energy
-
-% Re-scale (normalize) each pixel in the L-R matrix using average energy.
-motion_contrast = energy_opponent/energy_flicker;
-
-% Plot, scaling by max L or R value
-mc_max = max(max(motion_contrast));
-mc_min = min(min(motion_contrast));
-if (abs(mc_max) > abs(mc_min))
-    peak = abs(mc_max);
-else
-    peak = abs(mc_min);
-end
+% 
+% % Calc total energy
+% total_energy = sum(sum(energy_right))+sum(sum(energy_left));
+% 
+% % Normalise each directional o/p by total output
+% RR1 = sum(sum(resp_right_1))/total_energy;
+% RR2 = sum(sum(resp_right_2))/total_energy;
+% LR1 = sum(sum(resp_left_1))/total_energy;
+% LR2 = sum(sum(resp_left_2))/total_energy;
+% %--------------------------------------------------------------------------
+% %         STEP 6: Sum the paired filters in each direction
+% %--------------------------------------------------------------------------
+% right_Total = RR1+RR2;
+% left_Total = LR1+LR2;
+% %--------------------------------------------------------------------------
+% 
+% %--------------------------------------------------------------------------
+% %         STEP 7: Calculate net energy as the R-L difference
+% %--------------------------------------------------------------------------
+% motion_energy = right_Total - left_Total;
+% 
+% 
+% % Plot the output:
+% %   Generate motion contrast matrix
+% energy_opponent = energy_right - energy_left; % L-R difference matrix
+% [xv yv] = size(energy_left); % Get the size of the response matrix
+% energy_flicker = total_energy/(xv * yv); % A value for average total energy
+% 
+% % Re-scale (normalize) each pixel in the L-R matrix using average energy.
+% motion_contrast = energy_opponent/energy_flicker;
+% 
+% % Plot, scaling by max L or R value
+% mc_max = max(max(motion_contrast));
+% mc_min = min(min(motion_contrast));
+% if (abs(mc_max) > abs(mc_min))
+%     peak = abs(mc_max);
+% else
+%     peak = abs(mc_min);
+% end
 
 end
 
