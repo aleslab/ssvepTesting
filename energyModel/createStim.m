@@ -86,6 +86,12 @@ left_Total = LR1+LR2;
 motion_energy = right_Total - left_Total;
 motionEnergy(tt,ss) = motion_energy;
 
+%   Generate motion contrast matrix
+energy_opponent = energy_right - energy_left; % L-R difference matrix
+[xv yv] = size(energy_left); % Get the size of the response matrix
+energy_flicker = total_energy/(xv * yv); % A value for average total energy
+flickerEnergy(tt,ss) = energy_flicker;
+
 if ss == 1 || ss==size(allStim,3)/2 || ss==size(allStim,3)
 % Plot the stimulus
 figure; 
@@ -98,12 +104,6 @@ axis equal
 title('Stimulus');
 
 % Plot the output:
-%   Generate motion contrast matrix
-energy_opponent = energy_right - energy_left; % L-R difference matrix
-[xv yv] = size(energy_left); % Get the size of the response matrix
-energy_flicker = total_energy/(xv * yv); % A value for average total energy
-flickerEnergy(tt,ss) = energy_flicker;
-
 % Re-scale (normalize) each pixel in the L-R matrix using average energy.
 motion_contrast = energy_opponent/energy_flicker;
 

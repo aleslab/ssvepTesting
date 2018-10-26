@@ -143,7 +143,7 @@ for dd=1:length(dataIn) % 2 experiments
                 plot(avInteractions(cc+3*(ss-1)).time,avInteractions(cc+3*(ss-1)).filteredWave(elec(ee),:),colDiff{cc},'LineWidth',2);
             end
             plot([0 400],[0 0],'--k')
-            ylim([-3 3])
+            ylim([-6 3])
             xlabel('time (ms)')
             ylabel('amplitude')
             title(['electrode' num2str(elec(ee)) titolo{ss}])
@@ -156,6 +156,17 @@ for dd=1:length(dataIn) % 2 experiments
         
     end
     
+%     %%% check spatio-temporal interactions
+%     figure;hold on;
+%     for cc=[1 2 3 7 8]
+%         plot(avInteractions(cc).time,avInteractions(cc).filteredWave(elec(ee),:),'LineWidth',2);
+%     end
+%     legend('spatial','templeft','tempright','SPl','SPr')
+%     figure;hold on;
+%     for cc=[4 5 6 9 10]
+%         plot(avInteractions(cc).time,avInteractions(cc).filteredWave(elec(ee),:),'LineWidth',2);
+%     end
+%     legend('spatial','templeft','tempright','SPl','SPr')
     
     
     %%%%%% plot predictions
@@ -194,8 +205,8 @@ for dd=1:length(dataIn) % 2 experiments
         title(['electrode' num2str(elec(ee))])
         legend('linear','spatial','temp','spatial+temp')
         if saveplot
-            saveas(gcf,[labelIn{dd} 'predict' titolo{ss} num2str(elec(ee)) '.pdf'],'pdf')
-            saveas(gcf,[labelIn{dd} 'predict' titolo{ss} num2str(elec(ee)) '.fig'],'fig')
+            saveas(gcf,[labelIn{dd} 'diff' titolo{ss} num2str(elec(ee)) '.pdf'],'pdf')
+            saveas(gcf,[labelIn{dd} 'diff' titolo{ss} num2str(elec(ee)) '.fig'],'fig')
         end
         end
     end
