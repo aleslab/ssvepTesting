@@ -270,8 +270,47 @@ title('Av Energy')
 if mm==1
     saveas(gcf,'Static.png')
 else
-    saveas(gcf,'Mouving.png')
+    saveas(gcf,'Moving.png')
 end
 % saveas(gcf,['Swidth' num2str(max_x) '-Sfreq' num2str(sf) '-Timp' num2str(max_t) '-Tbeta' num2str(beta) '-Twidth' num2str(slow_n) '.png'])
 end
 %%
+
+
+
+%% PLOT VSS
+col={'b','r','g'};
+
+figure;hold on;
+for mm =1:2
+    subplot(2,3,1+3*(mm-1));hold on;
+    for cc=1:3
+        plot(amp(cc,:,mm),col{cc},'LineWidth',2)
+    end
+    legend('10','5','2.5','Location','best')
+    xticks([0:5:20]);
+    xticklabels({'0','25','50','75','100'})
+    ylim([0 500])
+    ylabel('Energy Amplitude')
+    xlabel('Duty Cycle')
+    subplot(2,3,2+3*(mm-1));hold on;
+    for cc=1:3
+        plot(maxEnergy(cc,:,mm),col{cc},'LineWidth',2)
+    end
+    ylabel('Max Energy')
+    ylim([0 500])
+    xticks([0:5:20]);
+    xticklabels({'0','25','50','75','100'})
+    xlabel('Duty Cycle')
+    subplot(2,3,3+3*(mm-1));hold on;
+    for cc=1:3
+        plot(avEnergy(cc,:,mm),col{cc},'LineWidth',2)
+    end
+    xticks([0:5:20]);
+    xticklabels({'0','25','50','75','100'})
+    ylabel('Av Energy')
+    xlabel('Duty Cycle')
+end
+saveas(gcf,'Energy.png')
+saveas(gcf,'Energy.eps','epsc')
+
