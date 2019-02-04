@@ -63,9 +63,9 @@ for ff=1:length(listData)
     sbjDiff(ff,3).data = computeDiff(sbj(ff,1).data,sbj(ff,4).data); 
 
     % linear prediction + spatial interaction + temporal interaction 
-    poolNonLinearL = sumAxx(halfNonLinearSpatial,halfNonLinearL);
-    poolNonLinearR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
-    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx(2),poolNonLinearL),sumAxx(Axx(3),poolNonLinearR));
+    poolNonLinearL_LR = sumAxx(halfNonLinearSpatial,halfNonLinearL);
+    poolNonLinearR_LR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
+    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx(2),poolNonLinearL_LR),sumAxx(Axx(3),poolNonLinearR_LR));
      % difference recorded motion - full prediction
     sbjDiff(ff,4).data = computeDiff(sbj(ff,1).data,sbj(ff,5).data); 
     
@@ -109,27 +109,29 @@ for ff=1:length(listData)
     % difference and * 0.5
     interaction(ff,6).data = computeDiff(actualTemp2,linearTemp2);
     halfNonLinearR = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
-    % temporal prediciton
+    % temporal prediction
     sbj(ff,9).data = sumAxxWithShift(sumAxx(Axx(8),halfNonLinearL),sumAxx(Axx(9),halfNonLinearR));
     % difference recorded motion - prediction
     sbjDiff(ff,7).data = computeDiff(sbj(ff,6).data,sbj(ff,9).data); 
     
     % linear prediction + spatial interaction + temporal interaction 
-    poolNonLinearL = sumAxx(halfNonLinearSpatial,halfNonLinearL);
-    poolNonLinearR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
-    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx(8),poolNonLinearL),sumAxx(Axx(9),poolNonLinearR));
+    poolNonLinearL_SR = sumAxx(halfNonLinearSpatial,halfNonLinearL);
+    poolNonLinearR_SR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
+    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx(8),poolNonLinearL_SR),sumAxx(Axx(9),poolNonLinearR_SR));
     % difference recorded motion - prediction
     sbjDiff(ff,8).data = computeDiff(sbj(ff,6).data,sbj(ff,10).data); 
     
+    % Not "real" non-linear component but useful for checks 
+    interaction(ff,7).data = poolNonLinearL_LR;
+    interaction(ff,8).data = poolNonLinearR_LR;
+    interaction(ff,9).data = poolNonLinearL_SR;
+    interaction(ff,10).data = poolNonLinearR_SR;    
+
     % non-linear spatio-temporal component
     % long-range
-%     sbj(ff,11).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
-    interaction(ff,7).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
-    sbj(ff,11).data = interaction(ff,7).data;
+    sbj(ff,11).data = computeDiff(sbj(ff,1).data, sbj(ff,5).data);
     % short range
-%     sbj(ff,12).data = computeDiff(sbj(ff,6).data, sbj(ff,10).data);    
-    interaction(ff,8).data = computeDiff(sbj(ff,6).data, sbj(ff,10).data);    
-    sbj(ff,12).data = interaction(ff,8).data;
+    sbj(ff,12).data = computeDiff(sbj(ff,6).data, sbj(ff,10).data);    
 end
 
 
@@ -138,10 +140,27 @@ save('sbjDiff','sbjDiff','cfg')
 save('NLinteraction','interaction','cfg')
 
 
-% 
-% 
-% 
-% 
+
+figure;hold on;
+plot(halfNonLinearL.wave(23,:),'LineWidth',2);
+plot(halfNonLinearR.wave(23,:),'LineWidth',2);
+plot(halfNonLinearSpatial.wave(23,:),'LineWidth',2);
+plot(poolNonLinearL_SR.wave(23,:),'LineWidth',2);
+plot(poolNonLinearR_SR.wave(23,:),'LineWidth',2);
+ylim([-6 6])
+legend('0.5Tl','0.5Tr','0.5S','suml','sumr')
+
+figure;hold on;
+plot(nonLinearL.wave(23,:),'LineWidth',2);
+plot(interaction(14,6).data.wave(23,:),'LineWidth',2);
+plot(nonLinearSpatial.wave(23,:),'LineWidth',2);
+plot(poolNonLinearL_SR.wave(23,:),'LineWidth',2);
+plot(poolNonLinearR_SR.wave(23,:),'LineWidth',2);
+ylim([-6 6])
+legend('Tl','Tr','S','suml','sumr')
+
+
+
 % 
 % % do the average
 % gpPred = averageSbj(sbj);

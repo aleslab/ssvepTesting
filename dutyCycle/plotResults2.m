@@ -3,6 +3,7 @@ clearvars
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork  
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
 
@@ -21,12 +22,46 @@ end
 % keepSbj = [1:size(dataSbj,2)]; 
 keepSbj = [1:5 7:11 13:15]; % (there is no S1) reject S7 and S12: just noise?
 
-[avData, proj_Amp] = averageAxxWithSdt(dataSbj(:,keepSbj));
+[avData, proj_Amp] = averageAxxWithStd(dataSbj(:,keepSbj));
 
 col={'b','r','g'};
 
 pickElec = 23; % 23 Oz, 9, B6=38, 16=best SNR
 
+
+%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% Topography
+% flicker
+figure; hold on;
+for cond=1:15 
+    subplot(3,5,cond); hold on;
+    plotTopo(avData(cond).amp(:,avData(cond).i1f1),cfg.layout);
+    colorbar
+    if cond < 6
+        caxis([0 1.5]);
+    else
+        caxis([0 2.5]);
+    end
+end
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 1500 1000])
+saveas(gcf,'topoFlickF1.jpg')
+% motion
+position = [11 7 3 9 15 13 8];
+figure; hold on;
+for cond=16:length(avData) 
+    subplot(3,5,position(cond-15)); hold on;
+    plotTopo(avData(cond).amp(:,avData(cond).i1f1*2-1),cfg.layout);
+    colorbar
+    if cond < 6
+        caxis([0 1.5]);
+    else
+        caxis([0 2.5]);
+    end
+end
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 1500 1000])
+saveas(gcf,'topoMotionF2.jpg')
 
 %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%% SSVEP
