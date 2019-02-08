@@ -5,7 +5,7 @@ clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
-addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFuntions
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
 % addpath C:\Users\Marlene\Documents\git\fieldtrip-aleslab-fork
