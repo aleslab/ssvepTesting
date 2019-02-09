@@ -9,7 +9,7 @@ behavFiles = dir([dataDir '*.mat']);
 
 
 keepSBJ = 1:length(behavFiles);
-keepSBJ = [1:5 7 9:11 13:15]; 
+keepSBJ = [1:5 7:11 13:15]; 
 
 
 

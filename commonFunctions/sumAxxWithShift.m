@@ -1,7 +1,9 @@
-function [motion] = sumAxxWithShift(AxxToShift,AxxNoChange)
+function [motion] = sumAxxWithShift(AxxToShift,AxxNoChange,reshaping)
 % input 2 Axx files, 1st is the one to shift in time, the 2nd is not
 % shifted, then the 2 signals are summed
 % output the sum of the 2 signals
+% reshaping = optional argument = new reshape time window if the output needs to be reshaped to a new time
+% window (cycle)
 
 % compute the new Axx with a shift in time of 200 ms (half cycle)
 % first for the wave
@@ -27,6 +29,15 @@ motion.sin = AxxNoChange.sin + shift.sin;
 motion.cos = AxxNoChange.cos + shift.cos;
 motion.amp = sqrt(motion.sin.^2 + motion.cos.^2);
 
+if nargin == 3 
+    for ch=1:size(motion.wave,1)
+        shortWave(ch,:,:) = reshape(motion.wave(ch,:),reshaping,[])';
+    end
+    motion.wave = squeeze(mean(shortWave,2));
+    motion.time = AxxNoChange.time(1:reshaping);
+else
+    motion.time = AxxNoChange.time;
+end
 
 % values that do not change
 motion.nt = AxxNoChange.nt;

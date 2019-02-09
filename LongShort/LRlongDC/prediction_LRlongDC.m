@@ -4,10 +4,12 @@ clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
 % dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V1/Axx/';
-dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/Axx/';
+dataDir = '/Users/marleneponcet/Documents/data/LongRangeV2/Axx/';
+outDir = '/Users/marleneponcet/Documents/data/LongRangeV2/';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
@@ -21,7 +23,7 @@ for ff=1:length(listData)
     sbj(ff,1).data = Axx(1);
     
     % linear prediction
-    sbj(ff,2).data = sumAxxWithShift(Axx(2),Axx(3)); %1st is the one to shift, 2nd does not 
+    sbj(ff,2).data = sumAxxWithShift(Axx(3),Axx(2)); %1st is the one to shift, 2nd does not 
     % difference recorded motion - linear prediction
     sbjDiff(ff,1).data = computeDiff(sbj(ff,1).data,sbj(ff,2).data); 
     
@@ -36,7 +38,7 @@ for ff=1:length(listData)
     % get half of the interaction term
     halfNonLinearSpatial = multiplyAxx(nonLinearSpatial,0.5);
     % spatial prediction
-    sbj(ff,3).data = sumAxxWithShift(sumAxx(Axx(2),halfNonLinearSpatial),sumAxx(Axx(3),halfNonLinearSpatial));
+    sbj(ff,3).data = sumAxxWithShift(sumAxx(Axx(3),halfNonLinearSpatial),sumAxx(Axx(2),halfNonLinearSpatial));
     % difference recorded motion - linear+spatial prediction
     sbjDiff(ff,2).data = computeDiff(sbj(ff,1).data,sbj(ff,3).data); 
     
@@ -58,22 +60,22 @@ for ff=1:length(listData)
     interaction(ff,3).data = computeDiff(actualTemp2,linearTemp2);
     halfNonLinearR = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
     % temporal prediction
-    sbj(ff,4).data = sumAxxWithShift(sumAxx(Axx(2),halfNonLinearL),sumAxx(Axx(3),halfNonLinearR));
+    sbj(ff,4).data = sumAxxWithShift(sumAxx(Axx(3),halfNonLinearR),sumAxx(Axx(2),halfNonLinearL));
     % difference recorded motion - linear+temporal prediction
     sbjDiff(ff,3).data = computeDiff(sbj(ff,1).data,sbj(ff,4).data); 
-
+    
     % linear prediction + spatial interaction + temporal interaction 
     poolNonLinearL = sumAxx(halfNonLinearSpatial,halfNonLinearL);
     poolNonLinearR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
-    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx(2),poolNonLinearL),sumAxx(Axx(3),poolNonLinearR));
-     % difference recorded motion - full prediction
+    sbj(ff,5).data = sumAxxWithShift(sumAxx(Axx(3),poolNonLinearR),sumAxx(Axx(2),poolNonLinearL));
+    % difference recorded motion - full prediction
     sbjDiff(ff,4).data = computeDiff(sbj(ff,1).data,sbj(ff,5).data); 
     
     % original SR motion
     sbj(ff,6).data = Axx(7);
     
     % linear prediction
-    sbj(ff,7).data = sumAxxWithShift(Axx(8),Axx(9)); %1st is the one to shift, 2nd does not 
+    sbj(ff,7).data = sumAxxWithShift(Axx(9),Axx(8)); %1st is the one to shift, 2nd does not 
     % difference recorded motion - prediction
     sbjDiff(ff,5).data = computeDiff(sbj(ff,6).data,sbj(ff,7).data); 
     
@@ -88,7 +90,7 @@ for ff=1:length(listData)
     % get half of the interaction term
     halfNonLinearSpatial = multiplyAxx(nonLinearSpatial,0.5);
     % spatial prediction
-    sbj(ff,8).data = sumAxxWithShift(sumAxx(Axx(8),halfNonLinearSpatial),sumAxx(Axx(9),halfNonLinearSpatial));
+    sbj(ff,8).data = sumAxxWithShift(sumAxx(Axx(9),halfNonLinearSpatial),sumAxx(Axx(8),halfNonLinearSpatial));
     % difference recorded motion - prediction
     sbjDiff(ff,6).data = computeDiff(sbj(ff,6).data,sbj(ff,8).data); 
     
@@ -110,14 +112,14 @@ for ff=1:length(listData)
     interaction(ff,6).data = computeDiff(actualTemp2,linearTemp2);
     halfNonLinearR = multiplyAxx(computeDiff(actualTemp2,linearTemp2),0.5);    
     % temporal prediciton
-    sbj(ff,9).data = sumAxxWithShift(sumAxx(Axx(8),halfNonLinearL),sumAxx(Axx(9),halfNonLinearR));
+    sbj(ff,9).data = sumAxxWithShift(sumAxx(Axx(9),halfNonLinearR),sumAxx(Axx(8),halfNonLinearL));
     % difference recorded motion - prediction
     sbjDiff(ff,7).data = computeDiff(sbj(ff,6).data,sbj(ff,9).data); 
     
     % linear prediction + spatial interaction + temporal interaction 
     poolNonLinearL = sumAxx(halfNonLinearSpatial,halfNonLinearL);
     poolNonLinearR = sumAxx(halfNonLinearSpatial,halfNonLinearR);
-    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx(8),poolNonLinearL),sumAxx(Axx(9),poolNonLinearR));
+    sbj(ff,10).data = sumAxxWithShift(sumAxx(Axx(9),poolNonLinearR),sumAxx(Axx(8),poolNonLinearL));
     % difference recorded motion - prediction
     sbjDiff(ff,8).data = computeDiff(sbj(ff,6).data,sbj(ff,10).data); 
     
@@ -133,15 +135,15 @@ for ff=1:length(listData)
 end
 
 
-save('sbjprediction','sbj','cfg')
-save('sbjDiff','sbjDiff','cfg')
-save('NLinteraction','interaction','cfg')
+save([outDir 'sbjprediction'],'sbj','cfg')
+save([outDir 'sbjDiff'],'sbjDiff','cfg')
+save([outDir 'NLinteraction'],'interaction','cfg')
 
 
-% 
-% 
-% 
-% 
+
+
+
+
 % 
 % % do the average
 % gpPred = averageSbj(sbj);

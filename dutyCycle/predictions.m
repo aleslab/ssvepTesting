@@ -10,7 +10,7 @@ cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
 keepSbj = 1:length(listData); 
-keepSbj = [1:5 7 9:11 13:15]; 
+keepSbj = [1:5 7:11 13:15]; % (there is no S1) reject S7 and S12: just noise?
 
 
 % compute average (for later comparison)
@@ -109,8 +109,9 @@ for ss = 1:length(listData)
 end
 
 avPred = averageAxx(pred(:,keepSbj));
-avDiffMotion = averageAxx(diffmotion(:,keepSbj));
-interactiveSteadyStatePlot2(cfg,[avData,avPred,avDiffMotion])
+avDiffMotion = averageAxx(diffmotion(:,keepSbj));   
+% interactiveSteadyStatePlot2(cfg,[avData,avPred,avDiffMotion])
+
 
 
 
