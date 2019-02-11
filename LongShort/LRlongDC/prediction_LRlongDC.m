@@ -8,7 +8,7 @@ addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
 % dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V1/Axx/';
-dataDir = '/Users/marleneponcet/Documents/data/LongRangeV2/Axx/';
+dataDir = '/Users/marleneponcet/Documents/data/LongRangeV2/';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
@@ -134,9 +134,9 @@ for ff=1:length(listData)
 end
 
 
-save('sbjprediction','sbj','cfg')
-save('sbjDiff','sbjDiff','cfg')
-save('NLinteraction','interaction','cfg')
+save([outDir 'sbjprediction','sbj','cfg')
+save([outDir 'sbjDiff','sbjDiff','cfg')
+save([outDir 'NLinteraction','interaction','cfg')
 
 
 

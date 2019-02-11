@@ -6,6 +6,7 @@ for ff=1:size(dataSbj,1)
         dataAmp(:,:,cond,ff) = dataSbj(ff,cond).data.amp;
         dataSin(:,:,cond,ff) = dataSbj(ff,cond).data.sin;
         dataCos(:,:,cond,ff) = dataSbj(ff,cond).data.cos;
+        dataFil(:,:,cond,ff) = dataSbj(ff,cond).data.filteredWave;
     end
 end
 
@@ -31,6 +32,7 @@ groupAv(cond).cos = mean(dataCos(:,:,cond,:),4);
 
 groupAv(cond).amp = sqrt(groupAv(cond).sin.^2 + groupAv(cond).cos.^2);
 
+groupAv(cond).filteredWave = mean(dataFil(:,:,cond,:),4);
 
 end
 

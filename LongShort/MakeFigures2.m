@@ -86,65 +86,86 @@ for ee=1:2 % which experiment
     %%%%%%% REGRESS for the average signal
     for numCond=1:2 % long/short 
         spatInt(:,:,numCond) = avPredictions(3+5*(numCond-1)).filteredWave - avPredictions(2+5*(numCond-1)).filteredWave  ;
-        tempInt(:,:,numCond) = avPredictions(4+5*(numCond-1)).filteredWave - avPredictions(2+5*(numCond-1)).filteredWave  ;
+        tempInt(:,:,numCond) = avPredictions(4+5*(numCond-1)).filteredWave - avPredictions(2+5*(numCond-1)).filteredWave  ;        
+        ySig(:,:,numCond) = avPredictions(1+5*(numCond-1)).filteredWave - avPredictions(2+5*(numCond-1)).filteredWave ;
     end
     
+    % Same coef for time and electrodes
+    newDim = [size(ySig,1)*size(ySig,2)];
     for numCond=1:2 % long/short 
-        for elec=2:size(avPredictions(1).filteredWave,1) % first electrode is the reference 0
-            sigAM = avPredictions(1+5*(numCond-1)).filteredWave(elec,:)';
-            regCoef1 = [ones(size(sigAM)) avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' ]; % as linear 
-            regCoef2 = [ones(size(sigAM)) avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' spatInt(elec,:,numCond)' ]; % as linear + spatial 
-            regCoef3 = [ones(size(sigAM)) avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' tempInt(elec,:,numCond)']; % as linear + temporal
-            regCoef4 = [ones(size(sigAM)) avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' spatInt(elec,:,numCond)' tempInt(elec,:,numCond)']; % as linear + spatial + temporal
-            [coefLinear(numCond,elec,:), bint, r, rint, statsL(numCond,elec,:)] = regress(sigAM,regCoef1);
-            [coefSpatial(numCond,elec,:), bint, r, rint, statsS(numCond,elec,:)] = regress(sigAM,regCoef2);
-            [coefTemp(numCond,elec,:), bint, r, rint, statsT(numCond,elec,:)] = regress(sigAM,regCoef3);
-            [coefFull(numCond,elec,:), bint, r, rint, statsF(numCond,elec,:)] = regress(sigAM,regCoef4);
+        regCoefS = [ones(newDim) reshape(spatInt(:,:,numCond),[newDim 1])]; % as 1*linear + spatial 
+        regCoefT = [ones(newDim) reshape(tempInt(:,:,numCond),[newDim 1])]; 
+        regCoefF = [ones(newDim) reshape(spatInt(:,:,numCond),[newDim 1]) reshape(tempInt(:,:,numCond),[newDim 1])];
+        [coefSp(numCond,:), bintSp(numCond,:), rSp(numCond,:), rintSp(numCond,:), statsSp(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefS);
+        [coefTe(numCond,:), bintTe(numCond,:), rTe(numCond,:), rintTe(numCond,:), statsTe(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefT);
+        [coefFu(numCond,:), bintFu(numCond,:), rFu(numCond,:), rintFu(numCond,:), statsFu(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefF);
+    end
+   
+    % different coef for different electrodes
+    for numCond=1:2 % long/short 
+        for chan=2:size(avPredictions(1).filteredWave,1) % first electrode is the reference 0
+            regCoefS = [ones(length(ySig),1) spatInt(chan,:,numCond)']; % as 1*linear + spatial 
+            regCoefT = [ones(length(ySig),1) tempInt(chan,:,numCond)']; % as 1*linear + spatial 
+            regCoefF = [ones(length(ySig),1) spatInt(chan,:,numCond)' tempInt(chan,:,numCond)']; % as 1*linear + spatial 
+            [coefSpatial(numCond,chan,:), bintS(numCond,chan,:,:), rS(numCond,chan,:), ...
+                rintS(numCond,chan,:,:), statsS(numCond,chan,:)] = ...
+                regress(ySig(chan,:,numCond)',regCoefS);
+            [coefTemp(numCond,chan,:), bintT(numCond,chan,:,:), rT(numCond,chan,:), ...
+                rintT(numCond,chan,:,:), statsT(numCond,chan,:)] = ...
+                regress(ySig(chan,:,numCond)',regCoefT);
+            [coefFull(numCond,chan,:), bintF(numCond,chan,:,:), rF(numCond,chan,:), ...
+                rintF(numCond,chan,:,:), statsF(numCond,chan,:)] = ...
+                regress(ySig(chan,:,numCond)',regCoefF);
         end
     end
     % vector STATS containing, in the following order, the R-square statistic, the F statistic and p value for the full model, and an estimate of the error variance.
     
-    % topo of factors
-    for numCond=1:2 % long/short
-        for fact=1:4
-            subplot(2,4,fact+4*(numCond-1))
-            plotTopo(coefFull(numCond,:,fact),cfg.layout)
-            %             colorbar
-            if ee==1
-                caxis([-1.5 1.5])
-            else
-                caxis([-1.5 1.5])
-            end
-        end
-    end
-    
-    % reconstruct a "corrected" signal
-    for numCond=1:2 % long/short
-        for elec=2:size(avPredictions(1).filteredWave,1) % first electrode is the reference 0
-            bestFit(numCond,elec,:) = coefFull(numCond,elec,2)*avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' + ...
-                coefFull(numCond,elec,3)*spatInt(elec,:,numCond)' + ...
-                coefFull(numCond,elec,4)*tempInt(elec,:,numCond)' ;
-        end
-    end
-    figure; plot(avPredictions(1).time, avPredictions(1).filteredWave(elec,:));
-    hold on; plot(avPredictions(1).time,squeeze(bestFit(1,elec,:)));
-    figure; plot(avPredictions(6).time, avPredictions(6).filteredWave(elec,:));
-    hold on; plot(avPredictions(6).time,squeeze(bestFit(2,elec,:)));    
-    
-    % left over after best-fitting
-    for numCond=1:2 % long/short 
-        leftOver(numCond,:,:) = avPredictions(1+5*(numCond-1)).filteredWave - squeeze(bestFit(numCond,:,:)) ;
-    end    
-    figure; plot(avPredictions(1).time, avPredictions(1).filteredWave(elec,:)-squeeze(bestFit(1,elec,:))');
-    figure; plot(avPredictions(1).time, avPredictions(6).filteredWave(elec,:)-squeeze(bestFit(2,elec,:))');
+    % topo of r-squares
     figure;
     for numCond=1:2 % long/short
-        subplot(1,2,numCond)
-        plotTopo(squeeze(mean(abs(leftOver(numCond,:,:)),3)),cfg.layout)
-        colorbar;
+        subplot(3,2,numCond)
+        plotTopo(statsS(numCond,:,1),cfg.layout)
+        caxis([0 1])
+    end
+    for numCond=1:2 % long/short
+        subplot(3,2,numCond+2)
+        plotTopo(statsT(numCond,:,1),cfg.layout)
+        caxis([0 1])
+    end
+    for numCond=1:2 % long/short
+        subplot(3,2,numCond+4)
+        plotTopo(statsF(numCond,:,1),cfg.layout)
+        caxis([0 1])
     end
 
 end
 
 
 
+
+% % reconstruct a "corrected" signal
+% for numCond=1:2 % long/short
+%     for elec=2:size(avPredictions(1).filteredWave,1) % first electrode is the reference 0
+%         bestFit(numCond,elec,:) = coefFull(numCond,elec,2)*avPredictions(2+5*(numCond-1)).filteredWave(elec,:)' + ...
+%             coefFull(numCond,elec,3)*spatInt(elec,:,numCond)' + ...
+%             coefFull(numCond,elec,4)*tempInt(elec,:,numCond)' ;
+%     end
+% end
+% figure; plot(avPredictions(1).time, avPredictions(1).filteredWave(elec,:));
+% hold on; plot(avPredictions(1).time,squeeze(bestFit(1,elec,:)));
+% figure; plot(avPredictions(6).time, avPredictions(6).filteredWave(elec,:));
+% hold on; plot(avPredictions(6).time,squeeze(bestFit(2,elec,:)));
+% 
+% % left over after best-fitting
+% for numCond=1:2 % long/short
+%     leftOver(numCond,:,:) = avPredictions(1+5*(numCond-1)).filteredWave - squeeze(bestFit(numCond,:,:)) ;
+% end
+% figure; plot(avPredictions(1).time, avPredictions(1).filteredWave(elec,:)-squeeze(bestFit(1,elec,:))');
+% figure; plot(avPredictions(1).time, avPredictions(6).filteredWave(elec,:)-squeeze(bestFit(2,elec,:))');
+% figure;
+% for numCond=1:2 % long/short
+%     subplot(1,2,numCond)
+%     plotTopo(squeeze(mean(abs(leftOver(numCond,:,:)),3)),cfg.layout)
+%     colorbar;
+% end
+    
