@@ -91,15 +91,16 @@ for ee=1:2 % which experiment
     end
     
     % Same coef for time and electrodes
-    newDim = [size(ySig,1)*size(ySig,2)];
+    newDim = size(ySig,1)*size(ySig,2);
     for numCond=1:2 % long/short 
-        regCoefS = [ones(newDim) reshape(spatInt(:,:,numCond),[newDim 1])]; % as 1*linear + spatial 
-        regCoefT = [ones(newDim) reshape(tempInt(:,:,numCond),[newDim 1])]; 
-        regCoefF = [ones(newDim) reshape(spatInt(:,:,numCond),[newDim 1]) reshape(tempInt(:,:,numCond),[newDim 1])];
-        [coefSp(numCond,:), bintSp(numCond,:), rSp(numCond,:), rintSp(numCond,:), statsSp(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefS);
-        [coefTe(numCond,:), bintTe(numCond,:), rTe(numCond,:), rintTe(numCond,:), statsTe(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefT);
-        [coefFu(numCond,:), bintFu(numCond,:), rFu(numCond,:), rintFu(numCond,:), statsFu(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefF);
+        regCoefS = [ones(newDim,1) reshape(spatInt(:,:,numCond),[newDim 1])]; % as 1*linear + spatial 
+        regCoefT = [ones(newDim,1) reshape(tempInt(:,:,numCond),[newDim 1])]; 
+        regCoefF = [ones(newDim,1) reshape(spatInt(:,:,numCond),[newDim 1]) reshape(tempInt(:,:,numCond),[newDim 1])];
+        [coefSp(numCond,:), bintSp(numCond,:,:), rSp(numCond,:), rintSp(numCond,:,:), statsSp(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefS);
+        [coefTe(numCond,:), bintTe(numCond,:,:), rTe(numCond,:), rintTe(numCond,:,:), statsTe(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefT);
+        [coefFu(numCond,:), bintFu(numCond,:,:), rFu(numCond,:), rintFu(numCond,:,:), statsFu(numCond,:)] = regress(reshape(ySig(:,:,numCond),[newDim 1]),regCoefF);
     end
+   clear regCoefS regCoefT regCoefF
    
     % different coef for different electrodes
     for numCond=1:2 % long/short 
