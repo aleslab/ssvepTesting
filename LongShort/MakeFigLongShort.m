@@ -164,7 +164,7 @@ saveas(gcf,'meanRMS','png')
 for ec=1:4
     for fact=1:4
         for trode = 1:size(diff(ec, fact).wave(:,:),1)
-            rootMeanElec(trode,ec,fact) = rms(diff(ec, fact).filteredWave(trode,:));
+            rootMeanElec(trode,ec,fact) = rms(diff(ec, fact).wave(trode,:));
         end
     end
 end

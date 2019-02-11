@@ -8,7 +8,6 @@ ft_defaults
 
 % dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V1/Axx/';
 dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/Axx/';
-outDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
@@ -136,9 +135,9 @@ for ff=1:length(listData)
 end
 
 
-save([outDir 'sbjprediction'],'sbj','cfg')
-save([outDir 'sbjDiff'],'sbjDiff','cfg')
-save([outDir 'NLinteraction'],'interaction','cfg')
+save('sbjprediction','sbj','cfg')
+save('sbjDiff','sbjDiff','cfg')
+save('NLinteraction','interaction','cfg')
 
 
 
@@ -153,7 +152,7 @@ legend('0.5Tl','0.5Tr','0.5S','suml','sumr')
 
 figure;hold on;
 plot(nonLinearL.wave(23,:),'LineWidth',2);
-plot(interaction(13,6).data.wave(23,:),'LineWidth',2);
+plot(interaction(14,6).data.wave(23,:),'LineWidth',2);
 plot(nonLinearSpatial.wave(23,:),'LineWidth',2);
 plot(poolNonLinearL_SR.wave(23,:),'LineWidth',2);
 plot(poolNonLinearR_SR.wave(23,:),'LineWidth',2);
