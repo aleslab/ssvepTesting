@@ -15,7 +15,7 @@ for dd=1:2 % which experiment (different duty-cycle used)
 
     for sbjInd=1:length(sbj)
     for condIdx=1:size(sbj,2)
-        filtIdx = determineFilterIndices( 'nf1low50', sbj(sbjInd,condIdx).data.freq, sbj(sbjInd,condIdx).data.i1f1 );
+        filtIdx = determineFilterIndices( 'nf1low49', sbj(sbjInd,condIdx).data.freq, sbj(sbjInd,condIdx).data.i1f1 );
         
         %Create a logical matrix selecting frequency components.
         filtMat = false(size(sbj(sbjInd,condIdx).data.amp));

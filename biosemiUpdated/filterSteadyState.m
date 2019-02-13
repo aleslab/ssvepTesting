@@ -8,18 +8,18 @@ function [ filteredWave ] = filterSteadyState( cfg, steadyState )
 %Create the component matrix
 %First determine the length of the fourier transform components.
 
-if ~isfield(steadyState, 'nDft') %If we're not told the length, have to try and recreate it. 
+if ~isfield(steadyState, 'ndft') %If we're not told the length, have to try and recreate it. 
     
-    nDft = 2*(steadyState.nfr-1); %Close but may be off by 1
+    ndft = 2*(steadyState.nfr-1); %Close but may be off by 1
     
-    if mod(nDft,steadyState.nt)~=0,
-        nDft = nDft +1;
-        if mod(nDft,steadyState.nt)~=0,
+    if mod(ndft,steadyState.nt)~=0,
+        ndft = ndft +1;
+        if mod(ndft,steadyState.nt)~=0,
             error('Failed to guess nDft. Are nT and nFr compatible?');
         end
     end
 else
-    nDft = steadyState.nDft;
+    ndft = steadyState.ndft;
 end
 
 %Now create the component matrix:
@@ -30,7 +30,7 @@ end
 %normalized by nDft and the sin coefficient, which is the imaginary part
 %has already been sign inverted.  Therefore we need to make our own inverse
 %dftmtx. 
-dft = dftmtx(nDft);
+dft = dftmtx(ndft);
 dft = dft(:,1:steadyState.nfr); %Just grab the frequency components we need. Do not include DC by default. 
 filteredWave = NaN(size(steadyState.wave));
 

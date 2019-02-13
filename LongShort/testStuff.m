@@ -1,6 +1,22 @@
 %%%%%% test stuff
 
 %%%%%%%%%%%%
+%% amplitude to waveform
+test = rand(1,30);
+plot(test)
+dft = dftmtx(30);
+dftData = test*dft;
+ampT = abs(dftData);
+cosT = real(dftData);
+sinT = -imag(dftData); 
+
+cosT
+
+invdft = CONJ(dftmtx(30))/30; % inverse fourier
+dftData = *invdft;
+
+
+%%%%%%%%%%%%
 %% RMS
 for ss=1:3
     for chan=1:2
