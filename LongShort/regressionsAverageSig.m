@@ -18,7 +18,10 @@ pickElec = [23 9 38];
 
 for ee=1:2 % which experiment
     load([dataPath{ee} 'sbjprediction.mat'])
-
+    clear spatInt tempInt ySig coefSp bintSp rSp rintSp statsSp
+    clear coefTe bintTe rTe rintTe statsTe
+    clear coefSp bintFu rFu rintFu statsFu
+    
     %%%%%% compute average
     avPredictions = averageSbj(sbj);
     avPredictions(1).condLabel = 'originalmotion';
@@ -54,21 +57,40 @@ for ee=1:2 % which experiment
     
     for numCond=1:2 % long/short
         sseLin = sumsqr(avPredictions(1+5*(numCond-1)).filteredWave - avPredictions(2+5*(numCond-1)).filteredWave);
-        ssAM = sumsqr(avPredictions(1+5*(numCond-1)).filteredWave);
-        percentErrLin(numCond) = sseLin / ssAM;
+        ssNoise(numCond) = sumsqr(avPredictions(1+5*(numCond-1)).noiseWave);
+        percentErrLin(numCond) = sseLin / ssNoise(numCond);
     end
-    % for other components
-    % r2=1-SSE/SStotal
-    % percentError = 1 - r2
-    for numCond=1:2 % long/short
-        percentErrSp(numCond) = 1 - statsSp(numCond,1);
-        percentErrTe(numCond) = 1 - statsTe(numCond,1);
-        percentErrFu(numCond) = 1 - statsFu(numCond,1);
-        rsqSp(numCond) = statsSp(numCond,1);
-        rsqTe(numCond) = statsTe(numCond,1);
-        rsqFu(numCond) = statsFu(numCond,1);
-    end
+%     % for other components
+%     % r2=1-SSE/SStotal
+%     % percentError = 1 - r2
+%     for numCond=1:2 % long/short
+%         percentErrSp(numCond) = 1 - statsSp(numCond,1);
+%         percentErrTe(numCond) = 1 - statsTe(numCond,1);
+%         percentErrFu(numCond) = 1 - statsFu(numCond,1);
+%         rsqSp(numCond) = statsSp(numCond,1);
+%         rsqTe(numCond) = statsTe(numCond,1);
+%         rsqFu(numCond) = statsFu(numCond,1);
+%     end
         
+        for numCond=1:2 % long/short
+            predSp = avPredictions(2+5*(numCond-1)).filteredWave + coefSp(numCond,2)*spatInt(:,:,numCond);
+            sseSp = sumsqr(avPredictions(1+5*(numCond-1)).filteredWave - predSp);
+            percentErrSp(numCond) = sseSp / ssNoise(numCond);
+            
+            predTe = avPredictions(2+5*(numCond-1)).filteredWave + coefTe(numCond,2)*tempInt(:,:,numCond);
+            sseTe = sumsqr(avPredictions(1+5*(numCond-1)).filteredWave - predTe);
+            percentErrTe(numCond) = sseTe / ssNoise(numCond);
+           
+            predFul = avPredictions(2+5*(numCond-1)).filteredWave + coefFu(numCond,2)*spatInt(:,:,numCond) + coefFu(numCond,3)*tempInt(:,:,numCond);
+            sseFul = sumsqr(avPredictions(1+5*(numCond-1)).filteredWave - predFul);
+            percentErrFul(numCond) = sseFul / ssNoise(numCond);
+        end
+        
+            figure;
+    bar([percentErrLin(1) percentErrSp(1) percentErrTe(1) percentErrFul(1);...
+        percentErrLin(2) percentErrSp(2) percentErrTe(2) percentErrFul(2)]);
+    saveas(gcf,['figures' filesep 'noiseErrRatioAverageE' num2str(ee)],'png')
+    
     for chan=1:length(pickElec)
         figure;
         for numCond=1:2 % long/short
@@ -76,17 +98,19 @@ for ee=1:2 % which experiment
             plot(avPredictions(1+5*(numCond-1)).filteredWave(pickElec(chan),:))
             plot(avPredictions(2+5*(numCond-1)).filteredWave(pickElec(chan),:))
             legend('AM','Linear')
-            title([condRange{numCond} num2str(pickElec(chan))])
+%             title([condRange{numCond} num2str(pickElec(chan))])
             subplot(2,2,numCond+1+1*(numCond-1)); hold on;
             plot(coefFu(numCond,2)*spatInt(pickElec(chan),:,numCond))
             plot(coefFu(numCond,3)*tempInt(pickElec(chan),:,numCond))
             legend('Spatial','Temporal')
-            title([condRange{numCond} num2str(pickElec(chan))])
+%             title([condRange{numCond} num2str(pickElec(chan))])
         end
     end
    
    
    clear regCoefS regCoefT regCoefF   
+   clear coefSpatial bintS rS rintS statsS coefTemp bintT rT rintT statsT
+   clear coefFull bintF rF rintF statsF 
     % different coef for different electrodes
     for numCond=1:2 % long/short 
         for chan=2:size(avPredictions(1).filteredWave,1) % first electrode is the reference 0

@@ -58,8 +58,8 @@ for ee=1:2 % which experiment
         % for linear
         for numCond=1:2 % long/short
             sseLin(ss,numCond,:,:) = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave - sbj(ss,2+5*(numCond-1)).data.filteredWave);
-            ssAM(ss,numCond,:,:) = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave);
-            percentErrLin(ss,numCond) = sseLin(ss,numCond,:,:) / ssAM(ss,numCond,:,:);
+            ssNoise(ss,numCond,:,:) = sumsqr(sbj(ss,1+5*(numCond-1)).data.noiseWave);
+            percentErrLin(ss,numCond) = sseLin(ss,numCond,:,:) / ssNoise(ss,numCond,:,:);
             rmsLi(ss,numCond) = rms(sbj(ss,1+5*(numCond-1)).data.filteredWave(:) - sbj(ss,2+5*(numCond-1)).data.filteredWave(:));
         end
 %         % for other components
@@ -75,17 +75,17 @@ for ee=1:2 % which experiment
         for numCond=1:2 % long/short
             predSp = sbj(ss,2+5*(numCond-1)).data.filteredWave + coefSp(numCond,2)*spatInt(:,:,numCond);
             sseSp = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave - predSp);
-            percentErrSp(ss,numCond) = sseSp / ssAM(ss,numCond,:,:);
+            percentErrSp(ss,numCond) = sseSp / ssNoise(ss,numCond,:,:);
             rmsSp(ss,numCond) = rms(sbj(ss,1+5*(numCond-1)).data.filteredWave(:) - predSp(:));
             
             predTe = sbj(ss,2+5*(numCond-1)).data.filteredWave + coefTe(numCond,2)*tempInt(:,:,numCond);
             sseTe = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave - predTe);
-            percentErrTe(ss,numCond) = sseTe / ssAM(ss,numCond,:,:);
+            percentErrTe(ss,numCond) = sseTe / ssNoise(ss,numCond,:,:);
             rmsTe(ss,numCond) = rms(sbj(ss,1+5*(numCond-1)).data.filteredWave(:) - predTe(:));
            
             predFul = sbj(ss,2+5*(numCond-1)).data.filteredWave + coefFu(numCond,2)*spatInt(:,:,numCond) + coefFu(numCond,3)*tempInt(:,:,numCond);
             sseFul = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave - predFul);
-            percentErrFul(ss,numCond) = sseFul / ssAM(ss,numCond,:,:);
+            percentErrFul(ss,numCond) = sseFul / ssNoise(ss,numCond,:,:);
             rmsFu(ss,numCond) = rms(sbj(ss,1+5*(numCond-1)).data.filteredWave(:) - predFul(:));
             
             correctedSpat(ss,numCond,:,:) = coefFu(numCond,2)*spatInt(:,:,numCond);
@@ -110,11 +110,11 @@ for ee=1:2 % which experiment
             avAM2(numCond,:,:) = squeeze(mean(subAM(:,numCond,:,:)));
         end
     end
-    avPercentErrFu(ee,:) = mean(percentErrFul)*100;
-    avPercentErrTe(ee,:) = mean(percentErrTe)*100;
-    avPercentErrSp(ee,:) = mean(percentErrSp)*100;
-    avPercentErrLi(ee,:) = mean(percentErrLin)*100;
-    avCoefFull(ee,:,:) = squeeze(mean(coefFull))*100; 
+    avPercentErrFu(ee,:) = mean(percentErrFul);
+    avPercentErrTe(ee,:) = mean(percentErrTe);
+    avPercentErrSp(ee,:) = mean(percentErrSp);
+    avPercentErrLi(ee,:) = mean(percentErrLin);
+    avCoefFull(ee,:,:) = squeeze(mean(coefFull)); 
     avRmsFu(ee,:) = rms(rmsFu);
     avRmsTe(ee,:) = rms(rmsTe);
     avRmsSp(ee,:) = rms(rmsSp);
@@ -145,10 +145,11 @@ for ee=1:2
     bar([avPercentErrLi(ee,1) avPercentErrSp(ee,1) avPercentErrTe(ee,1) avPercentErrFu(ee,1);...
         avPercentErrLi(ee,2) avPercentErrSp(ee,2) avPercentErrTe(ee,2) avPercentErrFu(ee,2)]);
     legend('lin','spa','temp','s+t')
-    ylabel('% error')
+    ylabel('noise error ratio')
     xticklabels({'LR','SR'})
     title(['E' num2str(ee) 'with coef'])
-    saveas(gcf,['figures' filesep 'pctErrorE' num2str(ee)],'png')
+    ylim([0 15])
+    saveas(gcf,['figures' filesep 'noiseErrRatioE' num2str(ee)],'png')
 end
 
 %%%% plot rms... isn't it wrong? Since I use it to do the regress it's
@@ -213,6 +214,7 @@ for chan=1:length(pickElec)
     legend('LR','SR')
     title(['E2elec' num2str(pickElec(chan))])
 end
-figure;plotTopo(mean(abs(leftOver(:,:)),2),cfg.layout); colorbar;
-figure;plotTopo(mean(abs(leftOver2(:,:)),2),cfg.layout); colorbar;
-
+figure;plotTopo(squeeze(mean(abs(leftOver(1,:,:)),3)),cfg.layout); colorbar;
+figure;plotTopo(squeeze(mean(abs(leftOver2(1,:,:)),3)),cfg.layout); colorbar;
+figure;plotTopo(squeeze(mean(abs(leftOver(2,:,:)),3)),cfg.layout); colorbar;
+figure;plotTopo(squeeze(mean(abs(leftOver2(2,:,:)),3)),cfg.layout); colorbar;

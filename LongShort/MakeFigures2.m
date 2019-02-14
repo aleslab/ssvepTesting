@@ -60,6 +60,7 @@ for ee=1:2 % which experiment
                     diffFilt(fact+4*(ss-1),subj,chan,:) = (sbj(subj,1+5*(ss-1)).data.filteredWave(chan,:) - sbj(subj,fact+1+5*(ss-1)).data.filteredWave(chan,:));
                     rmsFilt(fact+4*(ss-1),subj,chan) = rms(diffFilt(fact+4*(ss-1),subj,chan,:));
                 end
+                rmsNoise(ss,subj,chan) = rms(sbj(subj,1+5*(ss-1)).data.noiseWave(chan,:));
             end
         end
     end
@@ -84,11 +85,12 @@ for ee=1:2 % which experiment
 %     end
     
     %%% rms of sbj across electrodes
+    rmsNoiseAll = rms(rms(rmsNoise(:,:,:),3),2);
     allRMS = rms(rms(rmsFilt(:,:,:),3),2);
     newRMS = reshape(allRMS,[4 2]);
     figure;
-    bar(newRMS')  
-    legend('linear','spatial','temporal','s+t','Location','Best')
+    bar([rmsNoiseAll'; newRMS]')  
+    legend('noise','linear','spatial','temporal','s+t','Location','Best')
     xticklabels({'LR','SR'})
     ylabel('rms with rms(sbj)')
     title(['E' num2str(ee)])
