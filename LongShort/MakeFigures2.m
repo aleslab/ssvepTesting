@@ -15,8 +15,9 @@ dataPath = {'/Users/marleneponcet/Documents/data/LongRangeV2/', '/Users/marlenep
 pickElec = [23 9 38];
 
 for ee=1:2 % which experiment
-    clear diffFilt rmsFilt
+    clear diffFilt rmsFilt rmseNoCoef rmsNoise rmsSignal rmseCoef rmseNoCoef testrmsNoise
     load([dataPath{ee} 'sbjprediction.mat'])
+    load(['rmseCoefE' num2str(ee) '.mat'])
 
     %%%%%% compute average
     avPredictions = averageSbj(sbj);
@@ -42,10 +43,10 @@ for ee=1:2 % which experiment
             for mm=1:5 % long/short range
                 plot(avPredictions(mm+5*(ss-1)).time,avPredictions(mm+5*(ss-1)).filteredWave(pickElec(chan),:),'LineWidth',2);
             end
-            legend('AM','linear','spatial','temp','ST','Location','Best')
             title([condRange{ss} num2str(pickElec(chan))])
             line([0 400],[0 0],'Color','k','LineStyle','--')
-        end
+            legend('AM','linear','spatial','temp','ST','Location','Best')
+       end
     end 
     saveas(gcf,['figures' filesep 'E' num2str(ee) 'predictions'],'png')
     
@@ -57,10 +58,9 @@ for ee=1:2 % which experiment
         for chan=1:sbj(1,1).data.nchan
             for ss=1:2 % long/short
                 for fact =1:4
-                    diffFilt(fact+4*(ss-1),subj,chan,:) = (sbj(subj,1+5*(ss-1)).data.filteredWave(chan,:) - sbj(subj,fact+1+5*(ss-1)).data.filteredWave(chan,:));
+                    diffFilt(fact+4*(ss-1),subj,chan,:) = (sbj(subj,fact+1+5*(ss-1)).data.filteredWave(chan,:) - sbj(subj,1+5*(ss-1)).data.filteredWave(chan,:));
                     rmsFilt(fact+4*(ss-1),subj,chan) = rms(diffFilt(fact+4*(ss-1),subj,chan,:));
                 end
-                rmsNoise(ss,subj,chan) = rms(sbj(subj,1+5*(ss-1)).data.noiseWave(chan,:));
             end
         end
     end
@@ -84,20 +84,83 @@ for ee=1:2 % which experiment
 %         end
 %     end
     
-    %%% rms of sbj across electrodes
-    rmsNoiseAll = rms(rms(rmsNoise(:,:,:),3),2);
-    allRMS = rms(rms(rmsFilt(:,:,:),3),2);
-    newRMS = reshape(allRMS,[4 2]);
-    figure;
-    bar([rmsNoiseAll'; newRMS]')  
-    legend('noise','linear','spatial','temporal','s+t','Location','Best')
-    xticklabels({'LR','SR'})
-    ylabel('rms with rms(sbj)')
+%     %%% rms of sbj across electrodes
+%     rmsNoiseAll = rms(rms(rmsNoise(:,:,:),3),2);
+%     stdNoiseAll = std(rms(rmsNoise(:,:,:),3),0,2);
+%     allRMS = rms(rms(rmsFilt(:,:,:),3),2);
+%     stdAllRMS = std(rms(rmsFilt(:,:,:),3),0,2);
+%     
+%     newRMS = reshape(allRMS,[4 2]); newSTD = reshape(stdAllRMS,[4 2]);
+%     newRMScat = [rmsNoiseAll'; newRMS];  newSTDcat = [stdNoiseAll'; newSTD];
+%     newRMScat = reshape(newRMScat,10,1); newSTDcat = reshape(newSTDcat,10,1);
+%     
+%     colBar = {'b','m','c','g','r','b','m','c','g','r'};
+%     locX = [1:5 7:11];
+%     figure; hold on;
+%     for dd=1:10
+%         bar(locX(dd),newRMScat(dd),colBar{dd})
+%     end
+%     errorbar(locX, newRMScat, newSTDcat,'k','Linestyle','none')
+%     legend('noise','linear','spatial','temporal','s+t','Location','Best')
+%     xticklabels({'','LR','','','SR'})
+%     ylabel('rms with rms(sbj)')
+%     title(['E' num2str(ee)])
+%     ylim([0 2])
+%     saveas(gcf,['figures' filesep 'E' num2str(ee) 'rms'],'png')
+
+    %%%%%%%%%%%%%%%%%
+    % look at rms per condition
+    for ss=1:length(sbj)
+        for numCond=1:10
+            testrmsNoise(ss,numCond,:) = rms(sbj(ss,numCond).data.noiseWave(:)  );
+            rmsSignal(ss,numCond,:) = rms(sbj(ss,numCond).data.filteredWave(:)  );
+        end
+    end
+    figure;hold on;
+    bar(mean(testrmsNoise))
+    errorbar(mean(testrmsNoise), std(testrmsNoise),'k','Linestyle','none')
     title(['E' num2str(ee)])
-    ylim([0 1.4])
-    saveas(gcf,['figures' filesep 'E' num2str(ee) 'rms'],'png')
+    ylabel('rms noise per cond')
+    saveas(gcf,['figures' filesep 'RMSnoiseAllCond' num2str(ee)],'png')
+   
+    figure;hold on;
+    bar(mean(rmsSignal))
+    errorbar(mean(rmsSignal), std(rmsSignal),'k','Linestyle','none')
+    title(['E' num2str(ee)])
+    ylabel('rms Signal per cond')
     
+    %%%%%%%
+    % get all the rms we need across electrodes
+    rmseNoCoef(:,:) = rms(rmsFilt(:,:,:),3)';
+    rmsNoise = rms(testrmsNoise(:,:,:),3);
+    save(['allRMSe' num2str(ee) '.mat'],'rmsSignal','rmseNoCoef','rmsNoise','rmseCoef')
+%     rmseAvg(ee,:) = allRMS';
+%     rmseStd(ee,:) = stdAllRMS';
+%     rmseAvgNoise(ee,:) = mean(testrmsNoise);
+%     rmseStdNoise(ee,:) = std(testrmsNoise);    
+%     rmsAvg(ee,:) = mean(rmsSignal);
+%     rmsStd(ee,:) = std(rmsSignal);        
 end
+
+
+
+
+
+figure;
+for ee=1:2
+    load(['allRMSe' num2str(ee)]);
+    subplot(2,2,1+2*(ee-1));hold on;
+    bar([mean(rmsSignal(:,1:2)) mean(rmsNoise(:,1:2)) mean(rmseNoCoef(:,1:4)) mean(rmseCoef(:,1:3))])
+    errorbar([mean(rmsSignal(:,1:2)) mean(rmsNoise(:,1:2)) mean(rmseNoCoef(:,1:4)) mean(rmseCoef(:,1:3))], ...
+        [std(rmsSignal(:,1:2)) std(rmsNoise(:,1:2)) std(rmseNoCoef(:,1:4)) std(rmseCoef(:,1:3))],'k','Linestyle','none')
+    title(['E' num2str(ee) 'LR'])
+    subplot(2,2,2+2*(ee-1));hold on;
+    bar([mean(rmsSignal(:,6:7)) mean(rmsNoise(:,6:7)) mean(rmseNoCoef(:,5:8)) mean(rmseCoef(:,4:6))])
+    errorbar([mean(rmsSignal(:,6:7)) mean(rmsNoise(:,6:7)) mean(rmseNoCoef(:,5:8)) mean(rmseCoef(:,4:6))], ...
+        [std(rmsSignal(:,6:7)) std(rmsNoise(:,6:7)) std(rmseNoCoef(:,5:8)) std(rmseCoef(:,1:3))],'k','Linestyle','none')
+    title(['E' num2str(ee) 'SR'])
+end
+saveas(gcf,['figures' filesep 'RMSallCond' num2str(ee)],'png')
 
 
 
