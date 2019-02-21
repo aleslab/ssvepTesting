@@ -87,7 +87,7 @@ for ee=1:2
     ylabel('RMS signal/ rms noise')
     line([1 9],[1 1],'Color','r','LineWidth',3)
     title(['E' num2str(ee) ' SR'])
-%     saveas(gcf,['figures' filesep 'RMScorrected' num2str(ee)],'png')
+    saveas(gcf,['figures' filesep 'RMScorrected' num2str(ee)],'png')
     
     %     norm2RMSlr = [rmsSignal(:,1:2)./rmsNoise(:,1:2) rmseNoCoef(:,1:4) ./ noiseCorr2(:,1:4)];
     %     norm2RMSsr = [rmsSignal(:,6:7)./rmsNoise(:,6:7) rmseNoCoef(:,5:8) ./ noiseCorr2(:,5:8)];

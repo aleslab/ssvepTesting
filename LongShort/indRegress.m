@@ -20,7 +20,7 @@ pickElec = [23 9 38];
 % too many variables to clear!!!!
 % for ee=1:2 % which experiment
 
-ee=1;
+ee=2;
 
 load([dataPath{ee} 'sbjprediction.mat'])
 clear percentErrSp percentErrLin percentErrTe percentErrFul subAM subPredFul coefFull correctedSpat correctedTemp
@@ -145,7 +145,7 @@ saveas(gcf,['figures' filesep 'bestPredElec' num2str(pickElec(chan))],'png')
 %     stdRmsSp(ee,:) = std(rmsSp );
 %     stdRmsFu(ee,:) = std(rmsFu );
 %     stdRmsNoise(ee,:) = std(rmsNoise );
-rmseCoef = [rmsTe(:,1) rmsSp(:,1) rmsFu(:,1) rmsTe(:,2) rmsSp(:,2) rmsFu(:,2)];
+rmseCoef = [rmsSp(:,1) rmsTe(:,1) rmsFu(:,1) rmsSp(:,2) rmsTe(:,2) rmsFu(:,2)];
 save(['rmseCoefE' num2str(ee) '.mat'],'rmseCoef')
 
 %     % normalise and average rms (=NRMSE)
