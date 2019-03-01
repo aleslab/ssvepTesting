@@ -20,7 +20,7 @@ pickElec = [23 9 38];
 % too many variables to clear!!!!
 % for ee=1:2 % which experiment
 
-ee=2;
+ee=1;
 
 load([dataPath{ee} 'sbjprediction.mat'])
 clear percentErrSp percentErrLin percentErrTe percentErrFul subAM subPredFul coefFull correctedSpat correctedTemp
@@ -93,7 +93,11 @@ for ss=1:length(sbj)
         sseFul = sumsqr(sbj(ss,1+5*(numCond-1)).data.filteredWave - predFul);
         percentErrFul(ss,numCond) = sseFul / ssNoise(ss,numCond,:,:);
         rmsFu(ss,numCond) = rms( predFul(:) - sbj(ss,1+5*(numCond-1)).data.filteredWave(:));
-        
+        % rms predFul for topo (per chan)
+        for chan = 1: size(predFul,1)
+            rmsFuTopo(ss,numCond,chan) = rms( predFul(chan,:) - sbj(ss,1+5*(numCond-1)).data.filteredWave(chan,:));
+        end
+     
         correctedSpat(ss,numCond,:,:) = coefFu(numCond,2)*spatInt(:,:,numCond);
         correctedTemp(ss,numCond,:,:) = coefFu(numCond,3)*tempInt(:,:,numCond);
         subPredFul(ss,numCond,:,:) = predFul;
@@ -105,6 +109,7 @@ for ss=1:length(sbj)
 end
 
 save(['regCoefE' num2str(ee) '.mat'],'coefF','coefS','coefT');
+save(['rmsFuTopo' num2str(ee) '.mat'],'rmsFuTopo');
 
 % need to do it separately for the 2 experiments because the time
 % dimensions are different
