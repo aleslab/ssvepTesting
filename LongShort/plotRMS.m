@@ -1,6 +1,7 @@
 
 clearvars;
 close all;
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 
 for ee=1:2
     load(['allRMSe' num2str(ee)]);
@@ -61,31 +62,56 @@ for ee=1:2
     normRMSlr = [rmsSignal(:,1:2)./rmsNoise(:,1:2) rmseNoCoef(:,1:4) ./ noiseCorr(:,1:4) rmseCoef(:,1:3) ./ noiseCorr(:,5:7)];
     normRMSsr = [rmsSignal(:,6:7)./rmsNoise(:,6:7) rmseNoCoef(:,5:8) ./ noiseCorr(:,8:11) rmseCoef(:,4:6) ./ noiseCorr(:,12:14)];
     
+    % take the inverse
+    normRMSlr = 1 ./ normRMSlr;
+    normRMSsr = 1 ./ normRMSsr;
+    
+%     figure; hold on;
+%     subplot(2,1,1);hold on;
+%     bar(mean(normRMSlr))
+%     errorbar(mean(normRMSlr),std(normRMSlr)/sqrt(length(normRMSsr)),'k','Linestyle','none')
+%     ylabel('RMS signal/ rms noise')
+%     line([1 9],[1 1],'Color','r','LineWidth',3)
+%     title(['E' num2str(ee) ' LR'])
+%     subplot(2,1,2);hold on;
+%     bar(mean(normRMSsr))
+%     errorbar(mean(normRMSsr),std(normRMSsr)/sqrt(length(normRMSsr)),'k','Linestyle','none')
+%     ylabel('RMS signal/ rms noise')
+%     line([1 9],[1 1],'Color','r','LineWidth',3)
+%     title(['E' num2str(ee) ' SR'])
+%     saveas(gcf,['figures' filesep 'RMScorrected' num2str(ee)],'png')
+    
     figure; hold on;
     subplot(2,1,1);hold on;
-    bar(mean(normRMSlr))
-    errorbar(mean(normRMSlr),std(normRMSlr)/sqrt(length(normRMSsr)),'k','Linestyle','none')
-    ylabel('RMS signal/ rms noise')
-    line([1 9],[1 1],'Color','r','LineWidth',3)
+    boxplot(normRMSlr)
+    ylabel('1/ (RMS S/N)')
+    line([1 9],[1 1],'Color','r','LineWidth',2)
     title(['E' num2str(ee) ' LR'])
+    xticklabels({'RMSAM','RSMlin','RMSElin','RMSEspat','RMSEtemp','RMSEst','coefspat','coeftemp','coefST'})
+    ylim([0 1.5])
     subplot(2,1,2);hold on;
-    bar(mean(normRMSsr))
-    errorbar(mean(normRMSsr),std(normRMSsr)/sqrt(length(normRMSsr)),'k','Linestyle','none')
-    ylabel('RMS signal/ rms noise')
+    boxplot(normRMSsr)
+    ylabel('1/ (RMS S/N)')
     line([1 9],[1 1],'Color','r','LineWidth',3)
     title(['E' num2str(ee) ' SR'])
+    xticklabels({'RMSAM','RSMlin','RMSElin','RMSEspat','RMSEtemp','RMSEst','coefspat','coeftemp','coefST'})
+    ylim([0 1.5])
     saveas(gcf,['figures' filesep 'RMScorrected' num2str(ee)],'png')
-
-    save(['normRMSsr' num2str(ee) '.mat'],'normRMSsr')    
-    [Hlr,Plr] = ttest(normRMSlr,1)
-    [Hsr,Psr] = ttest(normRMSsr,1)
     
+    
+    % tests the hypothesis that data in x has a continuous distribution with zero median 
+    for cond=1:size(normRMSsr,2)
+        [pSR(cond)] = signtest(normRMSsr(:,cond)-1); 
+        [pLR(cond)] = signtest(normRMSlr(:,cond)-1); 
+    end
+    save(['signTestE' num2str(ee) '.mat'],'pSR','pLR')    
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % topographies
-    load(['chanRMS' num2str(ee)]); clear noiseTopoCorr;
+    clear noiseTopoCorr rmsTopoNoise;
+    load(['chanRMS' num2str(ee)]); 
     load(['rmsFuTopo' num2str(ee)]); 
     
     % noise correction for the differences (RMSE)
@@ -105,10 +131,11 @@ for ee=1:2
 %     figure; plotTopo(squeeze(mean(noiseTopoCorr(:,4,:))),cfg.layout); colorbar
 
     % apply normalisation
+    % rmsTopo in the order: rms AM, rms Lin, rmse Lin, rmse Temp
     normTopoRMSlr = [rmsTopo(:,1:2,:)./rmsTopoNoise(:,1:2,:) rmsTopo(:,3:4,:) ./ noiseTopoCorr(:,1:2,:) rmsFuTopo(:,1,:)./noiseTopoCorr(:,5,:)];
     normTopoRMSsr = [rmsTopo(:,5:6,:)./rmsTopoNoise(:,5:6,:) rmsTopo(:,7:8,:) ./ noiseTopoCorr(:,3:4,:) rmsFuTopo(:,2,:)./noiseTopoCorr(:,6,:)];
     
-
+    
     % plot topo
     cfg.layout = 'biosemi128.lay';
     titre = {'RMS AM','RMS Lin','RMSE Lin', 'RMSE temp','RMSE coef'};
@@ -117,13 +144,27 @@ for ee=1:2
         subplot(2,5,cond)
         plotTopo(squeeze(mean(normTopoRMSlr(:,cond,:))),cfg.layout)
         colorbar
+        caxis([1 7.5])
+        if ee==2
+            caxis([1 7.5])
+        else
+            caxis([1 2.5])
+        end
         title(titre{cond})
         subplot(2,5,cond+5)
         plotTopo(squeeze(mean(normTopoRMSsr(:,cond,:))),cfg.layout)
         colorbar
+        if ee==2
+            caxis([1 7.5])
+        else
+            caxis([1 2.5])
+        end
         title(titre{cond})
     end
+    colormap(jmaColors('hotcortex'));
+%     colormap('hot');
     saveas(gcf,['figures' filesep 'topoRMS E' num2str(ee)],'png')
+    
     
     %%%% RMS Electrodes picked
     pickElec = [23 126 38];
@@ -133,14 +174,26 @@ for ee=1:2
         subplot(3,1,chan); hold on;
         tmpRMSlr = [rmsTopo(:,1:2,pickElec(chan))./rmsTopoNoise(:,1:2,pickElec(chan)) rmsTopo(:,3:4,pickElec(chan)) ./ noiseTopoCorr(:,1:2,pickElec(chan))];
         tmpRMSsr = [rmsTopo(:,5:6,pickElec(chan))./rmsTopoNoise(:,5:6,pickElec(chan)) rmsTopo(:,7:8,pickElec(chan)) ./ noiseTopoCorr(:,3:4,pickElec(chan))];
-        bar([mean(tmpRMSlr) mean(tmpRMSsr)])
-        errorbar([mean(tmpRMSlr) mean(tmpRMSsr)],[std(tmpRMSlr)/sqrt(length(tmpRMSlr)) std(tmpRMSsr)/sqrt(length(tmpRMSlr))],'k','Linestyle','none')
-        line([1 8],[1 1],'Color','r','LineWidth',3)
+        boxplot([1./tmpRMSlr 1./tmpRMSsr])
+        line([1 8],[1 1],'Color','r','LineWidth',2)
         title(['elec' num2str(pickElec(chan))])
+        ylabel('1/ (RMS S/N)')
+        ylim([-0.2 2.2])
+        xticklabels({'longRMSAM','RSMlin','RMSElin','RMSEtmp','shortAM','RSMlin','RMSElin','RMSEtmp'})
     end
     saveas(gcf,['figures' filesep 'RMS per elec E' num2str(ee)],'png')
     
+%     figure; hold on;
+%     for chan=1:length(pickElec)
+%         subplot(3,1,chan); hold on;
+%         tmpRMSlr = [rmsTopo(:,1:2,pickElec(chan))./rmsTopoNoise(:,1:2,pickElec(chan)) rmsTopo(:,3:4,pickElec(chan)) ./ noiseTopoCorr(:,1:2,pickElec(chan))];
+%         tmpRMSsr = [rmsTopo(:,5:6,pickElec(chan))./rmsTopoNoise(:,5:6,pickElec(chan)) rmsTopo(:,7:8,pickElec(chan)) ./ noiseTopoCorr(:,3:4,pickElec(chan))];
+%         bar([mean(tmpRMSlr) mean(tmpRMSsr)])
+%         errorbar([mean(tmpRMSlr) mean(tmpRMSsr)],[std(tmpRMSlr)/sqrt(length(tmpRMSlr)) std(tmpRMSsr)/sqrt(length(tmpRMSlr))],'k','Linestyle','none')
+%         line([1 8],[1 1],'Color','r','LineWidth',3)
+%         title(['elec' num2str(pickElec(chan))])
+%     end
+%     saveas(gcf,['figures' filesep 'RMS per elec E' num2str(ee)],'png')
+    
     
 end
-
-

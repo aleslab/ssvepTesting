@@ -13,7 +13,6 @@ cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
 dataPath = {'/Users/marleneponcet/Documents/data/LongRangeV2/', '/Users/marleneponcet/Documents/data/LRshortDC/V2/'};
-pickElec = [23 9 38];
 
 for ee=1:2 % which experiment
     clear diffFilt rmsFilt rmseNoCoef rmsNoise rmsSignal rmseCoef rmseNoCoef testrmsNoise rmsTopo rmsTopoNoise

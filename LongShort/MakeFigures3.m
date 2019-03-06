@@ -113,24 +113,27 @@ for ee=1:2 % which experiment
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     % per sbj
-%     pickElec = 9;
-%     figure;
-%     for ss=1:length(sbj)
-%         subplot(4,4,ss); hold on;
-%         plot(sbj(ss,1).data.time,sbj(ss,1).data.filteredWave(pickElec,:)-sbj(ss,4).data.filteredWave(pickElec,:),'LineWidth',2);
+    % per sbj
+    pickElec = 9;
+    figure;
+    for ss=1:length(sbj)
+        subplot(4,4,ss); hold on;
+        plot(sbj(ss,1).data.time,sbj(ss,1).data.filteredWave(pickElec,:)-sbj(ss,4).data.filteredWave(pickElec,:),'LineWidth',2);
 %         plot(avPredictions(1).time,avPredictions(1).filteredWave(pickElec,:) - avPredictions(4).filteredWave(pickElec,:),'LineWidth',2);
-%         plot(avPredictions(1).time,avPredictions(1).noiseWave(pickElec,:) ,'LineWidth',2);
-%         testRMS(ss) = rms(sbj(ss,1).data.filteredWave(pickElec,:)-sbj(ss,4).data.filteredWave(pickElec,:));
-%     end
-%     figure;
-%     for ss=1:length(sbj)
-%         subplot(4,4,ss); hold on;
-%         plot(sbj(ss,1).data.time,sbj(ss,6).data.filteredWave(pickElec,:)-sbj(ss,9).data.filteredWave(pickElec,:),'LineWidth',2);
+        plot(sbj(ss,1).data.time,sbj(1).data.noiseWave(pickElec,:) ,'LineWidth',2);
+        testRMS(ss) = rms(sbj(ss,1).data.filteredWave(pickElec,:)-sbj(ss,4).data.filteredWave(pickElec,:));
+        title(['rms' num2str(testRMS(ss))])
+    end
+    figure;
+    for ss=1:length(sbj)
+        subplot(4,4,ss); hold on;
+        plot(sbj(ss,1).data.time,sbj(ss,6).data.filteredWave(pickElec,:)-sbj(ss,9).data.filteredWave(pickElec,:),'LineWidth',2);
 %         plot(avPredictions(1).time,avPredictions(6).filteredWave(pickElec,:) - avPredictions(9).filteredWave(pickElec,:),'LineWidth',2);
-%         plot(avPredictions(1).time,avPredictions(6).noiseWave(pickElec,:) ,'LineWidth',2);
-%         testRMSShort(ss) = rms(sbj(ss,6).data.filteredWave(pickElec,:)-sbj(ss,9).data.filteredWave(pickElec,:));
-%     end
+        plot(sbj(ss,6).data.time,sbj(6).data.noiseWave(pickElec,:) ,'LineWidth',2);
+        plot(sbj(ss,6).data.time,rmsTopoNoise(ss,5,9),'LineWidth',2);
+        testRMSShort(ss) = rms(sbj(ss,6).data.filteredWave(pickElec,:)-sbj(ss,9).data.filteredWave(pickElec,:));
+        title(['rms' num2str(testRMSShort(ss))])
+    end
 
     pickElec = 16;
     figure; hold on

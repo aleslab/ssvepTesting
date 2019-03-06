@@ -15,7 +15,7 @@ cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
 dataPath = {'/Users/marleneponcet/Documents/data/LongRangeV2/', '/Users/marleneponcet/Documents/data/LRshortDC/V2/'};
-pickElec = [23 9 38];
+pickElec = [23 126 38];
 
 % too many variables to clear!!!!
 % for ee=1:2 % which experiment
