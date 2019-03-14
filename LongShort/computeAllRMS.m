@@ -59,7 +59,7 @@ for ee=1:2 % which experiment
     rmseNoCoef(:,:) = rms(rmsFilt(:,:,:),3)';
     rmsNoise = rms(testrmsNoise(:,:,:),3);
     save(['allRMSe' num2str(ee) '.mat'],'rmsSignal','rmseNoCoef','rmsNoise','rmseCoef')
-    
+     
       
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,12 +71,14 @@ for ee=1:2 % which experiment
             rmsTopo(ss,1,chan) = rms(sbj(ss,1).data.filteredWave(chan,:) );
             rmsTopo(ss,2,chan) = rms(sbj(ss,2).data.filteredWave(chan,:) );
             rmsTopo(ss,3,chan) = rms(sbj(ss,2).data.filteredWave(chan,:) - sbj(ss,1).data.filteredWave(chan,:) );
-            rmsTopo(ss,4,chan) = rms(sbj(ss,4).data.filteredWave(chan,:) - sbj(ss,1).data.filteredWave(chan,:) );
+            rmsTopo(ss,4,chan) = rms(sbj(ss,3).data.filteredWave(chan,:) - sbj(ss,1).data.filteredWave(chan,:) );
+            rmsTopo(ss,5,chan) = rms(sbj(ss,4).data.filteredWave(chan,:) - sbj(ss,1).data.filteredWave(chan,:) );
             
-            rmsTopo(ss,5,chan) = rms(sbj(ss,6).data.filteredWave(chan,:) );
-            rmsTopo(ss,6,chan) = rms(sbj(ss,7).data.filteredWave(chan,:) );
-            rmsTopo(ss,7,chan) = rms(sbj(ss,7).data.filteredWave(chan,:) - sbj(ss,6).data.filteredWave(chan,:) );
-            rmsTopo(ss,8,chan) = rms(sbj(ss,9).data.filteredWave(chan,:) - sbj(ss,6).data.filteredWave(chan,:) );
+            rmsTopo(ss,6,chan) = rms(sbj(ss,6).data.filteredWave(chan,:) );
+            rmsTopo(ss,7,chan) = rms(sbj(ss,7).data.filteredWave(chan,:) );
+            rmsTopo(ss,8,chan) = rms(sbj(ss,7).data.filteredWave(chan,:) - sbj(ss,6).data.filteredWave(chan,:) );
+            rmsTopo(ss,9,chan) = rms(sbj(ss,8).data.filteredWave(chan,:) - sbj(ss,6).data.filteredWave(chan,:) );
+            rmsTopo(ss,10,chan) = rms(sbj(ss,9).data.filteredWave(chan,:) - sbj(ss,6).data.filteredWave(chan,:) );
         end
     end
     
@@ -90,7 +92,7 @@ for ee=1:2 % which experiment
             end
         end
     end
-    save(['chanRMS' num2str(ee) '.mat'],'rmsTopo','rmsTopoNoise')    
+    save(['chanRMSall' num2str(ee) '.mat'],'rmsTopo','rmsTopoNoise')    
     
 end
 

@@ -2,10 +2,10 @@
 % check accuracy perf in LongRangeV2
 % for each participant
 
-dataDir = '/Users/marleneponcet/Documents/data/LRshortDC/V2/originalData/';
+dataDir = '/Users/marleneponcet/Documents/data/LongRangeV2/originalData/';
 behavFiles = dir([dataDir '*.mat']);
 
-keepSBJ = [1:6 8 10:15];
+keepSBJ = [1 2 4:18];
 
 % conditions:
 % LR 1:6 AM, left, right, simult, double left, double right
@@ -86,5 +86,5 @@ figure;boxplot(behav*100); ylim([0 100]);
 xticklabels({'AM', 'l', 'r', 'sim', 'Dl', 'Dr','AM', 'l', 'r', 'sim', 'Dl', 'Dr'})
 ylabel('% correct')
 xlabel('condition')
-saveas(gcf,['Figure' filesep 'behavShortDC.png'])
+saveas(gcf,'behavlongDC.png')
 % chance = 25%

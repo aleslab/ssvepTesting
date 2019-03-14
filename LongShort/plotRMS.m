@@ -35,21 +35,20 @@ for ee=1:2
     noiseCorr = zeros(length(rmsNoise),11);
     noiseCorr2 = zeros(length(rmsNoise),11); % this is just to have a look with the sqrt results
 
-    %%% not including AM noise for the rmse
     for ss=1:length(rmsNoise)
         for motrange=1:2
             noiseCorr(ss,1+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + rmsNoise(ss,2+5*(motrange-1))^2); % AM + lin
             noiseCorr2(ss,1+7*(motrange-1)) = rmsNoise(ss,1+5*(motrange-1)) * sqrt(3); % AM + lin
-            noiseCorr(ss,2+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + rmsNoise(ss,3+5*(motrange-1))^2); % lin + spat
+            noiseCorr(ss,2+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + rmsNoise(ss,3+5*(motrange-1))^2); % AM + spat
             noiseCorr2(ss,2+7*(motrange-1)) = rmsNoise(ss,1+5*(motrange-1)) * sqrt(3);
-            noiseCorr(ss,3+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + rmsNoise(ss,4+5*(motrange-1))^2); % lin + temp
+            noiseCorr(ss,3+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + rmsNoise(ss,4+5*(motrange-1))^2); % AM + temp
             noiseCorr2(ss,3+7*(motrange-1)) = rmsNoise(ss,1+5*(motrange-1)) * sqrt(3);
-            noiseCorr(ss,4+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + rmsNoise(ss,3+5*(motrange-1))^2 + rmsNoise(ss,4+5*(motrange-1))^2); % lin + spat + temp
+            noiseCorr(ss,4+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + rmsNoise(ss,3+5*(motrange-1))^2 + rmsNoise(ss,4+5*(motrange-1))^2); % AM + spat + temp
             noiseCorr2(ss,4+7*(motrange-1)) = rmsNoise(ss,1+5*(motrange-1)) * sqrt(4);
             % noise from regression uses the coef
-            noiseCorr(ss,5+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + coefS(ss,motrange)*rmsNoise(ss,3+5*(motrange-1))^2); % lin + spat
-            noiseCorr(ss,6+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + coefT(ss,motrange)*rmsNoise(ss,4+5*(motrange-1))^2); % lin + temp
-            noiseCorr(ss,7+7*(motrange-1)) = sqrt(rmsNoise(ss,2+5*(motrange-1))^2 + coefF(ss,motrange,1)*rmsNoise(ss,3+5*(motrange-1))^2 + coefF(ss,motrange,2)*rmsNoise(ss,4+5*(motrange-1))^2);             
+            noiseCorr(ss,5+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + coefS(ss,motrange)*rmsNoise(ss,3+5*(motrange-1))^2); % AM + spat
+            noiseCorr(ss,6+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + coefT(ss,motrange)*rmsNoise(ss,4+5*(motrange-1))^2); % AM + temp
+            noiseCorr(ss,7+7*(motrange-1)) = sqrt(rmsNoise(ss,1+5*(motrange-1))^2 + coefF(ss,motrange,1)*rmsNoise(ss,3+5*(motrange-1))^2 + coefF(ss,motrange,2)*rmsNoise(ss,4+5*(motrange-1))^2);             
         end
     end
     subplot(2,2,4);hold on;
@@ -119,13 +118,13 @@ for ee=1:2
     for ss=1:size(rmsTopoNoise,1)
         for chan=1:length(rmsTopoNoise)
             noiseTopoCorr(ss,1,chan) = sqrt(rmsTopoNoise(ss,1,chan)^2 + rmsTopoNoise(ss,2,chan)^2); % AM + lin
-            noiseTopoCorr(ss,2,chan) = sqrt(rmsTopoNoise(ss,2,chan)^2 + rmsTopoNoise(ss,4,chan)^2); % lin + temp
+            noiseTopoCorr(ss,2,chan) = sqrt(rmsTopoNoise(ss,1,chan)^2 + rmsTopoNoise(ss,4,chan)^2); % AM + temp
             noiseTopoCorr(ss,3,chan) = sqrt(rmsTopoNoise(ss,5,chan)^2 + rmsTopoNoise(ss,6,chan)^2); % AM + lin
-            noiseTopoCorr(ss,4,chan) = sqrt(rmsTopoNoise(ss,6,chan)^2 + rmsTopoNoise(ss,8,chan)^2); % lin + temp
+            noiseTopoCorr(ss,4,chan) = sqrt(rmsTopoNoise(ss,5,chan)^2 + rmsTopoNoise(ss,8,chan)^2); % AM + temp
             
             % regression coef 
-            noiseTopoCorr(ss,5,chan) = sqrt(rmsTopoNoise(ss,2,chan)^2 + coefF(ss,1,1)*rmsTopoNoise(ss,3,chan)^2 + coefF(ss,1,2)*rmsTopoNoise(ss,4,chan)^2); % lin + spat + temp             
-            noiseTopoCorr(ss,6,chan) = sqrt(rmsTopoNoise(ss,6,chan)^2 + coefF(ss,2,1)*rmsTopoNoise(ss,7,chan)^2 + coefF(ss,2,2)*rmsTopoNoise(ss,8,chan)^2); % lin + spat + temp             
+            noiseTopoCorr(ss,5,chan) = sqrt(rmsTopoNoise(ss,1,chan)^2 + coefF(ss,1,1)*rmsTopoNoise(ss,3,chan)^2 + coefF(ss,1,2)*rmsTopoNoise(ss,4,chan)^2); % AM + spat + temp             
+            noiseTopoCorr(ss,6,chan) = sqrt(rmsTopoNoise(ss,5,chan)^2 + coefF(ss,2,1)*rmsTopoNoise(ss,7,chan)^2 + coefF(ss,2,2)*rmsTopoNoise(ss,8,chan)^2); % AM + spat + temp             
         end
     end
 %     figure; plotTopo(squeeze(mean(noiseTopoCorr(:,4,:))),cfg.layout); colorbar
@@ -144,25 +143,28 @@ for ee=1:2
         subplot(2,5,cond)
         plotTopo(squeeze(mean(normTopoRMSlr(:,cond,:))),cfg.layout)
         colorbar
-        caxis([1 7.5])
-        if ee==2
-            caxis([1 7.5])
-        else
-            caxis([1 2.5])
-        end
+%         if ee==1
+%             caxis([1 2.5])
+%         elseif ee == 2 && cond<3
+%             caxis([1 7.5])
+%         else
+%             caxis([1 3])
+%         end
         title(titre{cond})
         subplot(2,5,cond+5)
         plotTopo(squeeze(mean(normTopoRMSsr(:,cond,:))),cfg.layout)
         colorbar
-        if ee==2
-            caxis([1 7.5])
-        else
-            caxis([1 2.5])
-        end
+%         if ee==1
+%             caxis([1 2.5])
+%         elseif ee == 2 && cond<3
+%             caxis([1 7.5])
+%         else
+%             caxis([1 3])
+%         end
         title(titre{cond})
     end
     colormap(jmaColors('hotcortex'));
-%     colormap('hot');
+    colormap('hot');
     saveas(gcf,['figures' filesep 'topoRMS E' num2str(ee)],'png')
     
     
