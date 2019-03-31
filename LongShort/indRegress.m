@@ -95,7 +95,7 @@ for ss=1:length(sbj)
         rmsFu(ss,numCond) = rms( predFul(:) - sbj(ss,1+5*(numCond-1)).data.filteredWave(:));
         % rms predFul for topo (per chan)
         for chan = 1: size(predFul,1)
-            rmsFuTopo(ss,numCond,chan) = rms( predFul(chan,:) - sbj(ss,1+5*(numCond-1)).data.filteredWave(chan,:));
+            rmseFuTopo(ss,numCond,chan) = rms( predFul(chan,:) - sbj(ss,1+5*(numCond-1)).data.filteredWave(chan,:));
         end
      
         correctedSpat(ss,numCond,:,:) = coefFu(numCond,2)*spatInt(:,:,numCond);
@@ -109,7 +109,7 @@ for ss=1:length(sbj)
 end
 
 save(['regCoefE' num2str(ee) '.mat'],'coefF','coefS','coefT');
-save(['rmsFuTopo' num2str(ee) '.mat'],'rmsFuTopo');
+save(['rmseFuTopo' num2str(ee) '.mat'],'rmseFuTopo');
 
 % need to do it separately for the 2 experiments because the time
 % dimensions are different
