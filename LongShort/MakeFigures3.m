@@ -111,7 +111,7 @@ for ee=1:2 % which experiment
     %        end
     %     end
     %     saveas(gcf,['figures' filesep 'E' num2str(ee) 'interactions'],'png')
-    figure('Renderer', 'painters', 'Position', [10 10 1200 300])
+    figure('Renderer', 'painters', 'Position', [10 10 1200 250])
     for chan=1:length(pickElec)
         subplot(1,3,chan); hold on;
         for mm=3:4 % long/short range
@@ -122,25 +122,43 @@ for ee=1:2 % which experiment
         line([0 400],[0 0],'Color','k','LineStyle','--')
         legend('spatL','spatS','tempL','tempS','Location','Best')
         if ee==2
-            ylim([-2 3])
+            ylim([-3 4])
         elseif ee==1
-            ylim([-2 3])
+            ylim([-3 4])
         end
     end
     saveas(gcf,['figures' filesep 'E' num2str(ee) 'interactions'],'png')
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % per sbj
         
-        figure('Renderer', 'painters', 'Position', [10 10 1200 300])
+    figure('Renderer', 'painters', 'Position', [10 10 1200 500])
+        for chan=1:length(pickElec)
+            subplot(2,3,chan); hold on;
+            plot(avPredictions(1).time,avPredictions(1).filteredWave(pickElec(chan),:),'LineWidth',2);
+            plot(avPredictions(1).time,avPredictions(1).filteredWave(pickElec(chan),:)-avPredictions(4).filteredWave(pickElec(chan),:),'LineWidth',2)
+            line([0 400],[0 0],'Color','k','LineStyle','--')
+            legend('AM','LR','Location','Best')
+            title(['unexplained chan' num2str(pickElec(chan))])
+            ylim([-3 4])
+            subplot(2,3,chan+3); hold on;
+            plot(avPredictions(1).time,avPredictions(6).filteredWave(pickElec(chan),:),'LineWidth',2);
+            plot(avPredictions(1).time,avPredictions(6).filteredWave(pickElec(chan),:)-avPredictions(9).filteredWave(pickElec(chan),:),'LineWidth',2)
+            line([0 400],[0 0],'Color','k','LineStyle','--')
+            legend('AM','SR','Location','Best')
+            title(['unexplained chan' num2str(pickElec(chan))])
+            ylim([-3 4])            
+        end
+        saveas(gcf,['figures' filesep 'AMRest3chan E' num2str(ee)],'png')
+        
+    figure('Renderer', 'painters', 'Position', [10 10 1200 250])
         for chan=1:length(pickElec)
             subplot(1,3,chan); hold on;
             plot(avPredictions(1).time,avPredictions(1).filteredWave(pickElec(chan),:)-avPredictions(4).filteredWave(pickElec(chan),:),'LineWidth',2)
             plot(avPredictions(1).time,avPredictions(6).filteredWave(pickElec(chan),:)-avPredictions(9).filteredWave(pickElec(chan),:),'LineWidth',2)
             line([0 400],[0 0],'Color','k','LineStyle','--')
-            legend('LR','SR')
+            legend('LR','SR','Location','Best')
             title(['unexplained chan' num2str(pickElec(chan))])
-            ylim([-2 3])
+            ylim([-3 4])            
         end
         saveas(gcf,['figures' filesep 'Rest3chan E' num2str(ee)],'png')
         
