@@ -69,7 +69,7 @@ end
 % so we have an integer number of samples per cycle
 % and define the trials (trl) based on the resampled data
 cfg.trialdef.preStimDuration = 0; % required for resample_ssvep
-cfg.trialdef.trialLength = experimentData(1).trialData.trialDuration; 
+cfg.trialdef.trialLength = 1/experimentData(1).condInfo.stimTagFreq * experimentData(1).condInfo.lengthSeq * experimentData(1).condInfo.nbSeq; 
 cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
 cfg.trialdef.epochLength = 1/experimentData(1).condInfo.stimTagFreq * experimentData(1).condInfo.lengthSeq *2; % size of the window for cutting trials (in seconds)
 data = resample_ssvep(cfg,data);
