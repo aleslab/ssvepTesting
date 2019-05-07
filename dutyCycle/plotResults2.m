@@ -26,8 +26,10 @@ keepSbj = [1:5 7:11 13:15]; % (there is no S1) reject S7 and S12: just noise?
 
 col={'b','r','g'};
 
-pickElec = 23; % 23 Oz, 9, B6=38, 16=best SNR
+% pickElec = 23; % 23 Oz, 9, B6=38, 16=best SNR
 
+% from topo max: A15 & A27
+pickElec = [15 23 27];
 
 %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%% Topography
@@ -45,7 +47,8 @@ for cond=1:15
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,'topoFlickF1.jpg')
+colormap('hot');
+saveas(gcf,['figures' filesep 'topoFlickF1.jpg'])
 % motion
 position = [11 7 3 9 15 13 8];
 figure; hold on;
@@ -53,7 +56,7 @@ for cond=16:length(avData)
     subplot(3,5,position(cond-15)); hold on;
     plotTopo(avData(cond).amp(:,avData(cond).i1f1*2-1),cfg.layout);
     colorbar
-    if cond < 6
+    if cond-15 == 3
         caxis([0 1.5]);
     else
         caxis([0 2.5]);
@@ -61,18 +64,20 @@ for cond=16:length(avData)
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,'topoMotionF2.jpg')
+colormap('hot');
+saveas(gcf,['figures' filesep 'topoMotionF2.jpg'])
 
 %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%% SSVEP
+for elec = 1:length(pickElec)
 for cond=1:15 
-   avAmp(cond)=avData(cond).amp(pickElec,(avData(cond).i1f1));
+   avAmp(cond)=avData(cond).amp(pickElec(elec),(avData(cond).i1f1));
 %    avProj(cond)=mean(proj_Amp(pickElec,avData(cond).i1f1,cond,:));
-   semProj(cond) = std(proj_Amp(pickElec,avData(cond).i1f1,cond,:)) / sqrt(size(dataSbj,2));
+   semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1,cond,:)) / sqrt(size(dataSbj,2));
 end
 for cond=16:22 % for motion take the 2f1
-   avAmp(cond)=avData(cond).amp(pickElec,(avData(cond).i1f1*2-1));
-   semProj(cond) = std(proj_Amp(pickElec,avData(cond).i1f1*2-1,cond,:)) / sqrt(size(dataSbj,2));
+   avAmp(cond)=avData(cond).amp(pickElec(elec),(avData(cond).i1f1*2-1));
+   semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1*2-1,cond,:)) / sqrt(size(dataSbj,2));
 end
 % % compute noise level per freq
 % for cond=1:15 % exclude motion conditions
@@ -80,7 +85,7 @@ end
 % end
 % compute noise level all cond pooled
 for cond = 1:length(avData)
-    baseline(cond) = (avData(cond).amp(pickElec,avData(cond).i1f1-1)+avData(cond).amp(pickElec,avData(cond).i1f1+1)) / 2;
+    baseline(cond) = (avData(cond).amp(pickElec(elec),avData(cond).i1f1-1)+avData(cond).amp(pickElec(elec),avData(cond).i1f1+1)) / 2;
 end
 temp=reshape(baseline(1:20),4,5);
 avBaseline = mean(temp);
@@ -103,8 +108,9 @@ legend('10','5','2.5','noise level','Location','Best')
 xlabel('Duty Cycle')
 ylabel('SSVEP amplitude')
 set(gca,'FontSize',15)
-saveas(gcf,'ampDC.png')
-saveas(gcf,'ampDC.eps','epsc')
+title(num2str(pickElec(elec)))
+saveas(gcf,['figures' filesep 'ampDCloc' num2str(pickElec(elec)) '.png'])
+saveas(gcf,['figures' filesep 'ampDCloc' num2str(pickElec(elec)) '.eps'],'epsc')
 
 
 
@@ -118,6 +124,8 @@ for fq=1:3
         movSEM(fq,dc) = std(tabMot(fq,dc,:))/sqrt(6);
     end
 end
+
+if elec == 1 % don't plot for each electrode
 figure;hold on;
 for fq=1:3
     errorbar(static(fq,:),statSEM(1,:),['.-'  col{fq}],'MarkerSize',40,'LineWidth',2)
@@ -135,7 +143,7 @@ ylabel('motion ratings')
 set(gca,'FontSize',15)
 saveas(gcf,'ratingsDC.png')
 saveas(gcf,'ratingsDC.eps','epsc')
-
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -155,8 +163,9 @@ ylim([0 3])
 legend('flickering','','moving')
 ylabel('motion rating')
 xlabel('SSVEP amplitude')
-saveas(gcf,'correlSSVEPratings.png')
-saveas(gcf,'correlSSVEPratings.eps','epsc')
+title(num2str(pickElec(elec)))
+saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.png'])
+saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.eps'],'epsc')
 
-
+end
 
