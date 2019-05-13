@@ -6,14 +6,6 @@ function preProcessing_seqContext_lastStim(sbjNb)
 % 4 stim followed by 2 stim duration blanks = epochs of 1.7 sec(6*24/85)
 
 
-%%%%%% ATTENTION
-% will probably need to do something different for the epochs in the random
-% condition... how to "cut" those???
-
-% also maybe I should only take the last stimulus presention (not the
-% entire sequence) = make a different resample_ssvep
-% run a sbj with 2 freq?
-
 ff = sbjNb;
 
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
@@ -80,7 +72,6 @@ cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
 cfg.trialdef.epochLength = 1/experimentData(1).condInfo.stimTagFreq * 2; % size of the window for cutting trials (in seconds) = 2 cycles = 600ms
 data = resample_only(cfg,data);
 
-save([dataOut eegFiles(ff).name(1:end-4) '_needClean'],'data')
 
 %%%%%%%%%%%%%%%%%%%
 % artefact rejection

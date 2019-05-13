@@ -5,14 +5,13 @@ clearvars;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
-dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/cleanData/';
-listData = dir([dataDir '*.mat']);
-dataOut = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
-
-dataDir = 'C:\Users\Marlene\Documents\dataStAndrews\seqContext\clean\';
+dataDir = '/Users/marleneponcet/Documents/data/seqContext/clean/';
 listData = dir([dataDir '*seq.mat']);
+dataOut = '/Users/marleneponcet/Documents/data/seqContext/Axx/';
+
 
 for ff=1:length(listData)
     
@@ -55,25 +54,12 @@ for ff=1:length(listData)
         
     
     % get the condition labels
-    testedFreq = [85/8 85/16 85/32]; % in Hz this is the onset of the single stimulus
-    onTime = [1 2 4 6 7];
-    condNb = 1;
-    for testFq=1:length(testedFreq)
-        for tt = 1:length(onTime)
-            Axx(condNb).condLabel = [num2str(testedFreq(testFq),'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC'];
-            condNb = condNb+1;
-        end
-    end
-    testedFreq = [85/32 85/16 85/8 85/16 85/32]; 
-    onTime = [1 2 4 6 7];
-    for tt = 1:length(testedFreq)
-        % freq/2 so that it is for the 2 stimuli (only 1 in the experiment) 
-        Axx(condNb).condLabel = ['motion ' num2str(testedFreq(tt)/2,'%.1f') 'Hz ' num2str(onTime(tt)/8*100) '% DC']; 
-        condNb = condNb+1;
-    end
-    
-    Axx(condNb).condLabel = ['motion ' num2str(85/(32*2),'%.1f') 'Hz 50% DC'];
-    Axx(condNb+1).condLabel = ['motion ' num2str(85/(16*2),'%.1f') 'Hz 50% DC'];
+    Axx(1).condLabel = 'motion';
+    Axx(2).condLabel = 'sequence';
+    Axx(3).condLabel = 'reversal';
+    Axx(4).condLabel = 'twoPositions';
+    Axx(5).condLabel = 'random';
+
     save([dataOut 'Axx_' listData(ff).name(11:21)],'Axx')
     
 end

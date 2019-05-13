@@ -1,8 +1,10 @@
 
 clearvars;
-dataIn = '/Users/marleneponcet/Documents/data/seqContext/cleanData/';
-filesDir = 'C:\Users\Marlene\Documents\dataStAndrews\seqContext\clean\';
+% filesDir = 'C:\Users\Marlene\Documents\dataStAndrews\seqContext\clean\';
+filesDir = '/Users/marleneponcet/Documents/data/seqContext/clean/';
 filesList = dir([filesDir '*stim.mat']);
+
+plotElec = [23 9];
 
 for ss=1:length(filesList)
 clear cleanData
@@ -25,11 +27,16 @@ end
 %     avDataT(:,:,condition) = squeeze(mean(condTrial));
 % end
 
+for ee=1:length(plotElec)
 figure; hold on
 for condition = 1:length(allCond)
-    plot(avData(ss,condition).time,avData(ss,condition).avg(23,:),'LineWidth',2)
+    plot(avData(ss,condition).time,avData(ss,condition).avg(plotElec(ee),:),'LineWidth',2)
 end
 legend('motion','seq','reversal','two','rand')
+title(['S' num2str(ss) ' E' num2str(plotElec(ee))])
+saveas(gcf,['figures', filesep 'S' num2str(ss) ' E' num2str(plotElec(ee))],'png')
+end
+
 
 % figure; hold on
 % for condition = 1:length(allCond)
@@ -38,14 +45,22 @@ legend('motion','seq','reversal','two','rand')
 
 end
 
+
+
+
 for condition = 1:length(allCond)
     grandavg(condition) = ft_timelockgrandaverage(cfg,avData(1,condition),avData(2,condition),avData(3,condition));
 end
+
+for ee=1:length(plotElec)
 figure; hold on
 for condition = 1:length(allCond)
-    plot(grandavg(condition).time,grandavg(condition).avg(23,:),'LineWidth',2)
+    plot(grandavg(condition).time,grandavg(condition).avg(plotElec(ee),:),'LineWidth',2)
 end
 legend('motion','seq','reversal','two','rand')
+title(['Avg' ' E' num2str(plotElec(ee))])
+saveas(gcf,['figures', filesep 'Avg' ' E' num2str(plotElec(ee))],'png')
+end
 
 ft_singleplotER(cfg,avData(1,1))
 

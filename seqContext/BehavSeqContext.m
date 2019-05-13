@@ -1,6 +1,7 @@
 % analyse behavioural results for seqContext
 % detection of white dots (0-3) on the black vertical bars
-filesDir = 'C:\Users\Marlene\Documents\dataStAndrews\seqContext\behaviour\';
+% filesDir = 'C:\Users\Marlene\Documents\dataStAndrews\seqContext\behaviour\';
+filesDir = '/Users/marleneponcet/Documents/data/seqContext/originalData/';
 allfiles = dir([filesDir '*.mat']);
 
 for ff = 1:length(allfiles)

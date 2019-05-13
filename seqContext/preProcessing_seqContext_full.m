@@ -1,18 +1,10 @@
 function preProcessing_seqContext_full(sbjNb)
 %%% read and extract epochs for seqContext experiment
-% 5 conditions * 17 blocks * 2 repetitions per block
+% 5 conditions * 14 blocks * 2 repetitions per block
 % each sequence is repeated 10 times in one trial condition
 % fq presentation 85/24 at 50% duty-cycle
 % 4 stim followed by 2 stim duration blanks = epochs of 1.7 sec(6*24/85)
 
-
-%%%%%% ATTENTION
-% will probably need to do something different for the epochs in the random
-% condition... how to "cut" those???
-
-% also maybe I should only take the last stimulus presention (not the
-% entire sequence) = make a different resample_ssvep
-% run a sbj with 2 freq?
 
 ff = sbjNb;
 
@@ -74,7 +66,6 @@ cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
 cfg.trialdef.epochLength = 1/experimentData(1).condInfo.stimTagFreq * experimentData(1).condInfo.lengthSeq *2; % size of the window for cutting trials (in seconds)
 data = resample_ssvep(cfg,data);
 
-save([dataOut eegFiles(ff).name(1:end-4) '_needCleanSEQ'],'data')
 
 %%%%%%%%%%%%%%%%%%%
 % artefact rejection
