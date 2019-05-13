@@ -8,14 +8,14 @@ addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
-dataDir = '/Users/marleneponcet/Documents/data/seqContext/clean/';
+dataDir = '/Users/marleneponcet/Documents/data/seqContext/cleanData/';
 listData = dir([dataDir '*seq.mat']);
 dataOut = '/Users/marleneponcet/Documents/data/seqContext/Axx/';
 
 
 for ff=1:length(listData)
     
-    clear cleanData; clear Axx; clear cfg;
+    clear data; clear Axx; clear cfg;
     load([dataDir listData(ff).name]);
     
 %     % reref to average
@@ -25,7 +25,7 @@ for ff=1:length(listData)
 %     [cleanData] = ft_preprocessing(cfg,cleanData);
     
     % compute steady state
-    cleanData=rmfield(data,'cfg'); % clear cfg so that the data does not become too heavy
+    data=rmfield(data,'cfg'); % clear cfg so that the data does not become too heavy
     
     %     % hierarchical structure
     %     % create folder for each subject
@@ -43,13 +43,13 @@ for ff=1:length(listData)
     % 1 Axx per sbj
     cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
     cfg.layout = 'biosemi128.lay';
-    allcond = unique(cleanData.trialinfo(:,1));
+    allcond = unique(data.trialinfo(:,1));
     
     % length for 5th condition not always the same
-    % add cleanData.trialinfo(:,3) == 144
+    % add cleanData.trialinfo(:,3) == 864
     for cond=1:length(allcond)
-        cfg.trials = find(cleanData.trialinfo(:,1) == allcond(cond) & cleanData.trialinfo(:,3) == 144);
-        [Axx(cond)] = ft_steadystateanalysis(cfg, cleanData); % the field elec is present only if a channel has been replaced
+        cfg.trials = find(data.trialinfo(:,1) == allcond(cond) & data.trialinfo(:,3) == 864);
+        [Axx(cond)] = ft_steadystateanalysis(cfg, data); % the field elec is present only if a channel has been replaced
     end
         
     

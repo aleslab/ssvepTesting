@@ -70,7 +70,9 @@ for iTrial = 1:length(condEventIdx)-1
             endsample = condSamples(indexTrial(2) - 1); % end of stim (trigger = 10)
             offset = 0;
             cycleLengthSamp = ceil(endsample - begsample);
-            nbCycle = length(cycleStarts);
+            nbCycle = 10; % this is to construct the waveform, so should give the nb of cycles in one trial length(cycleStarts)=60
+            % however we want the waveform to be 6 cycles = 1 sequence that
+            % is 10 cycles (sequence) in one trial
             trl(end+1, :) = [begsample endsample offset condNum(iTrial) iTrial cycleLengthSamp nbCycle];
         end
     end
