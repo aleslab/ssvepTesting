@@ -16,6 +16,7 @@ function [steadystate] = ft_steadystateanalysis(cfg, data)
 % the coefficients to be more intuitively understood because they directly
 % relate to the time domain representation of the data. 
 %
+%   cfg.keeptrials         = 'yes' or 'no', return individual trials or average (default = 'no')
 %
 % The output has the following fields:
 %            
@@ -116,6 +117,11 @@ end
 nTrials = length(data.trial);
 nchan  = size(data.trial{1},1);
 
+if (strcmp(cfg.keeptrials,'yes'))
+  singleepochfourier = nan(nTrials, nchan, floor(epochLengthSamp/2)+1);
+  singleepochwave = nan(nTrials, nchan, epochLengthSamp);
+end
+
 
 %Going to analyze each channel.
 for iChan = 1:nchan,
@@ -172,7 +178,10 @@ for iChan = 1:nchan,
     selRow = @(x) x(iChan,:); %Function to take one row of input
     thisChanData=cellfun(selRow,data.trial,'uniformoutput',false);
     thisChanData = cat(1,thisChanData{:});
-    
+
+    if (strcmp(cfg.keeptrials,'yes'))
+        singleepochwave(:,iChan,:) = thisChanData;
+    end
     
     %Do the fourier transform of the data. 
     dftData = thisChanData*dft;
@@ -200,6 +209,12 @@ for iChan = 1:nchan,
     %get the expected amplitude value instead of the raw dot product. 
     dftData = dftData/steadystate.ndft;
    
+    %For storing the single trial just keep the fourier coefficients
+    %up to the user to calculate mag/sin/cos
+    if (strcmp(cfg.keeptrials,'yes'))
+        singleepochfourier(:,iChan,:) = dftData;
+    end
+    
     %Take the mean over trials of the complex valued fourier transform data
     %Note: This is IDENTICAL to taking the time down average and then
     %calculating the fourier transform.  We do the fourier first so we have
@@ -238,31 +253,50 @@ for iChan = 1:nchan,
     
     %Going to loop over the frequencies to calc the pvalue for each one 
     %The DC component is not a complex phasor so is treated differently.
-    %Using a simple t-test instead of a T2 circ test. 
+    %Using a simple t-test instead of a T2 circ test.
+    %
+    %Removed loop by updated t2circ to accept matrix inputs
+    %This results in a ~300x speedup.  The loop was causing a huge slowdown
+    %When calculating many frequency values. 
+    %
+    %     steadystate.pval(iChan,1) = 1;
+    %     steadystate.stderrradius(1) = std(dftData(:,1))/sqrt(nTrials);
     
-%     steadystate.pval(iChan,1) = 1;
-%     steadystate.stderrradius(1) = std(dftData(:,1))/sqrt(nTrials);
-    for iFr = 1:steadystate.nfr,
+    %Calculate DC using standard t-test. 
+    
+    if isreal(dftData)
+        iFr = 1:steadystate.nfr; %Index into DC component
         
-        if isreal(dftData(:,iFr)),
-            [H,P,CI] = ttest(dftData(:,iFr));
-            steadystate.pval(iChan,iFr) = P;
-            steadystate.stderrradius(iChan,iFr) = std(dftData(:,iFr))/sqrt(nTrials);
-            steadystate.confradius(iChan,iFr)   = CI(2)-mean(dftData(:,iFr));
-            continue
-        end
+        [H,P,CI] = ttest(dftData(:,iFr));
+        steadystate.pval(iChan,iFr) = P;
+        steadystate.stderrradius(iChan,iFr) = std(dftData(:,iFr))/sqrt(nTrials);
+        steadystate.confradius(iChan,iFr)   = CI(2)-mean(dftData(:,iFr));
+    else
         
-        [steadystate.pval(iChan,iFr), pooledStdDev, confradius] = t2circ(dftData(:,iFr));
+        iFr = 1; %Index into DC component
+        
+        [H,P,CI] = ttest(dftData(:,iFr));
+        steadystate.pval(iChan,iFr) = P;
+        steadystate.stderrradius(iChan,iFr) = std(dftData(:,iFr))/sqrt(nTrials);
+        steadystate.confradius(iChan,iFr)   = CI(2)-mean(dftData(:,iFr));
+        
+        iFr = 2:steadystate.nfr;
+        [steadystate.pval(iChan,iFr), pooledStdDev, steadystate.confradius(iChan,iFr)] = ...
+            t2circ(dftData(:,iFr));
         steadystate.stderrradius(iChan,iFr) = pooledStdDev/sqrt(size(dftData,1));
-        steadystate.confradius(iChan,iFr) = confradius;
-        
-        
     end
     
-    
+       
     
     
 end
+
+%If singletrial "epoch" requested
+if (strcmp(cfg.keeptrials,'yes'))
+    steadystate.singleepochfourier = singleepochfourier;
+    steadystate.singleepochwave    = singleepochwave;
+end
+
 
 %allTrialMtx =cat(3,data.trial{:});
 % set output variables
