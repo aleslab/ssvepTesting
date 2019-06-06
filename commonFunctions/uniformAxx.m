@@ -24,3 +24,8 @@ newAxx.pval = newAxx.pval';
 newAxx.stderradius = newAxx.stderradius';
 newAxx.confradius = newAxx.confradius';
 
+% add field i1F2
+% no second harmonic but required
+newAxx.i1F2 = 0;
+% first harmonic should be -1 since DC already taken care of in the pg
+newAxx.i1F1 = newAxx.i1F1-1;
