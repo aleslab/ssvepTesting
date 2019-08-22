@@ -12,6 +12,9 @@ freqCond = {'F10_6','F5_3','F2_7'};
 motion(1).cond = 18;
 motion(2).cond = [17 19 22];
 motion(3).cond = [16 20 21];
+motion(1).label = 3;
+motion(2).label = [2 4 3];
+motion(3).label = [1 5 3];
 
 for freq = 1:3
     % create separate folder for each freq condition
@@ -28,9 +31,10 @@ for freq = 1:3
         % load Axx
         load ([dirData 'Axx' filesep listAxx(ff).name])
         
-
+        ll=0;
         for cc=1+5*(freq-1):5*freq % do not include moving condition
             clear uniAxx;
+            ll = ll+1;
             % double the wave for the single stim condition so that it fits
             % with the motion condition
             Axx(cc).wave = repmat(Axx(cc).wave,1,2);
@@ -39,14 +43,14 @@ for freq = 1:3
             % reformat Axx to be consistent with mrcDataViewer
             uniAxx = uniformAxx(Axx(cc));
             % save each condition separately
-            save([axxFolder filesep 'Axx_c' num2str(cc,'%02d')],'-struct','uniAxx')
+            save([axxFolder filesep 'Axx_c' num2str(ll,'%02d')],'-struct','uniAxx')
         end
         
         % add moving conditions
         for mm = 1:length(motion(freq).cond)
             clear uniAxx
             uniAxx = uniformAxx(Axx(motion(freq).cond(mm)));
-            save([axxFolder filesep 'Axx_c' num2str(20+mm,'%02d')],'-struct','uniAxx')
+            save([axxFolder filesep 'Axx_c' num2str(20+motion(freq).label(mm),'%02d')],'-struct','uniAxx')
         end
             
         

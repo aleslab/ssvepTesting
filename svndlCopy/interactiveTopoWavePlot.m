@@ -4,6 +4,9 @@ function [] = interactiveTopoWavePlot(data,timeIndices)
 % helpful help here
 %
 
+cfg.layout = 'biosemi128.lay';
+tmpcfg     = removefields(cfg, 'inputfile');
+cfg.layout = ft_prepare_layout(tmpcfg);
 
 %Do some sanity checks here
 %if wrong
@@ -22,7 +25,8 @@ iT = 1;
 clf;
 topoAx = subplot(10,1,1:8);
 set(gcf,'KeyPressFcn',@keyInput)
-topoH = plotOnEgi(squeeze(data(1,:)));
+topoH = plotTopo(squeeze( data(1,:)),cfg.layout);
+% topoH = plotOnEgi(squeeze(data(1,:)));
 axis off;
 hold on;
 elecVerts = get(topoH,'Vertices');
