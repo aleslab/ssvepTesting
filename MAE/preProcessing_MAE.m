@@ -5,7 +5,7 @@ function preProcessing_MAE(sbjNb)
 % stimulus presented below fixation cross
 
 %%% 1st sbj: nb of frames per ON/OFF is wrong
-% might want to change 4Hz to 4.25 Hz 85/20
+% might want to change 4Hz test to 4.25 Hz 85/20
 
 ff = sbjNb;
 clear data, clear cfg, clear cleanData;
@@ -15,8 +15,14 @@ addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
 ft_defaults
 
+addpath C:\Users\Marlene\Documents\git\fieldtrip-aleslab-fork
+addpath C:\Users\Marlene\Documents\git\ssvepTesting/svndlCopy
+addpath C:\Users\Marlene\Documents\git\ssvepTesting/biosemiUpdated
+ft_defaults
+
 % path to the files
 dataDir = '/Users/marleneponcet/Documents/data/MAE/originalData/';
+dataDir = 'C:\Users\Marlene\Documents\dataStAndrews\MAE\';
 dataOut = '/Users/marleneponcet/Documents/data/MAE/cleanData/';
 eegFiles = dir([dataDir '*.bdf']);
 behavFiles = dir([dataDir '*.mat']);
@@ -67,21 +73,25 @@ cfg.trialdef.epochLength = 28/85*6; % size of the window for cutting trials (in 
 cfg.trialdef.preStimDuration = 14/85*6 ; %21/85*4
 data = resample_ssvep(cfg,data);
 
+% the file that is saved is wrong. 1 epoch is correct, the other is too
+% small 1.6 s. Should work from the original bdf
+% also since it's all wrong, might want to do the sampling by hand not
+% based on triggers
+% save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
+save([eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 
-save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 
 
+%%%%%%%%%%%%%%%%%%%
+% artefact rejection
+% first check for extrem channels/trials
+cfg.layout = 'biosemi128.lay';
+cfg.method = 'distance';
+cfg.neighbours = ft_prepare_neighbours(cfg, data);
 
-    %%%%%%%%%%%%%%%%%%%
-    % artefact rejection
-    % first check for extrem channels/trials
-        cfg.layout = 'biosemi128.lay';
-        cfg.method = 'distance';
-        cfg.neighbours = ft_prepare_neighbours(cfg, data);
-
-        cfg.method = 'summary';
-        cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
-        [data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
+cfg.method = 'summary';
+cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
+[data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
 
     %     %Eye blink detection and rejection
     %     cfg.artfctdef.eog.trlpadding   = 0.1;
@@ -108,7 +118,7 @@ save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pi
     cfg.artfctdef.reject = 'complete';
     [cleanData] = ft_rejectartifact(cfg, data);
     
-    save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData')
+    save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData','cfg')
 % end
 
 end

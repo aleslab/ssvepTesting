@@ -23,11 +23,11 @@ dataRes = ft_resampledata(resampleCfg, datain);
 numEpoch = round((trialLengthSecs-preStimDuration) / epochLengthSecs); 
 for iTrial = 1:length(datain.trial)
     condition = datain.trialinfo(iTrial,1);
-    cycleLength = round(trialLengthSecs/datain.trialinfo(iTrial,4)*newFs); % round just so that it gives an integer number
+    epochLength = round(trialLengthSecs/datain.trialinfo(iTrial,4)*newFs); % round just so that it gives an integer number
     for iCycle = 1:numEpoch
         begsample = round((preStimDuration*newFs+1)+epochLengthSecs*newFs*(iCycle-1)) + trialLengthSecs*newFs*(iTrial-1);
         endsample = begsample + epochLengthSecs*newFs-1;
-        trl(end+1, :) = [round(begsample) round(endsample) offset condition iTrial cycleLength iCycle]; % round just so that it gives an integer number
+        trl(end+1, :) = [round(begsample) round(endsample) offset condition iTrial epochLength iCycle]; % round just so that it gives an integer number
     end
 end
         

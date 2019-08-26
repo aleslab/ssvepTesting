@@ -59,7 +59,10 @@ for iTrial = 1:length(condEventIdx)-1
     end
     
     begsample = cycleStarts(1); % first trigger
-    endsample = cycleEnd; % end of stim
+    % 1 cycle sampling = cfg.trialdef.cycleLength*2048
+    % 1 test sampling = cfg.trialdef.trialLength*2048
+    endsample = ceil(begsample + cfg.trialdef.trialLength*2048); % hard coded due to pb with screen refresh / triggers
+%     endsample = cycleEnd; % end of stim
     offset = 0;
     cycleLengthSamp = ceil(endsample - begsample);
     nbCycleStarts = length(cycleStarts);
