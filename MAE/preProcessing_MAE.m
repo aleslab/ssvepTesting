@@ -1,11 +1,10 @@
 function preProcessing_MAE(sbjNb)
 % 12 conditions * 2 trials per condition
 % trial: 30s adaptation 5s followed by test 10s adapt 5s test * 8
-% adapt frequency = 5 Hz, test frequency = 4.05 Hz (85/21)
+% adapt frequency = 5 Hz, test frequency = 4.25 Hz (85/20)
 % stimulus presented below fixation cross
 
-%%% 1st sbj: nb of frames per ON/OFF is wrong
-% might want to change 4Hz test to 4.25 Hz 85/20
+
 
 ff = sbjNb;
 clear data, clear cfg, clear cleanData;
@@ -21,24 +20,34 @@ addpath C:\Users\Marlene\Documents\git\ssvepTesting/biosemiUpdated
 ft_defaults
 
 % path to the files
+% dataDir = 'C:\Users\Marlene\Documents\dataStAndrews\MAE\';
 dataDir = '/Users/marleneponcet/Documents/data/MAE/originalData/';
-dataDir = 'C:\Users\Marlene\Documents\dataStAndrews\MAE\';
 dataOut = '/Users/marleneponcet/Documents/data/MAE/cleanData/';
 eegFiles = dir([dataDir '*.bdf']);
 behavFiles = dir([dataDir '*.mat']);
+
 
 cfg.dataset   =  [dataDir eegFiles(ff).name];
     
 % read the behavioural file to get parameters for SSVEP
 load([dataDir behavFiles(ff).name])
-cfg.trialdef.freqTag = experimentData(1).condInfo.testFreq; % tagging freq (4.05 Hz = 85/21)
-cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag; % duration one cycle (0.2471)
-cfg.trialdef.trialLength = cfg.trialdef.cycleLength*experimentData(1).condInfo.testDuration; % duration test stimulus
-    
+cfg.trialdef.freqTag = experimentData(1).condInfo.testFreq; % tagging freq (4.25 Hz = 85/20)
+cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag; % duration one cycle (0.2353)
+cfg.trialdef.trialLength = cfg.trialdef.cycleLength*21;
+% can potentially use the real duration of the trial but if so, also need
+% to change the way the resampling is done by using the screen frequency
+% and not a rounded one (e.g. not 85*6) 
+cfg.abortTrigger = 99; % invalid trial
+
+% Used for S15 to get the condition number
+% tt = struct2table(experimentData);
+% aa = struct2table(tt.condInfo);
+% cfg.condition = aa.triggerCond';
+
 % define trials
 cfg.trialdef.bitmask = 2^9-1; %Values to keep.
-cfg.trialdef.condRange = [101 112]; % all possible conditions
-cfg.trialdef.testTrigger = 150; % trigger sent at the beginning of test
+% cfg.trialdef.condRange = [101 112]; % all possible conditions
+cfg.trialdef.condRange = [120 132]; % all possible conditions
 cfg.trialdef.ssvepTagVal = 1;
 cfg.layout = 'biosemi128.lay';
 cfg.trialfun = 'df_MAE';
@@ -47,8 +56,8 @@ cfg.trialfun = 'df_MAE';
 % pre-processing
 cfg.demean        ='no'; % useless with detrend. applies baseline correction to the entire trial by default (or to the specified window in cfg.baselinewindow)
 cfg.reref         = 'yes';
-cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
-%    cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+cfg.refchannel    = {'A1','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'}; % A3 = CPz / use Cz = A1
+% cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 cfg.lpfilter  = 'yes';
 cfg.lpfreq = 85; % screen 85Hz ...  49 would really clear noise, not 85
 cfg.hpfreq = 1;
@@ -69,16 +78,24 @@ end
 % resample the data so we have an integer number of samples per cycle
 % and define the trials (trl) based on the resampled data
 cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
-cfg.trialdef.epochLength = 28/85*6; % size of the window for cutting trials (in seconds)
-cfg.trialdef.preStimDuration = 14/85*6 ; %21/85*4
+cfg.trialdef.epochLength = 1/85*20*6; % size of the window for cutting trials (in seconds)
+% cfg.trialdef.epochLength = 0.01176*20*9;
+cfg.trialdef.preStimDuration = 1/85*20*2 ; 
+% cfg.trialdef.preStimDuration = 0.01176*20*2;
 data = resample_ssvep(cfg,data);
+
+% cfg.newFs = 85*6;
+% cfg.trialdef.preStimDuration = 1/85*20*4;
+% cfg.trialdef.epochLength = 1/85*20*8;
+% data = resample_ssvep(cfg,data);
+
 
 % the file that is saved is wrong. 1 epoch is correct, the other is too
 % small 1.6 s. Should work from the original bdf
 % also since it's all wrong, might want to do the sampling by hand not
 % based on triggers
 % save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
-save([eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
+% save([eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 
 
 

@@ -1,4 +1,6 @@
-function trl = df_MAE(cfg)
+function trl = df_MAEv2(cfg)
+% v2: use the last SSVEP trigger as a "end of cycle" trigger
+
 % condition number is at the beginning of the trial (101-112)
 % 150 is a trigger sent at the beggining of each test 
 % so for one trial there should be a condition number followed by 9x150 
@@ -92,11 +94,11 @@ for iTrial = 1:length(condEventIdx)-1
             fprintf('trial %d with a missing frame \n ',iTrial)
         else % no problem with this trial
             begsample = condSamples(indexTrial(1) + 1); % first trigger
-            endsample = condSamples(indexTrial(2)); % end of stim
+            endsample = condSamples(indexTrial(2)-1); % end of stim
 %             endsample = condSamples(indexTrial(2)-1); % end of stim 
             offset = 0;
             cycleLengthSamp = ceil(endsample - begsample);
-            nbCycleStarts = length(cycleStarts);
+            nbCycleStarts = length(cycleStarts)-1;
             trl(end+1, :) = [begsample endsample offset condNum(iTrial) iTrial cycleLengthSamp nbCycleStarts];
         end        
         

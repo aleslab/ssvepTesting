@@ -12,9 +12,13 @@ bitmask = 2^9-1;%Values to keep.
 condRange = cfg.trialdef.condRange;
 ssvepTagVal = cfg.trialdef.ssvepTagVal;
 
+
 %First find all condition starts
 idx = 1;
 for i=1:length(event)   
+    
+    %%%%% remove 1 frame sample 
+    event(i).sample = event(i).sample - FRAME;  
     
     if isempty(event(i).value)
         continue;

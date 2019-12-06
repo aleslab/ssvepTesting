@@ -1,11 +1,6 @@
-function preProcessing_MAE(sbjNb)
-% 12 conditions * 2 trials per condition
-% trial: 30s adaptation 5s followed by test 10s adapt 5s test * 8
-% adapt frequency = 5 Hz, test frequency = 4.05 Hz (85/21)
-% stimulus presented below fixation cross
+function preProcessing_MAEv2(sbjNb)
 
-%%% 1st sbj: nb of frames per ON/OFF is wrong
-% might want to change 4Hz to 4.25 Hz 85/20
+
 
 ff = sbjNb;
 clear data, clear cfg, clear cleanData;
@@ -13,36 +8,50 @@ clear data, clear cfg, clear cleanData;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 ft_defaults
 
+% addpath C:\Users\Marlene\Documents\git\fieldtrip-aleslab-fork
+% addpath C:\Users\Marlene\Documents\git\ssvepTesting/svndlCopy
+% addpath C:\Users\Marlene\Documents\git\ssvepTesting/biosemiUpdated
+% ft_defaults
+
 % path to the files
-dataDir = '/Users/marleneponcet/Documents/data/MAE/originalData/';
-dataOut = '/Users/marleneponcet/Documents/data/MAE/cleanData/';
+% dataDir = 'C:\Users\Marlene\Documents\dataStAndrews\MAE\';
+dataDir = '/Users/marleneponcet/Documents/data/MAEv3/original/';
+dataOut = '/Users/marleneponcet/Documents/data/MAEv3/clean/';
 eegFiles = dir([dataDir '*.bdf']);
 behavFiles = dir([dataDir '*.mat']);
+
 
 cfg.dataset   =  [dataDir eegFiles(ff).name];
     
 % read the behavioural file to get parameters for SSVEP
-load([dataDir behavFiles(ff).name])
-cfg.trialdef.freqTag = experimentData(1).condInfo.testFreq; % tagging freq (4.05 Hz = 85/21)
-cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag; % duration one cycle (0.2471)
-cfg.trialdef.trialLength = cfg.trialdef.cycleLength*experimentData(1).condInfo.testDuration; % duration test stimulus
-    
+load([dataDir behavFiles(5*(ff-1)+1).name])
+cfg.monitorRefresh = sessionInfo.expInfo.monRefresh;
+cfg.trialdef.freqTag = cfg.monitorRefresh/10; % 8.5 Hz now
+cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag; % duration one cycle (0.2353)
+cfg.trialdef.trialLength = cfg.trialdef.cycleLength*38*2; % 42 or 38 in prev version * 2 due to 9 Hz
+cfg.abortTrigger = 99; % invalid trial
+cfg.samplingRate = 2048;
+
 % define trials
 cfg.trialdef.bitmask = 2^9-1; %Values to keep.
-cfg.trialdef.condRange = [101 112]; % all possible conditions
-cfg.trialdef.testTrigger = 150; % trigger sent at the beginning of test
+cfg.trialdef.condRange = [110 150]; % all possible conditions
+% triggers are: 111 112 113 for non adapted, 131 132 133 for right, 121 122
+% 123 for left adaptation. 
+% triggers 101 102 103 are general triggers sent with experiments, they are
+% wrong
 cfg.trialdef.ssvepTagVal = 1;
 cfg.layout = 'biosemi128.lay';
-cfg.trialfun = 'df_MAE';
+cfg.trialfun = 'df_MAEv2';
 [cfg] = ft_definetrial(cfg);
     
 % pre-processing
 cfg.demean        ='no'; % useless with detrend. applies baseline correction to the entire trial by default (or to the specified window in cfg.baselinewindow)
 cfg.reref         = 'yes';
-cfg.refchannel    = {'A1'}; % A3 = CPz / use Cz = A1
-%    cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+cfg.refchannel    = {'A1','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'}; % A3 = CPz / use Cz = A1
+% cfg.refchannel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 cfg.lpfilter  = 'yes';
 cfg.lpfreq = 85; % screen 85Hz ...  49 would really clear noise, not 85
 cfg.hpfreq = 1;
@@ -62,25 +71,36 @@ end
 
 % resample the data so we have an integer number of samples per cycle
 % and define the trials (trl) based on the resampled data
-cfg.newFs = 85*6; %Integer number of samples per monitor refresh (~500)
-cfg.trialdef.epochLength = 28/85*6; % size of the window for cutting trials (in seconds)
-cfg.trialdef.preStimDuration = 28/85*6 ; 21/85*4
+cfg.newFs = cfg.monitorRefresh*6; %Integer number of samples per monitor refresh (~500)
+cfg.trialdef.epochLength = 1/cfg.monitorRefresh*20*6; % size of the window for cutting trials (in seconds)
+cfg.trialdef.preStimDuration = 1/cfg.monitorRefresh*20*2 ; % prev version: 1/cfg.monitorRefresh*20*6
 data = resample_ssvep(cfg,data);
 
+% cfg.newFs = 85*6;
+% cfg.trialdef.preStimDuration = 1/85*20*4;
+% cfg.trialdef.epochLength = 1/85*20*8;
+% data = resample_ssvep(cfg,data);
 
-%     save(['/Users/marleneponcet/Documents/data/dutyCycle/toClean/' eegFiles(ff).name(1:end-4) '_toClean'],'data','cfg')
-% end
 
-    %%%%%%%%%%%%%%%%%%%
-    % artefact rejection
-    % first check for extrem channels/trials
-        cfg.layout = 'biosemi128.lay';
-        cfg.method = 'distance';
-        cfg.neighbours = ft_prepare_neighbours(cfg, data);
+% the file that is saved is wrong. 1 epoch is correct, the other is too
+% small 1.6 s. Should work from the original bdf
+% also since it's all wrong, might want to do the sampling by hand not
+% based on triggers
+% save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
+% save([eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 
-        cfg.method = 'summary';
-        cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
-        [data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
+
+
+%%%%%%%%%%%%%%%%%%%
+% artefact rejection
+% first check for extrem channels/trials
+cfg.layout = 'biosemi128.lay';
+cfg.method = 'distance';
+cfg.neighbours = ft_prepare_neighbours(cfg, data);
+
+cfg.method = 'summary';
+cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that layout was taken into account
+[data] = ft_rejectvisual(cfg, data); % if I want to change the way how the channels are interpolated then will have to do channel repair separately (will also not have to change the rejectvisual function)
 
     %     %Eye blink detection and rejection
     %     cfg.artfctdef.eog.trlpadding   = 0.1;
@@ -107,7 +127,7 @@ data = resample_ssvep(cfg,data);
     cfg.artfctdef.reject = 'complete';
     [cleanData] = ft_rejectartifact(cfg, data);
     
-    save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData')
+    save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData','cfg')
 % end
 
 end

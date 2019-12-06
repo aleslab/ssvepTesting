@@ -1,3 +1,6 @@
+%%% analysis file used for manuscript April 2019
+
+
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
@@ -198,7 +201,11 @@ for ee=1:2 % which experiment
 %         plotTopo(squeeze(mean(rmsSignalChan(:,toPlot(cond),:)./rmsNoiseChan(:,toPlot(cond),:))),cfg.layout)
         colorbar
         colormap('hot');
-        caxis([0 2.3]) % max is 2.26 in shortDC
+        if ee == 1
+            caxis([0 1])
+        else
+            caxis([0 2.3]) % max is 2.26 in shortDC
+        end
         title(titre{cond})
     end
     saveas(gcf,['figures' filesep 'E' num2str(ee) 'topoAM.png'])
@@ -253,4 +260,8 @@ cond2 = [2 3 4 5 3 4 5 4 5 5 ];
 for cc=1:length(cond1)
     pSign(cc) = signtest(1./yval(:,cond1(cc)),1./yval(:,cond2(cc)));
     pSign(cc+ length(cond1)) = signtest(1./yval(:,cond1(cc)+ 5),1./yval(:,cond2(cc)+ 5));
+end
+for cc=1:length(cond1)
+    pWil(cc) = signrank(1./yval(:,cond1(cc)),1./yval(:,cond2(cc)));
+    pWil(cc+ length(cond1)) = signrank(1./yval(:,cond1(cc)+ 5),1./yval(:,cond2(cc)+ 5));
 end
