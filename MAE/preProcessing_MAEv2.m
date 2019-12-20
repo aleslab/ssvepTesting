@@ -61,13 +61,20 @@ cfg.detrend = 'yes';
 
     
 %%%%%%%%%% Electrode exchanged
-for dd=1:length(data.trial)
-    tmpChan12 = data.trial{1,dd}(12,:);
-    tmpChan29 = data.trial{1,dd}(29,:);
-    data.trial{1,dd}(12,:) = tmpChan29;
-    data.trial{1,dd}(29,:) = tmpChan12;
-end
-
+% for dd=1:length(data.trial)
+%     tmpChan12 = data.trial{1,dd}(12,:);
+%     tmpChan29 = data.trial{1,dd}(29,:);
+%     data.trial{1,dd}(12,:) = tmpChan29;
+%     data.trial{1,dd}(29,:) = tmpChan12;
+% end
+% for ch=1:32
+% for dd=1:length(data.trial)
+%     tmpChanC = data.trial{1,dd}(ch,:);
+%     tmpChanA = data.trial{1,dd}(ch+64,:);
+%     data.trial{1,dd}(ch+64,:) = tmpChanC;
+%     data.trial{1,dd}(ch,:) = tmpChanA;
+% end
+% end
 
 % resample the data so we have an integer number of samples per cycle
 % and define the trials (trl) based on the resampled data
@@ -89,6 +96,9 @@ data = resample_ssvep(cfg,data);
 % save(['/Users/marleneponcet/Documents/data/MAE/' eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 % save([eegFiles(ff).name(1:end-4) '_pilote'],'data','cfg')
 
+%%%%%% merging datasets
+% data_merged =  ft_appenddata(cfg, dataO, data2);
+% data = data_merged;
 
 
 %%%%%%%%%%%%%%%%%%%
@@ -128,6 +138,7 @@ cfg.keepchannel = 'repair'; % had to modify ft_rejectvisual line 343 so that lay
     [cleanData] = ft_rejectartifact(cfg, data);
     
     save([dataOut eegFiles(ff).name(1:end-4) '_clean'],'cleanData','cfg')
+    
 % end
 
 end
