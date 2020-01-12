@@ -38,3 +38,5 @@ checkCode/testAllCond\.mat
 checkCode/testAv\.mat
 
 seqContext/figures/
+
+*.jpg
