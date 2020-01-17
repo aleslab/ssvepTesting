@@ -1,5 +1,3 @@
-%%% analysis file used for manuscript April 2019
-
 
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
@@ -51,6 +49,8 @@ for ee=1:2 % which experiment
     end
     % RMSE over all time and electrodes
     % lin, spa, temp, s+t
+    % RMSE should be difference between prediction - AM but here since it
+    % is squared the order is not too important
     for ss=1:length(sbj)
         for numCond=2:5 
             rmse(ss,numCond-1) = rms(sbj(ss,1).data.filteredWave(:) -  sbj(ss,numCond).data.filteredWave(:)); % long-range

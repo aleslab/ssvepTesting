@@ -73,8 +73,21 @@ for iCond = 1:6
     subplot(2,3,iCond); 
     [phi(iCond) uCI(iCond) lCI(iCond)] = circ_mean(alpha(:,iCond)); % mean direction + upper and lower 95% CI
     circ_plot(alpha(:,iCond),'pretty','ro',true,'linewidth',2,'color','r');
+    [pval(iCond) z(iCond)] = circ_rtest(alpha(:,iCond));
 end
 saveas(gcf,['figures' filesep 'phaseDiff-adaptation.png'],'png') 
+
+
+alpha = deg2rad(squeeze(phaseDiff(2,:,:)));
+figure;
+for iCond = 1:6
+    subplot(2,3,iCond); 
+    [phi(iCond) uCI(iCond) lCI(iCond)] = circ_mean(alpha(:,iCond)); % mean direction + upper and lower 95% CI
+    circ_plot(alpha(:,iCond),'pretty','ro',true,'linewidth',2,'color','r');
+end
+saveas(gcf,['figures' filesep 'phaseDiff-2ndHarm.png'],'png') 
+
+
 % phi = [2.9314   -2.4366    3.0632   -1.9449   -3.1292   -2.5163]; % mean direction
 % upCl = [NaN,-3.34767959928740,NaN,-2.65245642630042,-3.33621068191455,-3.12983270982153];
 % confDiff = phi - upCl; % CI for direction 

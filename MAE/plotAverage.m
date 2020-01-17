@@ -36,7 +36,7 @@ for ss = 1:length(listData)
             phaseDataToPlot(iCond) = complex( Axx(conditions(ff,iCond)).cos(iElec,iFr(fq)), Axx(conditions(ff,iCond)).sin(iElec,iFr(fq)));
             %TODO: Fix this! this is an underestimate of the 95% confidence intervals!
             confRadius(iCond) = Axx(conditions(ff,iCond)).confradius(iElec,iFr(fq));
-            alpha(ss,fq,ff,iCond) = angle(phaseDataToPlot(iCond));
+            complexAlpha(ss,fq,ff,iCond) = phaseDataToPlot(iCond);
        end
         subplot(2,3,ff)
         pdPhasePlot(phaseDataToPlot,confRadius);
@@ -128,40 +128,50 @@ elec = 23; freq = groupAv(1).i1f1;
 % use variable alpha
 % each figure plot each condition, no adapt, left, right
 for fq=1:2
+    figure; 
 for ff=1:6
-     figure; 
 for iCond = 1:3
-    subplot(1,3,iCond); hold on;
-    [phi(fq,ff,iCond) uCI(fq,ff,iCond) lCI(fq,ff,iCond)] = circ_mean(alpha(:,fq,ff,iCond)); % mean direction + upper and lower 95% CI
-    circ_plot(alpha(:,fq,ff,iCond),'pretty','ro',true,'linewidth',2,'color','r');
+%     subplot(6,3,iCond+3*(ff-1)); hold on;
+    alpha = angle(complexAlpha(:,fq,ff,iCond));
+    [phi(fq,ff,iCond) uCI(fq,ff,iCond) lCI(fq,ff,iCond)] = circ_mean(alpha); % mean direction + upper and lower 95% CI
+    circ_plot(alpha,'pretty','ro',true,'linewidth',2,'color','r');
+    populationdPhasePlot(complexAlpha(:,fq,ff,iCond))
 end
 end
 end
+complexAlpha(ss,fq,ff,iCond)
+tYSubj = squeeze(complexAlpha(:,1,3,:))
+populationdPhasePlot(tYSubj)
 
 cc=1;
 for ff = 1:6
     for iCond=1:3
-        stdCond(cc) = std(sbjProj(elec,freq,cc,:));
+        meanAmp(ff,iCond) = mean(sbjProj(elec,freq,cc,:)) ;
+        intervalAmp(ff,iCond) = std(sbjProj(elec,freq,cc,:)) / sqrt(size(sbjProj,4)) * 1.960;
         cc=cc+1;
     end
 end
-% mean direction: phi
-% 95CI: uCI
-% mean amplitude: groupAv.amp
-% stdCond
-% test C1, no adapt
-compMean = complex(groupAv(1).amp(elec,freq), phi(1,1,1));
-%%%%%% NO! amplitude is not cosine!!!
-confMean = complex(stdCond(1), uCI(1,1,1));
-figure;pdPhasePlot(compMean,confMean);
+phiFirst = squeeze(phi(1,:,:)); % only first harmonic
+uCIfirst = squeeze(uCI(1,:,:)); % only first harmonic
+% mean direction: rad2deg(phiFirst)
+% 95CI: uCI (this is after adding the mean)
+% mean amplitude: meanAmp
+% 95CI: mean +/- 1.960 * (std/sqrt(N))
+% intervalAmp (to add or substract from mean)
 
-cosMean = cos(phi(1,1,1)) * groupAv(1).amp(elec,freq);
-compMean = complex(0.9269, phi(1,1,1));
-
-
-% convert angles to unit vectors
-z = exp(1i*phi(1,1,1));
-figure;pdPhasePlot(z,confMean);
+% % test C1, no adapt
+% compMean = complex(groupAv(1).amp(elec,freq), phi(1,1,1));
+% %%%%%% NO! amplitude is not cosine!!!
+% confMean = complex(stdCond(1), uCI(1,1,1));
+% figure;pdPhasePlot(compMean,confMean);
+% 
+% cosMean = cos(phi(1,1,1)) * groupAv(1).amp(elec,freq);
+% compMean = complex(0.9269, phi(1,1,1));
+% 
+% 
+% % convert angles to unit vectors
+% z = exp(1i*phi(1,1,1));
+% figure;pdPhasePlot(z,confMean);
 
 
 
@@ -170,20 +180,44 @@ figure;pdPhasePlot(z,confMean);
 % sin(iChan,:) = -imag(complexNb);
 
 
+%%%% from mrCurrent code
+tYSubj = squeeze(complexAlpha(:,fq,ff,iCond))
+
+SEM = 0; tNellip = 30;
+tTh = linspace( 0, 2*pi, tNellip )';
+tNSbjs = length(listData);
+if SEM
+    tNormK = 1 / (tNSbjs-2);
+else % 95% CI
+    tNormK = (tNSbjs-1)/tNSbjs/(tNSbjs-2) * finv( 0.95, 2, tNSbjs - 2 );
+end
+% Compute eigen-stuff
+% the idea here is to get two vectors representing the spread of the
+% distribution. 1 vector will be fit to the largest spread and the second
+% will be perpendicular to the 1st vector. 
+% tEVec= eigen vector = vector direction (phase) of the 2 vectors. This is
+% only the direction so the second vector will only change its sign (- or
+% +) to be perpendicular to the first one
+% tEVal = eigen values = vector amplitudes. Has only 2 values (one for each
+% vector) with 2 zeros to fit the matrix. 
+% tYSubj: one distribution is computed on the column (not row). Multiple 
+% clouds should be organised as multiple columns
+[ tEVec, tEVal ] = eig( cov( [ real( tYSubj ), imag( tYSubj ) ] ) );	
+% Error/confidence ellipse
+% we start from a circle [ cos(tTh), sin(tTh) ] and ellongate it depending
+% on the spread of the distribution
+tXY = [ cos(tTh), sin(tTh) ] * sqrt( tNormK * tEVal ) * tEVec';		
+patch( tXY(:,1), tXY(:,2), 'r', 'FaceAlpha', .25, 'EdgeColor', 'r', 'LineWidth', 2 );
+% the patch has to be drawn at the mean centre
 
 
-% %%%% from mrCurrent code
-% tNellip = 30;
-% tTh = linspace( 0, 2*pi, tNellip )';
-% tNSbjs = length(listData);
-% if SEM
-%     tNormK = 1 / (tNSbjs-2);
-% else % 95% CI
-%     tNormK = (tNSbjs-1)/tNSbjs/(tNSbjs-2) * finv( 0.95, 2, tNSbjs - 2 );
-% end
-% [ tEVec, tEVal ] = eig( cov( [ real( tYSubj ), imag( tYSubj ) ] ) );	% Compute eigen-stuff
-% tXY = [ cos(tTh), sin(tTh) ] * sqrt( tNormK * tEVal ) * tEVec';		% Error/confidence ellipse
-                                
+if IsOptSel( 'Patches', 'on' )
+    % patches with transparent fills look great, but Matlab throws an error when trying to save them as AI files.
+    patch( tXY(:,1), tXY(:,2), 'r', 'FaceAlpha', .25, 'EdgeColor', 'r', 'LineWidth', 2 );
+else
+    % use the following when making AI files.
+    line( tXY(:,1), tXY(:,2), 'Color', 'r', 'LineWidth', 2 );
+end
 
 % average across all odd/even harmonics
 %%%% BUT THIS IS NOT POSSIBLE FOR THE PHASE!!! Phase might be different at
