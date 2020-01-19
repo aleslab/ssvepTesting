@@ -45,7 +45,7 @@ for ss = 1:length(listData)
         % why computing amplitude difference??
         ampDiff(fq,ss,ff) = Axx(conditions(ff,2)).amp(iElec,iFr(fq)) - Axx(conditions(ff,3)).amp(iElec,iFr(fq));
         % phase and amplitude differences 
-        phaseDiff(fq,ss,ff) = rad2deg(angle(phaseDataToPlot(2)) - angle(phaseDataToPlot(3)));
+        phaseDiff(fq,ss,ff) = angle(phaseDataToPlot(2)) - angle(phaseDataToPlot(3));
         % sin and cos differences to get phiDiff should be equal to
         % phaseDiff... heu pas vraiment... 
         cosDiff = Axx(conditions(ff,2)).cos(iElec,iFr(fq)) - Axx(conditions(ff,3)).cos(iElec,iFr(fq));
@@ -66,7 +66,11 @@ end
 % substracting the no-adaptation condition adds noise in the signal so not
 % a great thing to do
 
-alpha = deg2rad(squeeze(phaseDiff(1,:,:)));
+alpha = squeeze(phaseDiff(1,:,:));
+
+% I would want to do populationdPhasePlot(squeeze(alpha(:,1))) but I need
+% the phase difference to be in complex number whereas I only have the
+% angle difference so cannot plot it!
 
 figure;
 for iCond = 1:6
@@ -78,7 +82,7 @@ end
 saveas(gcf,['figures' filesep 'phaseDiff-adaptation.png'],'png') 
 
 
-alpha = deg2rad(squeeze(phaseDiff(2,:,:)));
+alpha = squeeze(phaseDiff(2,:,:));
 figure;
 for iCond = 1:6
     subplot(2,3,iCond); 

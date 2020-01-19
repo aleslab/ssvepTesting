@@ -41,7 +41,7 @@ for ss = 1:length(listData)
         subplot(2,3,ff)
         pdPhasePlot(phaseDataToPlot,confRadius);
     end
-%     saveas(gcf,['figures' filesep 'Result_S' num2str(ss) '_Fq' num2str(fq) '.png'],'png')
+    saveas(gcf,['figures' filesep 'Result_S' num2str(ss) '_Fq' num2str(fq) '.png'],'png')
     end
     dataSbj(:,ss) = Axx;
 end
@@ -53,7 +53,7 @@ interactiveSteadyStatePlot2(cfg,groupAv)
 
 %%% figure with all conditions (no-left-right adaptation) on the same
 %%% phasor
-iFr   = [groupAv(1).i1f1 groupAv(1).i1f1*2-1];
+iFr = determineFilterIndices('nF1low50',groupAv(1).freq, groupAv(1).i1f1);
 conditions = [1 4 7; 2 5 8; 11 14 17; 10 13 16; 3 6 9; 12 15 18];
 listTitles = {'G1-10','G2-10h','G2-10l','G1-90','G2-90h','G2-90l'};
 for fq=1:length(iFr)
@@ -71,7 +71,7 @@ for iElec = [10 23 39]
         title(listTitles{ff})
     end
     % colours: red=left, yellow=right, blue=none
-    saveas(gcf,['figures' filesep 'Result_Average_Fq' num2str(fq) '_E' num2str(iElec) '.png'],'png')
+    saveas(gcf,['figures' filesep 'Result_Average_Harm' num2str(fq) '_E' num2str(iElec) '.png'],'png')
 end
 end
 
@@ -91,9 +91,25 @@ for ff=1:size(conditions,1)
     set(gcf,'PaperPositionMode','auto')
     set(gcf, 'Position', [0 0 1500 1000])
     colormap('hot');
-    saveas(gcf,['figures' filesep 'Result_Topo_' nameCond{ff} 'fq' num2str(fq) '.png'],'png')
+    saveas(gcf,['figures' filesep 'Result_Topo_' nameCond{ff} 'harm' num2str(fq) '.png'],'png')
 end
 end
+%%%% topo average across freq
+iFrOdd = determineFilterIndices('nF1Oddlow50',groupAv(1).freq, groupAv(1).i1f1);
+for ff=1:size(conditions,1)
+    figure;hold on;
+    for iCond = 1:length(conditions)
+        subplot(2,3,iCond)
+        plotTopo(mean(groupAv(conditions(ff,iCond)).amp(:,iFrOdd),2),cfg.layout);
+        colorbar
+    end
+    set(gcf,'PaperPositionMode','auto')
+    set(gcf, 'Position', [0 0 1500 1000])
+    colormap('hot');
+    saveas(gcf,['figures' filesep 'Result_Topo_' nameCond{ff} 'allOddHarm.png'],'png')
+end
+
+
     
 %%%
 %%%% gonna just plot the ERP for now... 
@@ -121,7 +137,7 @@ end
 %%%%%% the variance for the direction using circStat 
 
 
-elec = 23; freq = groupAv(1).i1f1;
+elec = 23; 
 % sbjProj(elec,freq,iCond,ss)
 
 % get the mean CI direction
@@ -131,17 +147,26 @@ for fq=1:2
     figure; 
 for ff=1:6
 for iCond = 1:3
-%     subplot(6,3,iCond+3*(ff-1)); hold on;
+    subplot(6,3,iCond+3*(ff-1)); hold on;
     alpha = angle(complexAlpha(:,fq,ff,iCond));
     [phi(fq,ff,iCond) uCI(fq,ff,iCond) lCI(fq,ff,iCond)] = circ_mean(alpha); % mean direction + upper and lower 95% CI
     circ_plot(alpha,'pretty','ro',true,'linewidth',2,'color','r');
-    populationdPhasePlot(complexAlpha(:,fq,ff,iCond))
 end
 end
 end
-complexAlpha(ss,fq,ff,iCond)
-tYSubj = squeeze(complexAlpha(:,1,3,:))
-populationdPhasePlot(tYSubj)
+
+figure;
+populationdPhasePlot(squeeze(complexAlpha(:,fq,ff,1)))
+
+% plot with the ellipses!
+for fq=1:2
+    figure; hold on;
+    for ff=1:6
+        subplot(2,3,ff);hold on;
+        populationdPhasePlot(squeeze(complexAlpha(:,fq,ff,:)))
+    end
+end
+
 
 cc=1;
 for ff = 1:6

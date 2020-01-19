@@ -1,6 +1,4 @@
-function [lH] = populationdPhasePlot(phasorData,varargin)
-% option: set max limit for the vector amplitude
-figure; hold on;
+function populationdPhasePlot(phasorData)
 cax = gca;
 
 colorList = get(gcf,'DefaultAxesColorOrder');
@@ -15,18 +13,16 @@ colorVec = mod([1:numColors]-1,numColorsDefined)+1;
 
 colorList = colorList(colorVec,:); 
 
+for tmp=1:size(phasorData,2)
+    [phi(tmp)] = circ_mean(phasorData(:,tmp)); % mean direction + upper and lower 95% CI
+end
 
-[phi] = circ_mean(phasorData); % mean direction + upper and lower 95% CI
-
-% if nargin > 1
-%     maxComp = varargin; 
-% else
-%     maxComp=max(abs(phi));
-% end
-maxComp = 1.5;
+% maxComp=max(abs(phasorData));
+% maxComp = max(abs(phi));
+maxComp = 1;
 rmax = max(maxComp,.1);
-rmax = rmax*1.5;
-%rmax = ceil(10*rmax)/10;
+% rmax = rmax*1.5;
+rmax = ceil(10*rmax)/10;
 rmax = round(rmax,1,'significant');
 rmin = 0;
 rticks = 2;
@@ -117,7 +113,7 @@ for iDat = 1:size(phasorData,2)
     zm = r*exp(1i*phi);
     centerX = real(zm);
     centerY = imag(zm);
-    line([0 centerX], [0, centerY],'linewidth', 2);
+    line([0 centerX], [0, centerY],'Color',colorList(iDat,:), 'linewidth', 2);
     
     % Compute eigen-stuff
     % the idea here is to get two vectors representing the spread of the
@@ -136,7 +132,7 @@ for iDat = 1:size(phasorData,2)
     % on the spread of the distribution
     tXY = [ cos(tTh), sin(tTh) ] * sqrt( tNormK * tEVal ) * tEVec';
     % the patch has to be drawn at the mean centre
-    patch( centerX+tXY(:,1), centerY+tXY(:,2), 'r', 'FaceAlpha', .25, 'EdgeColor', 'r', 'LineWidth', 2 );
+    patch( centerX+tXY(:,1), centerY+tXY(:,2),colorList(iDat,:), 'FaceAlpha', .25, 'EdgeColor', colorList(iDat,:), 'LineWidth', 2 );
     
 end
 
