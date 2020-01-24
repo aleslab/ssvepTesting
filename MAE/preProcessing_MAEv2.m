@@ -27,9 +27,9 @@ behavFiles = dir([dataDir '*.mat']);
 cfg.dataset   =  [dataDir eegFiles(ff).name];
     
 % read the behavioural file to get parameters for SSVEP
-load([dataDir behavFiles(5*(ff-1)+1).name])
+load([dataDir behavFiles(5*(ff-1)+1+1).name])
 cfg.monitorRefresh = sessionInfo.expInfo.monRefresh;
-cfg.trialdef.freqTag = cfg.monitorRefresh/10; % 8.5 Hz now
+cfg.trialdef.freqTag = cfg.monitorRefresh/10; % 8.5024 Hz now
 cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag; % duration one cycle (0.2353)
 cfg.trialdef.trialLength = cfg.trialdef.cycleLength*38*2; % 42 or 38 in prev version * 2 due to 9 Hz
 cfg.abortTrigger = 99; % invalid trial

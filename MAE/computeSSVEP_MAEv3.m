@@ -27,7 +27,8 @@ for dir = 1:3
         condNb = condNb+1;
     end
 end
-save([dataOut 'Axx_S0' num2str(ff)],'Axx','cfg')
+% save([dataOut 'Axx_S' num2str(ff)],'Axx','cfg')
+save([dataOut 'Axx_S16'],'Axx','cfg')
 
 % get the condition labels v3b
 phase=[90 10 90];
@@ -40,17 +41,7 @@ for dir = 1:3
         condNb = condNb+1;
     end
 end
-save([dataOut 'Axx_S54'],'Axx','cfg')
+save([dataOut 'Axx_S65'],'Axx','cfg')
 
 
 
-cc = 1;
-for aa=1:3
-    [Axx(9+cc)] = substractAxx(Axx(aa+3),Axx(aa));
-    Axx(9+cc).condLabel = ['sub-' Axx(aa+3).condLabel];
-    [Axx(10+cc)] = substractAxx(Axx(aa+6),Axx(aa));
-    Axx(10+cc).condLabel = ['sub-' Axx(aa+6).condLabel];    
-    cc = cc+2;
-end
-
-save([dataOut 'Axx_S0' num2str(ff) 'sub'],'Axx','cfg')

@@ -15,8 +15,11 @@ fullList = {dir([filesDir 'MAEv3_*.mat']), dir([filesDir 'MAEv3b_*.mat'])};
 % 76 cycles during the test, 1 cycle is around 117.6 ms (1/8.5)
 % remove the 1st 2 seconds (=17 cycles)? 
 minTime = 18;
-
+minTime = 5;
 tabResults = [];
+sbjOrderE1 = [105 101 109 102 103 107 104 106 108 110 112 111 113 115 114];
+sbjOrderE2 = [102 104 101 110 106 103 108 107 105 109 111 114 112 115 113];
+
 for expt = 1:length(fullList)
     filesList = fullList{expt};
     if mod(length(filesList),5)>0
@@ -54,10 +57,11 @@ for expt = 1:length(fullList)
         xlabel({'response'});xticks([1:3]);xticklabels({'left','right','no motion'})
         if expt==1
             ylabel({'condition'});yticklabels({'noG1-10','noG2h-10','noG2h-90','leftG1-10','leftG2h-10','leftG2h-90','rightG1-10','rightG2h-10','rightG2h-90'})
+            saveas(gcf,['figures' filesep 'Behav_S' num2str(sbjOrderE1(subj)) 'e' num2str(expt) '.png'],'png')
         else
             ylabel({'condition'});yticklabels({'noG1-90','noG2l-10','noG2l-90','leftG1-90','leftG2l-10','leftG2l-90','rightG1-90','rightG2l-10','rightG2l-90'})
+            saveas(gcf,['figures' filesep 'Behav_S' num2str(sbjOrderE2(subj)) 'e' num2str(expt) '.png'],'png')
         end
-        saveas(gcf,['figures' filesep 'Behav_S' num2str(subj) 'e' num2str(expt) '.png'],'png')
         tabSbj.Properties.VariableNames = {'sbjNb','condition', 'left', 'right', 'none'};
         tabResults = [tabResults; tabSbj];
     end

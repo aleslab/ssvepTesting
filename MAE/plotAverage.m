@@ -132,6 +132,48 @@ end
 
 
 
+%%% get phaseDiff from dataSbj for all harmonics < 50 Hz
+conditions = [4 7; 5 8; 14 17; 13 16; 6 9; 15 18];
+iFr = determineFilterIndices('nF1low50',dataSbj(1,1).freq, dataSbj(1,1).i1f1);
+elec = [23; 10; 39];
+for ss = 1:length(listData)
+    for fq=1:length(iFr)
+        for iElec=1:length(elec)
+        for iCond=1:length(conditions)
+            phaseLeft = complex( dataSbj(conditions(iCond,1),ss).cos(elec(iElec),iFr(fq)), dataSbj(conditions(iCond,1),ss).sin(elec(iElec),iFr(fq)));
+            phaseRight = complex( dataSbj(conditions(iCond,2),ss).cos(elec(iElec),iFr(fq)), dataSbj(conditions(iCond,2),ss).sin(elec(iElec),iFr(fq)));
+            phaseDiff(fq,iElec,iCond,ss) = angle(phaseLeft) - angle(phaseRight);
+        end
+        end
+    end
+end
+% plot
+for fq=1:1:length(iFr)
+    for iElec=1:length(elec)
+        figure;
+        for iCond=1:length(conditions)
+            subplot(2,3,iCond); hold on;
+            alpha = squeeze(phaseDiff(fq,iElec,iCond,:));
+            [phi(fq,ff,iCond) uCI(fq,ff,iCond) lCI(fq,ff,iCond)] = circ_mean(alpha); % mean direction + upper and lower 95% CI
+            circ_plot(alpha,'pretty','ro',true,'linewidth',2,'color','r');
+            [pval(iCond) z(iCond)] = circ_rtest(alpha);
+        end
+    end
+end
+for iElec=1
+figure;
+for iCond=1:length(conditions)
+    subplot(2,3,iCond); hold on;
+    alpha = squeeze(phaseDiff([3],iElec,iCond,:));
+    [phi(fq,ff,iCond) uCI(fq,ff,iCond) lCI(fq,ff,iCond)] = circ_mean(alpha(:)); % mean direction + upper and lower 95% CI
+    circ_plot(alpha(:),'pretty','ro',true,'linewidth',2,'color','r');
+    [pval(iCond) z(iCond)] = circ_rtest(alpha(:));
+end
+end
+% would be nice to have this figure with different colours for the data point depending on the 1st, 2nd or 3rd harmonic 
+% might include results where the amplitude of the harmonic is as big as
+% the surrounding noise! 
+
 
 %%%%%% try to get variance for the phase amplitude using sbjProj and 
 %%%%%% the variance for the direction using circStat 
