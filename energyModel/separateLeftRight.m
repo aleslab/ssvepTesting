@@ -17,9 +17,9 @@ max_x =2.0;         %2.0 % Half-width of filter (deg)
 dx = (max_x*2)/nx;  %Spatial sampling interval of filter (deg)
 
 % Spatial filter parameters
-sx=0.5;   %0.5 % standard deviation of Gaussian, in deg.
-sf=1.1;  % 1.1 % spatial frequency of carrier, in cpd
-
+sx=0.5*4;   %0.5 % standard deviation of Gaussian, in deg.
+sf=1.1/4;  % 1.1 % spatial frequency of carrier, in cpd
+ 
 % Step 1b: Define the time axis of the filters
 nt=100;         % Number of temporal samples in the filter
 max_t=0.5;      % 0.5 Duration of impulse response (sec)
@@ -83,7 +83,7 @@ right_2=o_slow+e_fast;     % R2
 % 1 step = 8ms, 24 steps = 192 ms
 
 % SPACE: x_stim is a row vector to hold sampled x-positions of the space.
-stim_width=4;  %half width in degrees, gives 8 degrees total
+stim_width=4;  %half width in degrees
 x_stim=-stim_width:dx:round(stim_width-dx);
 
 % TIME: t_stim is a col vector to hold sampled time intervals of the space

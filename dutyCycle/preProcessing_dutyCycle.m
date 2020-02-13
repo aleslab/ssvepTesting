@@ -1,9 +1,4 @@
 function preProcessing_dutyCycle(sbjNb)
-%%% read and extract epochs for LongRangeV2 experiment
-% 12 conditions * 17 repetitions * 5 epochs in 1 repetition = 204 trials
-% each epoch = 2 s, each trial = 10 + 3 s
-% cleaning process: 1st with the summary, then visual inspection (on 32 channels)
-% there is no easy way to remove horizontal eye-movements
 
 ff = sbjNb;
 
