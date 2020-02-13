@@ -260,10 +260,13 @@ for elec = 1:length(pickElec)
     saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.pdf'],'pdf')
     
     corrcoef(x,y)
-    R = corrcoef(x,y);
+    [R, P, RL, RU] = corrcoef(x,y);
+    % p-values for testing the hypothesis that there is no relationship (if
+    % p<0.05 then there is a sig correlation)
+    % RL and RU: lower and upper bounds for a 95% confidence interval 
     Rsq = R(1,2).^2;
     disp(['Rsquare static = ' num2str(Rsq)])
-    R = corrcoef(x2,y2);
+    [R, P, RL, RU] = corrcoef(x2,y2);
     Rsq = R(1,2).^2; 
     disp(['Rsquare moving = ' num2str(Rsq)])
     
