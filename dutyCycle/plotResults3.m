@@ -12,7 +12,8 @@ listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
-keepSbj = [1:5 7:11 13:15]; % S1=pilote, reject S7 and S12
+keepSbj = [1:5 7:11 13:15 17:18]; % S1=pilote so reject numS-1 (6 12 16 19)
+% reject S7 and S13 S17, S20 same as S03
 
 for ss = 1:length(keepSbj)
     clear Axx;
@@ -33,36 +34,39 @@ pickElec = [15 23 27];
 %%%%%%%%%% Topography
 % flicker
 figure; hold on;
+colormap('hot')
 for cond=1:15
+%     max(avData(cond).amp(:,avData(cond).i1f1))
     subplot(3,5,cond); hold on;
+    max(avData(cond).amp(:,avData(cond).i1f1*2-1))
     plotTopo(avData(cond).amp(:,avData(cond).i1f1),cfg.layout);
     colorbar
     if cond < 6
         caxis([0 1.5]);
     else
-        caxis([0 2.5]);
+        caxis([0 3]);
     end
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-colormap('hot');
 saveas(gcf,['figures' filesep 'topoFlickF1.jpg'])
 % motion
 position = [11 7 3 9 15 13 8];
 figure; hold on;
+colormap('hot')
 for cond=16:length(avData)
+%     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
     subplot(3,5,position(cond-15)); hold on;
     plotTopo(avData(cond).amp(:,avData(cond).i1f1*2-1),cfg.layout);
     colorbar
     if cond-15 == 3
         caxis([0 1.5]);
     else
-        caxis([0 2.5]);
+        caxis([0 3]);
     end
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-colormap('hot');
 saveas(gcf,['figures' filesep 'topoMotionF2.jpg'])
 
 %%%%%%%%%%%%%%%%%%%%%

@@ -5,6 +5,8 @@ ff = sbjNb;
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
+
 ft_defaults
 
 % path to the files
@@ -22,16 +24,16 @@ behavFiles = dir([dataDir '*.mat']);
     
     % read the behavioural file 
     % because some sbj have many behav files, cannot just get the ff file
-%     load([dataDir behavFiles(ff).name])
+    load([dataDir behavFiles(ff).name])
     
-    ll=0;bb=ff;
-    while ll==0
-        if str2num(behavFiles(bb).name(19:20))== ff+1 % +1 cause there is no S01 (starts at S02)
-            load([dataDir behavFiles(bb).name])
-            ll=1;
-        end
-        bb=bb+1;
-    end
+%     ll=0;bb=ff;
+%     while ll==0
+%         if str2num(behavFiles(bb).name(19:20))== ff+1 % +1 cause there is no S01 (starts at S02)
+%             load([dataDir behavFiles(bb).name])
+%             ll=1;
+%         end
+%         bb=bb+1;
+%     end
     
 % %     tableData = struct2table(experimentData);
 %     
@@ -68,12 +70,12 @@ behavFiles = dir([dataDir '*.mat']);
 %     %%%%%%%%% Changing config file is not enough!
 %     data.label{12} = 'A12';
 %     data.label{29} = 'A29';
-    for dd=1:length(data.trial)
-    tmpChan12 = data.trial{1,dd}(12,:);
-    tmpChan29 = data.trial{1,dd}(29,:);
-    data.trial{1,dd}(12,:) = tmpChan29;
-    data.trial{1,dd}(29,:) = tmpChan12;
-    end
+%     for dd=1:length(data.trial)
+%     tmpChan12 = data.trial{1,dd}(12,:);
+%     tmpChan29 = data.trial{1,dd}(29,:);
+%     data.trial{1,dd}(12,:) = tmpChan29;
+%     data.trial{1,dd}(29,:) = tmpChan12;
+%     end
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%
