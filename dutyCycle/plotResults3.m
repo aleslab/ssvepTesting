@@ -12,8 +12,9 @@ listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
-keepSbj = [1:5 7:11 13:15 17:18]; % S1=pilote so reject numS-1 (6 12 16 19)
+keepSbj = [1:5 7:11 13:15 17:18 20]; 
 % reject S7 and S13 S17, S20 same as S03
+% S1=pilote so reject numS-1 (6 12 16 19)
 
 for ss = 1:length(keepSbj)
     clear Axx;

@@ -14,11 +14,11 @@ fullList = {dir([filesDir 'MAEv3_*.mat']), dir([filesDir 'MAEv3b_*.mat'])};
 
 % 76 cycles during the test, 1 cycle is around 117.6 ms (1/8.5)
 % remove the 1st 2 seconds (=17 cycles)? 
-minTime = 18;
+% minTime = 18;
 minTime = 5;
 tabResults = [];
-sbjOrderE1 = [105 101 109 102 103 107 104 106 108 110 112 111 113 115 114];
-sbjOrderE2 = [102 104 101 110 106 103 108 107 105 109 111 114 112 115 113];
+sbjOrderE1 = [105 101 109 102 103 107 104 106 108 110 112 111 113 115 114 116 118 117 120 119];
+sbjOrderE2 = [102 104 101 110 106 103 108 107 105 109 111 114 112 115 113 117 116 118 119 120];
 
 for expt = 1:length(fullList)
     filesList = fullList{expt};
