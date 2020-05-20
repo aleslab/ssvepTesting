@@ -9,12 +9,13 @@ ft_defaults
 addpath polyparci/
 
 % load individual data
-dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
+% dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
+dataDir = 'C:\Users\Marlene\Documents\JUSTIN\data\dutyCycle\Axx\';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
-keepSbj = [1:5 7:11 13:15]; % S1=pilote, reject S7 and S12
+keepSbj = [1:5 7:11 13:15 17:18 20]; 
 dcVal = [12.5 25 50 75 87.5];
 
 for ss = 1:length(keepSbj)
@@ -124,6 +125,14 @@ for cond = 1: 3
     ci99(:,cond) = [tmp(2,1) - coefV(1) tmp(2,2) - coefV(1,2)];
 end
 
+% don't include condition with no SSVEP
+yRej = f1Amp(2:5,:)'; % 10Hz static
+xRej = repmat(dcVal(2:5),length(keepSbj),1);
+[coefV,errorEst]=polyfit(xRej(:),yRej(:),1);
+tmp = polyparci(coefV,errorEst,0.95); % gives lower and upper CI
+ci95 = [tmp(2,1) - coefV(1) tmp(2,2) - coefV(1,2)]; % only keep the diff
+tmp = polyparci(coefV,errorEst,0.99);
+ci99 = [tmp(2,1) - coefV(1) tmp(2,2) - coefV(1,2)];
 
 
 
@@ -136,7 +145,7 @@ y(:,:,3) = f1Amp([7 8 9],:)'; % 5 Hz static
 y(:,:,4) = f1Amp([17 22 19],:)'; % 5 Hz moving
 
 for cond=1:4
-    data(cond,:) = reshape(y(:,:,cond),1,39);
+    data(cond,:) = reshape(y(:,:,cond),1,length(keepSbj)*3);
 end
 for cond=1:4
     if cond<3
@@ -158,16 +167,29 @@ end
 
 
 %%%%%%%%%%% behaviour
-load('fullRatings.mat')
+clear x y data coef ci95 ci99;
+load('fullRatings9.mat')
+
+%%%%% compare average static vs moving ratings
+load fullRatings9.mat
+flicker = squeeze(mean(mean(tabStatic,1),2));
+for ss=1:9
+    move(ss) = mean(nonzeros(tabMot(:,:,ss)));
+end
+moving = moving';
+[P,H,STATS] = signrank(flicker,move); % signrank Wilcoxon signed rank test 
+
+
 static = mean(tabStatic,3); moving = mean(tabMot,3);
 
-%%%%% Effect of DC on flicker motion?
+%%%%% Effect of DC on ratings for flicker?
+clear coef;
 x = repmat(dcVal,length(tabStatic),1);
 y = static(1,1:5,:)'; % 10hz static
 data(1,:) = y(:);
-y = static(6:10,:)'; % 5Hz static
+y = static(2,1:5,:)'; % 5Hz static
 data(2,:) = y(:);
-y = static(11:15,:)'; % 2.5Hz static
+y = static(3,1:5,:)'; % 2.5Hz static
 data(3,:) = y(:);
 
 fqCond = {'10','5','2.5'};
@@ -185,4 +207,16 @@ for freq = 1: 3
     disp(result)
 end
 
-
+%%%%% Effect of DC on ratings for moving stim?
+clear coef yM xM tmp;
+xM = repmat(dcVal(2:4),length(tabMot),1);
+yM = squeeze(tabMot(2,2:4,:))'; % 5Hz
+[coef,error]=polyfit(xM,yM,1);
+tmp = polyparci(coef,error,0.95);
+[ coef ; tmp(2,1) - coef(1) tmp(2,2) - coef(1,2)] % 1st line is coef and intercept, 2nd is 95CI
+clear coef yM xM tmp;
+xM = repmat(dcVal([1 3 5]),length(tabMot),1);
+yM = squeeze(tabMot(3,[1 3 5],:))'; % 5Hz
+[coef,error]=polyfit(xM,yM,1);
+tmp = polyparci(coef,error,0.95);
+[ coef ; tmp(2,1) - coef(1) tmp(2,2) - coef(1,2)] % 1st line is coef and intercept, 2nd is 95CI

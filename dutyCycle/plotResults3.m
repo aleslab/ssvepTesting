@@ -1,13 +1,21 @@
 
 clearvars
-addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
-addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
-addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
-addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
+% addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
+% addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
+% addpath /Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated
+% addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
+% ft_defaults
+
+addpath /Users/Marlene/Documents/git/fieldtrip-aleslab-fork
+addpath /Users/Marlene/Documents/git/ssvepTesting/svndlCopy
+addpath /Users/Marlene/Documents/git/ssvepTesting/biosemiUpdated
+addpath /Users/Marlene/Documents/git/ssvepTesting/commonFunctions
 ft_defaults
 
+
 % load individual data
-dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
+% dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
+dataDir = 'C:\Users\Marlene\Documents\JUSTIN\data\dutyCycle\Axx\';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
@@ -23,6 +31,9 @@ for ss = 1:length(keepSbj)
 end
 
 [avData, proj_Amp] = averageAxxWithStd(dataSbj);
+save('16sbjDC','avData','proj_Amp','cfg')
+
+    
 
 col={'b','r','g'};
 
@@ -39,7 +50,7 @@ colormap('hot')
 for cond=1:15
 %     max(avData(cond).amp(:,avData(cond).i1f1))
     subplot(3,5,cond); hold on;
-    max(avData(cond).amp(:,avData(cond).i1f1*2-1))
+%     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
     plotTopo(avData(cond).amp(:,avData(cond).i1f1),cfg.layout);
     colorbar
     if cond < 6
@@ -78,23 +89,20 @@ for elec = 1:length(pickElec)
     for cond=1:15
         avAmp(cond)=avData(cond).amp(pickElec(elec),(avData(cond).i1f1));
         %    avProj(cond)=mean(proj_Amp(pickElec,avData(cond).i1f1,cond,:));
-        semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1,cond,:)) / sqrt(size(dataSbj,2));
+        semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1,cond,:)) / sqrt(length(avData));
     end
     for cond=16:22 % for motion take the 2f1
         avAmp(cond)=avData(cond).amp(pickElec(elec),(avData(cond).i1f1*2-1));
-        semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1*2-1,cond,:)) / sqrt(size(dataSbj,2));
+        semProj(cond) = std(proj_Amp(pickElec(elec),avData(cond).i1f1*2-1,cond,:)) / sqrt(length(avData));
     end
-    % % compute noise level per freq
-    % for cond=1:15 % exclude motion conditions
-    %    baseline(cond) = (avData(cond).amp(pickElec,avData(cond).i1f1-1)+avData(cond).amp(pickElec,avData(cond).i1f1+1)) / 2;
-    % end
-    % compute noise level all cond pooled
-    for cond = 1:length(avData)
-        baseline(cond) = (avData(cond).amp(pickElec(elec),avData(cond).i1f1-1)+avData(cond).amp(pickElec(elec),avData(cond).i1f1+1)) / 2;
+    
+    % compute noise level
+    for cond=1:15 
+       baseline(cond) = (avData(cond).amp(pickElec(elec),avData(cond).i1f1-1)+avData(cond).amp(pickElec(elec),avData(cond).i1f1+1)) / 2;
     end
-    temp=reshape(baseline(1:20),4,5);
-    avBaseline = mean(temp);
-    avBaseline(3) = mean([temp(1:4,3)' baseline(21) baseline(22)]); % add the 50% DC for other freq
+    for cond=16:22
+       baseline(cond) = (avData(cond).amp(pickElec(elec),avData(cond).i1f1*2-1-1)+avData(cond).amp(pickElec(elec),avData(cond).i1f1*2-1+1)) / 2;
+    end
     
     dcVal = [12.5 25 50 75 87.5];
     
@@ -102,15 +110,17 @@ for elec = 1:length(pickElec)
     for freq=1:3
         errorbar(dcVal,avAmp((freq-1)*5+1:freq*5),semProj((freq-1)*5+1:freq*5),['.-' col{freq}],'MarkerSize',40,'Linewidth',2);
     end
-    plot(dcVal,avBaseline,'--k','Linewidth',2)
+    line([dcVal(1) dcVal(5)], [min(baseline) min(baseline)],'Linewidth',2,'Color','k','LineStyle','--')
+    line([dcVal(1) dcVal(5)], [mean(baseline) mean(baseline)],'Linewidth',2,'Color','k','LineStyle','-')
+    line([dcVal(1) dcVal(5)], [max(baseline) max(baseline)],'Linewidth',2,'Color','k','LineStyle','--')
     errorbar(50,avAmp(18),semProj(18),['^:' col{1}],'MarkerSize',15,'Linewidth',2)
     errorbar([25 50 75],avAmp([17 22 19]),semProj([17 22 19]),['^:' col{2}],'MarkerSize',15,'Linewidth',2)
-    errorbar([12.5 50 87.5],avAmp([16 21 20]),semProj([17 22 19]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)
+    errorbar([12.5 50 87.5],avAmp([16 21 20]),semProj([16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)
     xlim([0 100]);
-    % xticks([1:1:5]);
-    % xticklabels({'12.5','25','50','75','87.5'})
-    ylim([0 inf])
-    legend('10','5','2.5','noise level','Location','Best')
+    xticks([0:12.5:100]);
+%     xticklabels({'12.5','25','50','75','87.5'})
+    ylim([0 3])
+    legend('10','5','2.5','noise range','mean noise','Location','Best')
     xlabel('Duty Cycle')
     ylabel('SSVEP amplitude')
     set(gca,'FontSize',15)
@@ -119,6 +129,7 @@ for elec = 1:length(pickElec)
     saveas(gcf,['figures' filesep 'ampDCloc' num2str(pickElec(elec)) '.eps'],'epsc')
     
     %%%%%% LINEAR REGRESSION
+    %%%%%% this is on average data not each individual data points
     % fitlm(dcVal,avAmp(1:5))
     % fitlm(dcVal,avAmp(6:10))
     % fitlm(dcVal,avAmp(11:15))
@@ -192,7 +203,7 @@ for elec = 1:length(pickElec)
     
     %%%%%%%%%%%%%%%%%%%%%
     %%%% RATINGS
-    load('fullRatings.mat')
+    load('fullRatings9.mat')
     static = mean(tabStatic,3); moving = mean(tabMot,3);
     for fq=1:3
         for dc=1:5
@@ -210,8 +221,8 @@ for elec = 1:length(pickElec)
         errorbar([25 50 75],moving([5 8 11]),movSEM([5 8 11]),['^:'  col{2}],'MarkerSize',15,'Linewidth',2)
         errorbar([12.5 50 87.5],moving([3 9 15]),movSEM([3 9 15]),['^:'  col{3}],'MarkerSize',15,'Linewidth',2)
         xlim([0 100]);
-        % xticks([1:1:5]);
-        ylim([0 inf])
+        xticks([0:12.5:100]);
+        ylim([0 3])
         % xticklabels({'12.5','25','50','75','87.5'})
         legend('10','5','2.5','Location','Best')
         xlabel('Duty Cycle')
@@ -229,10 +240,13 @@ for elec = 1:length(pickElec)
     %%%%%%%%%%%%%%%%%%%%%
     %%%%%%% CORREL
     y = [static(2,:) static(3,:)];
+    yE = [statSEM(2,:) statSEM(3,:)];
     x = avAmp(6:15);
+    xE = semProj(6:15);
     y2 = moving([3 5 11 15 9 8]); % do not include 10Hz
+    yE2 = movSEM([3 5 11 15 9 8]);
     x2 = avAmp([16:17 19:22]);% do not include 10Hz
-    
+    xE2 = semProj([16:17 19:22]);
     
     % figure;hold on;
     % p = polyfit(x,y,1);
@@ -249,13 +263,17 @@ for elec = 1:length(pickElec)
     % saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.png'])
     % saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.eps'],'epsc')
     
+
     figure;hold on;
-    scatter(x,y,80,'filled','MarkerEdgeColor','none')
-    scatter(x2,y2,80,'filled','MarkerEdgeColor','none')
-    xf = [min(x), max(x)];
-    plot(xf,polyval(polyfit(x,y,1), xf),'--k');
-    xf2 = [min(x2), max(x2)];
-    plot(xf2,polyval(polyfit(x2,y2,1), xf2),'--k');
+    scatter(x, y,80,'filled','MarkerEdgeColor','none');
+    scatter(x2, y2,80,'filled','MarkerEdgeColor','none');
+    eb(1) = errorbar(x,y,xE, 'horizontal', 'LineStyle', 'none');
+    eb(2) = errorbar(x,y,yE, 'vertical', 'LineStyle', 'none');
+    set(eb, 'color', 'b', 'LineWidth', 1)
+    eb2(1) = errorbar(x2,y2,xE2, 'horizontal', 'LineStyle', 'none');
+    eb2(2) = errorbar(x2,y2,yE2, 'vertical', 'LineStyle', 'none');
+    set(eb2, 'color', 'r', 'LineWidth', 1)
+    lsline
     ylim([0 3])
     legend('flickering','moving')
     ylabel('motion rating')
@@ -263,6 +281,46 @@ for elec = 1:length(pickElec)
     title(num2str(pickElec(elec)))
     saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.png'])
     saveas(gcf,['figures' filesep 'correlSSVEPratingsLoc' num2str(pickElec(elec)) '.pdf'],'pdf')
+  
+    figure;hold on;
+    scatter(log(x), log(y),80,'filled','MarkerEdgeColor','none');
+    scatter(log(x2), log(y2),80,'filled','MarkerEdgeColor','none');
+    lsline
+    legend('flickering','moving')
+    ylabel('motion rating (log scale)')
+    xlabel('SSVEP amplitude (log scale)')
+    title(num2str(pickElec(elec)))
+    saveas(gcf,['figures' filesep 'correlSSVEPratingsLogLoc' num2str(pickElec(elec)) '.png'])
+    saveas(gcf,['figures' filesep 'correlSSVEPratingsLogLoc' num2str(pickElec(elec)) '.pdf'],'pdf')
+      
+    figure; hold on;
+    scatter(x(1:5), y(1:5),80,'filled','MarkerFaceColor','b','MarkerEdgeColor','none');
+    scatter(x(6:10), y(6:10),80,'d','filled','MarkerFaceColor','c','MarkerEdgeColor','none');
+    scatter(x2(1:3), y2(1:3),80,'filled','MarkerFaceColor','r','MarkerEdgeColor','none');
+    scatter(x2(4:6), y2(4:6),80,'d','filled','MarkerFaceColor','m','MarkerEdgeColor','none');
+    eb(1) = errorbar(x(1:5),y(1:5),xE(1:5), 'horizontal', 'LineStyle', 'none');
+    eb(2) = errorbar(x(1:5),y(1:5),yE(1:5), 'vertical', 'LineStyle', 'none');
+    set(eb, 'color', 'b', 'LineWidth', 1)
+    eb(1) = errorbar(x(6:10),y(6:10),xE(6:10), 'horizontal', 'LineStyle', 'none');
+    eb(2) = errorbar(x(6:10),y(6:10),yE(6:10), 'vertical', 'LineStyle', 'none');
+    set(eb, 'color', 'c', 'LineWidth', 1)
+    eb2(1) = errorbar(x2(1:3),y2(1:3),xE2(1:3), 'horizontal', 'LineStyle', 'none');
+    eb2(2) = errorbar(x2(1:3),y2(1:3),yE2(1:3), 'vertical', 'LineStyle', 'none');
+    set(eb2, 'color', 'r', 'LineWidth', 1)
+    eb2(1) = errorbar(x2(4:6),y2(4:6),xE2(4:6), 'horizontal', 'LineStyle', 'none');
+    eb2(2) = errorbar(x2(4:6),y2(4:6),yE2(4:6), 'vertical', 'LineStyle', 'none');
+    set(eb2, 'color', 'm', 'LineWidth', 1)
+    xf = [min(x), max(x)];
+    plot(xf,polyval(polyfit(x,y,1), xf),'--k');
+    xf2 = [min(x2), max(x2)];
+    plot(xf2,polyval(polyfit(x2,y2,1), xf2),'--k');
+    ylim([0 3])
+    legend('flicker 5hz','flicker 2.5hz','moving 5hz','moving 2.5hz')
+    ylabel('motion rating')
+    xlabel('SSVEP amplitude')
+    title(num2str(pickElec(elec)))
+    saveas(gcf,['figures' filesep 'correlSSVEPratingsFqLoc' num2str(pickElec(elec)) '.png'])
+    saveas(gcf,['figures' filesep 'correlSSVEPratingsFqLoc' num2str(pickElec(elec)) '.pdf'],'pdf')
     
     corrcoef(x,y)
     [R, P, RL, RU] = corrcoef(x,y);
@@ -323,6 +381,11 @@ for elec = 1:length(pickElec)
     % R-squared: 0.877,  Adjusted R-Squared 0.853
     % F-statistic vs. constant model: 35.7, p-value = 0.00188
     
+%     %%%%%%% CORREL ALL FREQ
+%     y = [static(1,:) static(2,:) static(3,:)];
+%     x = avAmp(1:15);
+%     y2 = moving([7 5 8 11 3 9 15]); 
+%     x2 = avAmp([18 17 22 19 16 21 20]);
     
 end
 
