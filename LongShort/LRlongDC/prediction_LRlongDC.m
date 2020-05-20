@@ -13,6 +13,13 @@ listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
+ 
+% dataDir = 'C:\Users\Marlene\Documents\JUSTIN\data\AMshortlong\E2LRlongDC\AxxEqual\';
+% listData = dir([dataDir '*.mat']);
+% cfg.layout = 'biosemi128.lay';
+% cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+% outDir = dataDir;
+
 for ff=1:length(listData)
     clear Axx;
     load([dataDir listData(ff).name]);
@@ -134,9 +141,9 @@ for ff=1:length(listData)
 end
 
 
-save([outDir 'sbjprediction','sbj','cfg')
-save([outDir 'sbjDiff','sbjDiff','cfg')
-save([outDir 'NLinteraction','interaction','cfg')
+save([outDir 'sbjprediction'],'sbj','cfg')
+save([outDir 'sbjDiff'],'sbjDiff','cfg')
+save([outDir 'NLinteraction'],'interaction','cfg')
 
 
 

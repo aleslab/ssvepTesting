@@ -28,7 +28,8 @@ cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
 
 dataPath = {'/Users/Marlene/Documents/git/dataLR/LRlongDC/', '/Users/Marlene/Documents/git/dataLR/LRshortDC/'};
-
+dataPath = {'C:\Users\Marlene\Documents\JUSTIN\data\AMshortlong\E2LRlongDC\',...
+    'C:\Users\Marlene\Documents\JUSTIN\data\AMshortlong\E1LRshortDC\'};
 
 for ee=1:2 % which experiment
     clear sbj
@@ -208,8 +209,10 @@ for ee=1:2 % which experiment
         end
         title(titre{cond})
     end
-    saveas(gcf,['figures' filesep 'E' num2str(ee) 'topoAM.png'])
-    saveas(gcf,['figures' filesep 'E' num2str(ee) 'topoAM.pdf'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoAM.png'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoAM.pdf'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoAM.eps'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoAM.fig'])
     
     
     %%% plot topographies NRMSE
@@ -235,8 +238,9 @@ for ee=1:2 % which experiment
         caxis([1 3.4]) % max is 3.39 in shortDC, min cannot be less than 1
         title(titre{cond})
     end
-    saveas(gcf,['figures' filesep 'E' num2str(ee) 'topoNRMSE.png'])
-    saveas(gcf,['figures' filesep 'E' num2str(ee) 'topoNRMSE.fig'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoNRMSE.png'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoNRMSE.eps'])
+    saveas(gcf,[ 'E' num2str(ee) 'topoNRMSE.fig'])
     
     allRMSEtopo = [rmseChan(:,1:4,:) rmseFuTopo(:,1,:) rmseChan(:,5:8,:) rmseFuTopo(:,2,:)];
 %     figure('Renderer', 'painters', 'Position', [10 10 1000 500])

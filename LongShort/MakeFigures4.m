@@ -1,8 +1,7 @@
 % Make figures
-% topo of SSVEP
 % predictions (with AM)
 % Interactions
-% (for RMS see plotRMS)
+% (for RMS see RMSanalysis)
 
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
 addpath /Users/marleneponcet/Documents/Git/ssvepTesting/svndlCopy
