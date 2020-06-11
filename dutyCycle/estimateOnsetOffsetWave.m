@@ -1,5 +1,11 @@
 % estimate onset, offset waveform
 % and residual!!
+addpath /Volumes/Amrutam/Marlene/Git/fieldtrip-aleslab-fork
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/svndlCopy
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/biosemiUpdated
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/commonFunctions
+ft_defaults
+ft_defaultscfg.layout = 'biosemi128.lay';
 
 %% get the data and choose what to put in the regression
 % load('dataOnOffExtract.mat')
@@ -180,18 +186,19 @@ end
 allDC = [0.125 0.25 0.5 0.75 0.875];
 fqHz = [10 5 2];
 maxFreq = 20;
+tt = {'signal','residual'};
 
 %%% Oz waveform + amplitude spectrum
 iChan = 23;
 for fqPres = 1:3
     for type=1:2 % plot fit data =1 or residual =2
-        figure; hold on;
+        figure('Position', [0 0 1000 500]); hold on;
         for dc=1:5
             subplot(2,5,dc)
             plot(waveForm(iChan,:,dc+(fqPres-1)*5,type));
             xlabel('Time (seconds)')
             ylabel('Amplitude');
-            title(['Oz ' num2str(allDC(dc)*100)])
+            title(['Oz ' num2str(fqHz(fqPres)) 'Hz ' tt{type} ' ' num2str(allDC(dc)*100)])
             
             subplot(2,5,dc+5)
             bar(freqs(1:maxFreq),ampFFTnorm(iChan,1:maxFreq,dc+(fqPres-1)*5,type));
@@ -203,18 +210,21 @@ for fqPres = 1:3
 end
 %%% topographies (rms of waveform)
 for type=1:2 % plot fit data =1 or residual =2
-    figure; hold on;
+    figure('Position', [0 0 1500 1000]); hold on;
     for fqPres = 1:3
         for dc=1:5
             subplot(3,5,dc+(fqPres-1)*5)
             plotTopo(rms(waveForm(:,:,dc+(fqPres-1)*5,type),2),cfg.layout);
             colorbar;
+            title([num2str(fqHz(fqPres)) 'Hz ' tt{type} ' ' num2str(allDC(dc)*100)])
         end
     end
     saveas(gcf,['figures' filesep 'onOffRMS-' num2str(type)],'png')
 end
 
-%%% fitdata is constructed from the weights so will give back the data in
-%%% it. Wouldn't be more interesting to see how much of onset/offset is in
-%%% the data? (= weights for different duty-cycle) Or simulate signal
-%%% across duty-cycle with the same onset/offset?
+%%% the fitted data is constructed from the betaweights. The weights 
+%%% represent the regression (common signal for onset/offset) across
+%%% conditions. So the fitted data is created from a common onset/offset
+%%% and simulated for the different duty-cycles using the design matrix. 
+
+
