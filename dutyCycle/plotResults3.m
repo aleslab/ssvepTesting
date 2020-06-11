@@ -6,16 +6,23 @@ clearvars
 % addpath /Users/marleneponcet/Documents/Git/ssvepTesting/commonFunctions
 % ft_defaults
 
-addpath /Users/Marlene/Documents/git/fieldtrip-aleslab-fork
-addpath /Users/Marlene/Documents/git/ssvepTesting/svndlCopy
-addpath /Users/Marlene/Documents/git/ssvepTesting/biosemiUpdated
-addpath /Users/Marlene/Documents/git/ssvepTesting/commonFunctions
-ft_defaults
+% addpath /Users/Marlene/Documents/git/fieldtrip-aleslab-fork
+% addpath /Users/Marlene/Documents/git/ssvepTesting/svndlCopy
+% addpath /Users/Marlene/Documents/git/ssvepTesting/biosemiUpdated
+% addpath /Users/Marlene/Documents/git/ssvepTesting/commonFunctions
+% ft_defaults
 
+addpath /Volumes/Amrutam/Marlene/Git/fieldtrip-aleslab-fork
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/svndlCopy
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/biosemiUpdated
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/commonFunctions
+ft_defaults
 
 % load individual data
 % dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/Axx/';
-dataDir = 'C:\Users\Marlene\Documents\JUSTIN\data\dutyCycle\Axx\';
+% dataDir = 'C:\Users\Marlene\Documents\JUSTIN\data\dutyCycle\Axx\';
+dataDir = '/Volumes/Amrutam/Marlene/JUSTIN/DutyCycle/data/Axx/';
+
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
@@ -42,26 +49,94 @@ col={'b','r','g'};
 % from topo max: A15 & A27
 pickElec = [15 23 27];
 
+
+%%% create a matrix for the harmonics depending on condition
+harm = zeros(15,4);
+for cond=1:15
+    filtIdx = determineFilterIndices( 'nf1low49',avData(cond).freq, avData(cond).i1f1 );
+    harm(cond,:) = filtIdx(1:4); % avData(1).freq(filtIdx)
+end
+% add the harmonics for motion stim
+harm(16,:) = harm(11,:);
+harm(21,:) = harm(11,:);
+harm(20,:) = harm(11,:);
+harm(18,:) = harm(1,:);
+harm(17,:) = harm(6,:);
+harm(19,:) = harm(6,:);
+harm(22,:) = harm(6,:);
+
+
+% 2.5 - 5 - 7.5 - 10
+% 5 - 10 - 15 - 20
+% 10 - 20 - 30 - 40
+
 %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%% Topography
+% for each harmonic separately
+% flicker
+for hh = 1:4
+    figure; hold on;
+    colormap('hot')
+    for cond=1:15
+%         max(avData(cond).amp(:,harm(cond,hh)))
+        subplot(3,5,cond); hold on;
+        plotTopo(avData(cond).amp(:,harm(cond,hh)),cfg.layout);
+        colorbar
+        if hh == 1 && cond < 6
+            caxis([0 1.5]);
+        elseif hh == 1 && cond > 5
+            caxis([0 2.5]);
+        elseif hh == 2 && cond > 10
+            caxis([0 2]);
+        elseif hh == 2 && cond > 5 && cond < 11
+            caxis([0 1]);
+        elseif hh == 3 && cond > 5
+            caxis([0 0.8]);
+        elseif hh == 4 && cond > 10
+            caxis([0 0.8]);
+        else
+            caxis([0 0.5]);
+        end
+        
+    end
+    set(gcf,'PaperPositionMode','auto')
+    set(gcf, 'Position', [0 0 1500 1000])
+    saveas(gcf,['figures' filesep 'topoFlickF' num2str(hh) '.jpg'])
+end
+% motion
+position = [11 7 3 9 15 13 8];
+for hh = 1:4
+    figure; hold on;
+    colormap('hot')
+    for cond=16:length(avData)
+%         max(avData(cond).amp(:,harm(cond,hh)))
+        subplot(3,5,position(cond-15)); hold on;
+        plotTopo(avData(cond).amp(:,harm(cond,hh)),cfg.layout);
+        colorbar
+    end
+    set(gcf,'PaperPositionMode','auto')
+    set(gcf, 'Position', [0 0 1500 1000])
+    saveas(gcf,['figures' filesep 'topoMotionF' num2str(hh) '.jpg'])
+end
+
+
+
+% TOPO average across harmonics 
+for cond=1:15
+    fqharm(cond).ind(:) = determineFilterIndices( 'nf1low49',avData(cond).freq, avData(cond).i1f1 );
+end
 % flicker
 figure; hold on;
 colormap('hot')
 for cond=1:15
-%     max(avData(cond).amp(:,avData(cond).i1f1))
     subplot(3,5,cond); hold on;
-%     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
-    plotTopo(avData(cond).amp(:,avData(cond).i1f1),cfg.layout);
+    plotTopo(mean(avData(cond).amp(:,fqharm(cond).ind),2),cfg.layout);
     colorbar
-    if cond < 6
-        caxis([0 1.5]);
-    else
-        caxis([0 3]);
-    end
+    caxis([0 0.5]);
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,['figures' filesep 'topoFlickF1.jpg'])
+saveas(gcf,['figures' filesep 'topoFlickMeanF.jpg'])
 % motion
 position = [11 7 3 9 15 13 8];
 figure; hold on;
@@ -69,17 +144,19 @@ colormap('hot')
 for cond=16:length(avData)
 %     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
     subplot(3,5,position(cond-15)); hold on;
-    plotTopo(avData(cond).amp(:,avData(cond).i1f1*2-1),cfg.layout);
+    plotTopo(mean(avData(cond).amp(:,fqharm(position(cond-15)).ind),2),cfg.layout);
     colorbar
-    if cond-15 == 3
-        caxis([0 1.5]);
-    else
-        caxis([0 3]);
-    end
+    caxis([0 0.5]);
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,['figures' filesep 'topoMotionF2.jpg'])
+saveas(gcf,['figures' filesep 'topoMotionMeanF.jpg'])
+
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%% SSVEP

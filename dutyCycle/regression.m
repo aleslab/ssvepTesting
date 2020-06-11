@@ -1,4 +1,4 @@
-
+%%%% compute slopes, 95% CI, etc. for comparing conditions 
 
 clearvars
 addpath /Users/marleneponcet/Documents/Git/fieldtrip-aleslab-fork
