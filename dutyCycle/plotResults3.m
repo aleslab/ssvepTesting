@@ -26,6 +26,7 @@ dataDir = '/Volumes/Amrutam/Marlene/JUSTIN/DutyCycle/data/Axx/';
 listData = dir([dataDir '*.mat']);
 cfg.layout = 'biosemi128.lay';
 cfg.channel =  {'all','-EXG1', '-EXG2', '-EXG3','-EXG4','-EXG5','-EXG6','-EXG7','-EXG8', '-Status'};
+dcVal = [12.5 25 50 75 87.5];
 
 keepSbj = [1:5 7:11 13:15 17:18 20]; 
 % reject S7 and S13 S17, S20 same as S03
@@ -113,6 +114,23 @@ for hh = 1:4
         subplot(3,5,position(cond-15)); hold on;
         plotTopo(avData(cond).amp(:,harm(cond,hh)),cfg.layout);
         colorbar
+        if hh > 1 && cond == 18
+            caxis([0 0.5]);
+        elseif hh == 1 && cond  == 18
+            caxis([0 1.5]);
+        elseif hh == 1 && cond  ~= 18
+            caxis([0 2.5]);
+        elseif hh == 3 && cond ~= 18
+            caxis([0 0.8]);
+        elseif hh == 2 && ismember(cond,[16 21 20])
+            caxis([0 2]);
+        elseif hh == 2 && ismember(cond,[17 22 19])
+            caxis([0 1]);
+        elseif hh == 4 && ismember(cond,[16 21 20])
+            caxis([0 0.8]);
+        else
+            caxis([0 0.5]);
+        end
     end
     set(gcf,'PaperPositionMode','auto')
     set(gcf, 'Position', [0 0 1500 1000])
@@ -121,7 +139,7 @@ end
 
 
 
-% TOPO average across harmonics 
+% TOPO sum across harmonics 
 for cond=1:15
     fqharm(cond).ind(:) = determineFilterIndices( 'nf1low49',avData(cond).freq, avData(cond).i1f1 );
 end
@@ -130,31 +148,110 @@ figure; hold on;
 colormap('hot')
 for cond=1:15
     subplot(3,5,cond); hold on;
-    plotTopo(mean(avData(cond).amp(:,fqharm(cond).ind),2),cfg.layout);
+    plotTopo(sum(avData(cond).amp(:,fqharm(cond).ind),2),cfg.layout);
     colorbar
-    caxis([0 0.5]);
+    if cond < 6
+        caxis([0 2]);
+    elseif cond > 5 && cond < 11
+        caxis([0 4.5]);
+    elseif cond > 10
+        caxis([0 6]);
+    end
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,['figures' filesep 'topoFlickMeanF.jpg'])
+saveas(gcf,['figures' filesep 'topoFlickSumFq.jpg'])
 % motion
 position = [11 7 3 9 15 13 8];
 figure; hold on;
 colormap('hot')
 for cond=16:length(avData)
-%     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
+    %     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
     subplot(3,5,position(cond-15)); hold on;
-    plotTopo(mean(avData(cond).amp(:,fqharm(position(cond-15)).ind),2),cfg.layout);
+    plotTopo(sum(avData(cond).amp(:,fqharm(position(cond-15)).ind),2),cfg.layout);
     colorbar
-    caxis([0 0.5]);
+    if position(cond-15) < 6
+        caxis([0 2]);
+    elseif position(cond-15) > 5 && position(cond-15) < 11
+        caxis([0 4.5]);
+    elseif position(cond-15) > 10
+        caxis([0 6]);
+    end
 end
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
-saveas(gcf,['figures' filesep 'topoMotionMeanF.jpg'])
+saveas(gcf,['figures' filesep 'topoMotionSumFq.jpg'])
+% normalise the sum 
+load squareFFT.mat
+% flicker
+figure; hold on;
+colormap('hot')
+for cond=1:15
+    subplot(3,5,cond); hold on;
+    plotTopo(sum(avData(cond).amp(:,fqharm(cond).ind),2)/sum(sqAllFFT(fqharm(cond).ind,cond)),cfg.layout);
+    colorbar
+    if cond < 6
+        caxis([0 1]);
+    elseif cond > 5 && cond < 11
+        caxis([0 2]);
+    elseif cond > 10
+        caxis([0 2.5]);
+    end
+end
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 1500 1000])
+saveas(gcf,['figures' filesep 'topoFlickAllFqNorm.jpg'])
+% motion
+position = [11 7 3 9 15 13 8];
+figure; hold on;
+colormap('hot')
+for cond=16:length(avData)
+    %     max(avData(cond).amp(:,avData(cond).i1f1*2-1))
+    subplot(3,5,position(cond-15)); hold on;
+    plotTopo(sum(avData(cond).amp(:,fqharm(position(cond-15)).ind),2)/sum(sqAllFFT(fqharm(position(cond-15)).ind,cond)),cfg.layout);
+    colorbar
+    if position(cond-15) < 6
+        caxis([0 1]);
+    elseif position(cond-15) > 5 && position(cond-15) < 11
+        caxis([0 2]);
+    elseif position(cond-15) > 10
+        caxis([0 2.5]);
+    end
+end
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 1500 1000])
+saveas(gcf,['figures' filesep 'topoMotionAllFqNorm.jpg'])
 
 
+%%%%%
+normAmp = zeros(128,22);
+for cond=1:15
+    normAmp(:,cond) = sum(avData(cond).amp(:,fqharm(cond).ind),2)/sum(sqAllFFT(fqharm(cond).ind,cond));
+end
+for cond = 16:22
+    normAmp(:,cond) = sum(avData(cond).amp(:,fqharm(position(cond-15)).ind),2)/sum(sqAllFFT(fqharm(position(cond-15)).ind,cond));
+end
 
-
+col={'b','r','g'};
+chan = 23;
+figure;hold on;
+for freq=1:3
+    plot(dcVal,normAmp(chan,(freq-1)*5+1:freq*5),['.-' col{freq}],'MarkerSize',40,'Linewidth',2);
+end
+% line([dcVal(1) dcVal(5)], [min(baseline) min(baseline)],'Linewidth',2,'Color','k','LineStyle','--')
+% line([dcVal(1) dcVal(5)], [mean(baseline) mean(baseline)],'Linewidth',2,'Color','k','LineStyle','-')
+% line([dcVal(1) dcVal(5)], [max(baseline) max(baseline)],'Linewidth',2,'Color','k','LineStyle','--')
+plot(50,normAmp(chan,18),['^:' col{1}],'MarkerSize',15,'Linewidth',2)
+plot([25 50 75],normAmp(chan,[17 22 19]),['^:' col{2}],'MarkerSize',15,'Linewidth',2)
+plot([12.5 50 87.5],normAmp(chan,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)
+xlim([0 100]);
+xticks([0:12.5:100]);
+legend('10Hz','5Hz','2.5Hz','Location','Best')
+xlabel('Duty Cycle')
+ylabel('norm SSVEP amplitude')
+set(gca,'FontSize',15)
+title('Oz')
+saveas(gcf,['figures' filesep 'ampDCNormAllFq.jpg'])
 
 
 
@@ -181,7 +278,7 @@ for elec = 1:length(pickElec)
        baseline(cond) = (avData(cond).amp(pickElec(elec),avData(cond).i1f1*2-1-1)+avData(cond).amp(pickElec(elec),avData(cond).i1f1*2-1+1)) / 2;
     end
     
-    dcVal = [12.5 25 50 75 87.5];
+    
     
     figure;hold on;
     for freq=1:3

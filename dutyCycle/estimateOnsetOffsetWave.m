@@ -250,7 +250,7 @@ for fqPres = 1:3
             title(['Oz ' num2str(fqHz(fqPres)) 'Hz ' tt{type} ' ' num2str(allDC(dc)*100)])
             
             subplot(2,5,dc+5)
-            bar(freqs(1:maxFreq),abs(dataFFT(iChan,1:maxFreq,dc+(fqPres-1)*5,type)));
+            bar(freqs(2:maxFreq),abs(dataFFT(iChan,2:maxFreq,dc+(fqPres-1)*5,type)));
             xlabel('Frequency (Hertz)')
             ylabel('Amplitude');
         end

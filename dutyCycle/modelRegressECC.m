@@ -301,11 +301,12 @@ for area = 1:7
     plot([12.5 50 87.5],betaAmpNoIPS(area,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)
     title(tt(area))
     xticks([0:12.5:100]);
+    ylim([0 15])
     legend('10','5','2.5','Location','Best')
     xlabel('Duty Cycle')
     ylabel('betaNormECC amplitude')
 end
-saveas(gcf,'betaAmpPerArea','png')
+saveas(gcf,['figures' filesep 'betaAmpPerArea_v2'],'png')
 
 
 
