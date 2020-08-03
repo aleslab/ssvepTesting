@@ -225,11 +225,14 @@ saveas(gcf,['figures' filesep 'topoMotionAllFqNorm.jpg'])
 
 %%%%%
 normAmp = zeros(128,22);
+sumAmp = zeros(128,22);
 for cond=1:15
     normAmp(:,cond) = sum(avData(cond).amp(:,fqharm(cond).ind),2)/sum(sqAllFFT(fqharm(cond).ind,cond));
+    sumAmp(:,cond) = sum(avData(cond).amp(:,fqharm(cond).ind),2);
 end
 for cond = 16:22
     normAmp(:,cond) = sum(avData(cond).amp(:,fqharm(position(cond-15)).ind),2)/sum(sqAllFFT(fqharm(position(cond-15)).ind,cond));
+    sumAmp(:,cond) = sum(avData(cond).amp(:,fqharm(position(cond-15)).ind),2);
 end
 
 col={'b','r','g'};

@@ -188,7 +188,29 @@ ylabel('sum fq amp < 50Hz')
 title('normalisation')
 saveas(gcf,['figures' filesep 'normalisation'],'png')
 
+
+
+
 % %%%% plot high resolution
+% squareFFT(~abs(squareFFT)) = NaN;
+% maxFreq = find(freqs==85/8*5);
+% toplot = 42:2:56;
+% for fq = 1:length(allfq)
+%     figure('Position', [0 0 1500 1500]); hold on;
+%     for dc = 1:length(toplot)
+%         % spectrum
+%         subplot(4,2,dc)
+% %         bar(freqs(2:maxFreq),squeeze(abs(squareFFT(2:maxFreq,fq,toplot(dc)))));
+%         stem(freqs(2:end),squeeze(abs(squareFFT(2:end,fq,toplot(dc)))));
+%         xlim([0 freqs(end)])
+%         xlabel('Frequency (Hertz)')
+%         ylabel('Amplitude');
+%         title([num2str(allfq(fq)) 'Hz ' num2str(toplot(dc)) '%'])
+%     end
+%     saveas(gcf,['figures' filesep 'FourierAll' num2str(round(allfq(fq)))],'png')
+% end
+% 
+% 
 % figure; hold on
 % harm1 = determineFilterIndices( 'nf1low49', freqs, find(freqs==allfq(1)));
 % plot(allDC,sum(sqAllFFT(harm1,1:99),1),'b','LineWidth',2)
@@ -202,6 +224,10 @@ saveas(gcf,['figures' filesep 'normalisation'],'png')
 % ylabel('sum fq amp < 50Hz')
 % title('normalisation')
 % saveas(gcf,['figures' filesep 'normalisationHighRes'],'png')
+
+
+
+
 
 
 % %%%% Other way to compute FFT

@@ -4,7 +4,11 @@ clearvars
 % load models
 load('eccModel.mat');
 % load data
-load('16sbjDC.mat')
+load('16sbjDC_v2.mat')
+
+addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/biosemiUpdated
+addpath /Volumes/Amrutam/Marlene/Git/fieldtrip-aleslab-fork
+ft_defaults
 
 % remove 0 in the model matrix
 [nbElec, tot] = size(eccModelRef.amp);
@@ -24,13 +28,116 @@ minModel.sin = zeros(size(minModel.cos));
 
 % determine the indexes of all the harmonics < 50 Hz
 for cond=1:length(avData)
-    if cond < 16
-        fitData(cond).harmIdx = determineFilterIndices( 'nf1low49', avData(cond).freq, avData(cond).i1f1);
-    else
-        fitData(cond).harmIdx = determineFilterIndices( 'nf1low49', avData(cond).freq, avData(cond).i1f1*2-1);
+   fitData(cond).harmIdx = determineFilterIndices( 'nf1low49', avData(cond).freq, avData(cond).i1f1);
+end
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% do the regression without including IPS
+% this is without normalisation (useful for plotting the predicted maps)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for cond = 1:length(avData)
+    for hh = 1 : length(fitData(cond).harmIdx)
+        fitData(cond).betaCosRaw(:,hh)  = regress (avData(cond).cos(:,fitData(cond).harmIdx(hh)), minModel.cos(:,[1:6 8]));
+        fitData(cond).betaSinRaw(:,hh)  = regress (avData(cond).sin(:,fitData(cond).harmIdx(hh)), minModel.cos(:,[1:6 8]));
     end
 end
 
+%%% create topographies from betas and model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+load('squareFFT.mat') % load the amplitudes for a square function
+for cond = 1: length(avData)
+    for hh = 1 : length(fitData(cond).harmIdx)
+        pred(cond).cos(hh,:) = minModel.cos(:,[1:6 8]) * fitData(cond).betaCosRaw(:,hh);
+        pred(cond).sin(hh,:) = minModel.cos(:,[1:6 8]) * fitData(cond).betaSinRaw(:,hh);
+    end
+    pred(cond).amp = sqrt(pred(cond).cos(:,:).^2 + pred(cond).sin(:,:).^2);
+    % sum harmonics
+    pred(cond).sumAmp = sum(pred(cond).amp);
+    % normalise the amplitudes
+    sumSq = sum(sqAllFFT(fitData(cond).harmIdx,cond));
+    pred(cond).normAmp = pred(cond).sumAmp / sumSq;     
+end
+
+figure('position', [200, 0, 1500, 800])
+colormap('hot')
+for cond = 1:15
+    subplot(3,5,cond)
+    plotTopo(pred(cond).sumAmp,cfg.layout)
+    if cond < 6
+        caxis([0 2]);
+    elseif cond > 5 && cond < 11
+        caxis([0 4.5]);
+    elseif cond > 10
+        caxis([0 6]);
+    end
+    colorbar
+end
+saveas(gcf,['figures' filesep 'predTopoSumAllFq'],'png')
+
+figure('position', [200, 0, 1500, 800])
+colormap('hot')
+for cond = 1:15
+    subplot(3,5,cond)
+    plotTopo(pred(cond).normAmp,cfg.layout)
+    if cond < 6
+        caxis([0 1]);
+    elseif cond > 5 && cond < 11
+        caxis([0 2]);
+    elseif cond > 10
+        caxis([0 2.5]);
+    end
+    colorbar
+end
+saveas(gcf,['figures' filesep 'predTopoNormAllFq'],'png')
+
+figure('position', [200, 0, 1500, 800])
+colormap('hot')
+position = [11 7 3 9 15 13 8];
+for cond = 16:22
+    subplot(3,5,position(cond-15))
+    plotTopo(pred(cond).sumAmp,cfg.layout)
+    if position(cond-15) < 6
+        caxis([0 2]);
+    elseif position(cond-15) > 5 && position(cond-15) < 11
+        caxis([0 4.5]);
+    elseif position(cond-15) > 10
+        caxis([0 6]);
+    end
+    colorbar
+end
+saveas(gcf,['figures' filesep 'predTopoSumAllFqMotion'],'png')
+
+figure('position', [200, 0, 1500, 800])
+colormap('hot')
+position = [11 7 3 9 15 13 8];
+for cond = 16:22
+    subplot(3,5,position(cond-15))
+    plotTopo(pred(cond).normAmp,cfg.layout)
+    if position(cond-15) < 6
+        caxis([0 1]);
+    elseif position(cond-15) > 5 && position(cond-15) < 11
+        caxis([0 2]);
+    elseif position(cond-15) > 10
+        caxis([0 2.5]);
+    end
+    colorbar
+end
+saveas(gcf,['figures' filesep 'predTopoNormAllFqMotion'],'png')
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% do the regression without including IPS with a normalised model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % do a normalisation for each ROI -> unit norming
 % so that the betas represent microVolts (instead of microVolts/area size
@@ -42,17 +149,6 @@ model = minModel.cos;
 modelNorm = sqrt(sum(minModel.cos.^2,1));
 model = bsxfun(@rdivide,model,modelNorm);
 
- 
-% do the regression without including IPS
-% this is without normalisation (useful for plotting the predicted maps)
-for cond = 1:length(avData)
-    for hh = 1 : length(fitData(cond).harmIdx)
-        fitData(cond).betaCosRaw(:,hh)  = regress (avData(cond).cos(:,fitData(cond).harmIdx(hh)), minModel.cos(:,[1:6 8]));
-        fitData(cond).betaSinRaw(:,hh)  = regress (avData(cond).sin(:,fitData(cond).harmIdx(hh)), minModel.cos(:,[1:6 8]));
-    end
-end
-
-% do the regression without including IPS with a normalised model
 for cond = 1:length(avData)
     for hh = 1 : length(fitData(cond).harmIdx)
         fitData(cond).betaCos(:,hh)  = regress (avData(cond).cos(:,fitData(cond).harmIdx(hh)), model(:,[1:6 8]));
@@ -61,17 +157,16 @@ for cond = 1:length(avData)
 end
 
 % compute the amplitude (for each of the harmonics)
+load('squareFFT.mat') % load the amplitudes for a square function
 for cond = 1:length(avData)
     fitData(cond).amp = sqrt(fitData(cond).betaCos(:,:).^2 + fitData(cond).betaSin(:,:).^2);
     % sum the amplitudes for all the harmonics while keeping the areas
     % separate
     fitData(cond).sumAmp = sum(fitData(cond).amp,2);
     % normalise the amplitudes
-    load('squareFFT.mat') % load the amplitudes for a square function
     sumSq = sum(sqAllFFT(fitData(cond).harmIdx,cond));
     fitData(cond).normAmp = fitData(cond).sumAmp / sumSq;    
 end
-
 
 
 % easier format for plotting

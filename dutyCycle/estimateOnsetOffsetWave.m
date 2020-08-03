@@ -1,5 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % estimate onset, offset waveform and residual
+% only applied for the static signal
+% motion signal would need 2xtimeWindow for a left and right response
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 addpath /Volumes/Amrutam/Marlene/Git/fieldtrip-aleslab-fork
 addpath /Volumes/Amrutam/Marlene/Git/ssvepTesting/svndlCopy
@@ -13,7 +15,6 @@ ft_defaultscfg.layout = 'biosemi128.lay';
 clearvars
 load('16sbjDC.mat')
 dutyCyclesPercent = [.125 .25 .5 .75 .875];
-
 
 % %%%% each freq separately
 % bb = 0;
@@ -34,21 +35,17 @@ dutyCyclesPercent = [.125 .25 .5 .75 .875];
 %%%% all freq together (stacked up)
 maxnT = size(avData(15).wave,2);
 timeLine = avData(15).time;
-bb = 0;
 dutyCyclesPercent = repmat(dutyCyclesPercent,1,3);
 
 for aa = 1:15 % 1:5 = 10Hz, 6:10=5Hz, 11:15=2.5Hz
-    bb= bb+1;
-    listnT(bb) = size(avData(aa).wave,2);
-    dutyCyclesSamples(bb) = size(avData(aa).wave,2)*dutyCyclesPercent(aa);
+    listnT(aa) = size(avData(aa).wave,2);
+    dutyCyclesSamples(aa) = size(avData(aa).wave,2)*dutyCyclesPercent(aa);
     nbRep = maxnT/size(avData(aa).wave,2);
-    data(:,:,bb) = repmat(avData(aa).wave,1,nbRep);
+    data(:,:,aa) = repmat(avData(aa).wave,1,nbRep);
 end
-tt = 'all';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% regression
-
 nCh = size(data,1);%We will treat each electrode separately
 nT  = size(data,2);
 nDuty = size(data,3);
@@ -141,7 +138,7 @@ plot(stackedData(iCh,:)); %
 plot(fitData(iCh,:));
 plot(residual(iCh,:))
 legend('Data','Fit','Residual')
-title(tt)
+title('allStatic')
 
 subplot(2,3,3)
 plot(squeeze(betaWeights(iCh,:,:))'); hold on;
@@ -157,7 +154,7 @@ subplot(2,3,4); plotTopo(rms(betaWeights(:,1,:),3),cfg.layout); title('onset (be
 subplot(2,3,5); plotTopo(rms(betaWeights(:,2,:),3),cfg.layout); title('offset (beta)'); colorbar; %caxis([0 1.2]);
 subplot(2,3,6); plotTopo(rms(residual(:,:),2),cfg.layout); title('residual'); colorbar; %caxis([0 1.2]);
 
-saveas(gcf,['figures' filesep 'extractOnOff' tt],'png')
+saveas(gcf,['figures' filesep 'extractOnOffallStatic'],'png')
 
 
 
@@ -310,7 +307,8 @@ model = minModel.cos;
 modelNorm = sqrt(sum(minModel.cos.^2,1));
 model = bsxfun(@rdivide,model,modelNorm);
 
-% do the regression
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% do the regression for the 1f1 ONLY
 % find the harmonics index for the 3 different freq
 index1f1 = repmat([find(freqs == 85/8) find(freqs == 85/16) find(freqs == 85/32)],5,1);
 index1f1 = index1f1(:);
@@ -345,35 +343,172 @@ end
 saveas(gcf,['figures' filesep 'onOffbeta'],'png')
 
 
-% plot residual depending on ISI
+for type=1:2
+    figure;set(gcf, 'Position', [0 0 1200 800])
+    for area = 1:7
+        subplot(2,4,area); hold on;
+        plot(dcVal,betaAmp(area,1:5,type),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+        plot(dcVal,betaAmp(area,6:10,type),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+        plot(dcVal,betaAmp(area,11:15,type),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+        title(areaNames(area))
+        xticks([0:12.5:100]);
+        legend('10','5','2.5','Location','Best')
+        xlabel('Duty Cycle')
+        ylabel('betaNormECC amplitude')
+    end
+    if type == 1
+        saveas(gcf,['figures' filesep 'onOffbetaSignal'],'png')
+    elseif type ==2
+        saveas(gcf,['figures' filesep 'onOffbetaResiduals'],'png')
+    end
+end
 
-timeOn = timeLine(end) * (dcVal/100);
-timeOff = timeLine(end) - timeOn;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% do the regression for all harmonics
+% determine the indexes of all the harmonics < 50 Hz
+% attention, need to use freqs which is a made-up list of harmonics
+clear fitData
+divFq = repmat([8 16 32],5,1);divFq = divFq(:);
+for cond=1:15
+    tgtFq = 85/divFq(cond):85/divFq(cond):50;
+    harmIdx{cond} = arrayfun(@(tgtFq) find(freqs == tgtFq),tgtFq);
+end
+
+for cond = 1:15
+    for hh = 1 : length(harmIdx{cond})
+        fitData(cond).betaCos(:,hh)  = regress (real(dataFFT(:,harmIdx{cond}(hh),cond,1)), model(:,[1:6 8]));
+        fitData(cond).betaSin(:,hh)  = regress (-imag(dataFFT(:,harmIdx{cond}(hh),cond,1)), model(:,[1:6 8]));
+        fitData(cond).betaCosRes(:,hh)  = regress (real(dataFFT(:,harmIdx{cond}(hh),cond,2)), model(:,[1:6 8]));
+        fitData(cond).betaSinRes(:,hh)  = regress (-imag(dataFFT(:,harmIdx{cond}(hh),cond,2)), model(:,[1:6 8]));
+    end
+end
+
+% compute the amplitude (for each of the harmonics)
+% normalise with square function - attention indices for the harmonics are
+% different for the square function and the computed dataFFT
+for cond=1:length(avData)
+   fitData(cond).harmIdx = determineFilterIndices( 'nf1low49', avData(cond).freq, avData(cond).i1f1);
+end
+load('squareFFT.mat') % load the amplitudes for a square function
+for cond = 1:length(avData)
+    fitData(cond).amp = sqrt(fitData(cond).betaCos(:,:).^2 + fitData(cond).betaSin(:,:).^2);
+    fitData(cond).ampRes = sqrt(fitData(cond).betaCosRes(:,:).^2 + fitData(cond).betaSinRes(:,:).^2);
+    % sum the amplitudes for all the harmonics while keeping the areas
+    % separate
+    fitData(cond).sumAmp = sum(fitData(cond).amp,2);
+    fitData(cond).sumAmpRes = sum(fitData(cond).ampRes,2);
+    % normalise the amplitudes
+    sumSq = sum(sqAllFFT(fitData(cond).harmIdx,cond));
+    fitData(cond).normAmp = fitData(cond).sumAmp / sumSq;    
+    fitData(cond).normAmpRes = fitData(cond).sumAmpRes / sumSq;  
+end
+
+
+% easier format for plotting
+allNormAmp = [fitData.normAmp];
+allsumAmp = [fitData.sumAmp];
+allNormAmpRes = [fitData.normAmpRes];
+
+% plot 7 regions * 22 conditions
+col={'b','r','g'};
+areaNames = {'V1','V2','V3','V3A','V4','MT','LOC'};
+dcVal = [12.5 25 50 75 87.5];
+figure;set(gcf, 'Position', [0 0 1200 800])
+for area = 1:7
+    subplot(2,4,area); hold on;
+    plot(dcVal,allNormAmp(area,1:5),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,allNormAmp(area,6:10),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,allNormAmp(area,11:15),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+    title(areaNames(area))
+    xticks([0:12.5:100]);
+    legend('10','5','2.5','Location','Best')
+    xlabel('Duty Cycle')
+    ylabel('betaNormAllFq')
+end
+saveas(gcf,['figures' filesep 'onOffbetaNormAllFqPerArea'],'png')
 
 figure;set(gcf, 'Position', [0 0 1200 800])
 for area = 1:7
     subplot(2,4,area); hold on;
-    plot(timeOff/4,betaAmp(area,1:5,2),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
-    plot(timeOff/2,betaAmp(area,6:10,2),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
-    plot(timeOff,betaAmp(area,11:15,2),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
-    title(areaNames(area))
-    xlim([0 400])
-    legend('10r','5r','2.5r','Location','Best')
-    xlabel('ISI')
-    ylabel('betaNormECC amplitude')
+    plot(dcVal,allNormAmpRes(area,1:5),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,allNormAmpRes(area,6:10),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,allNormAmpRes(area,11:15),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+    title(tt(area))
+    xticks([0:12.5:100]);
+    legend('10','5','2.5','Location','Best')
+    xlabel('Duty Cycle')
+    ylabel('betaNormAllFq')
 end
-saveas(gcf,['figures' filesep 'onOffbeta-ISIresiduals'],'png')
+saveas(gcf,['figures' filesep 'onOffbetaNormAllFqPerAreaRes'],'png')
 
-figure;set(gcf, 'Position', [0 0 1200 800])
+
+% % plot residual depending on ISI
+% % this is because we thought that the residuals will be important to
+% % explain percept but this is NOT the case!
+% timeOn = timeLine(end) * (dcVal/100);
+% timeOff = timeLine(end) - timeOn;
+% 
+% figure;set(gcf, 'Position', [0 0 1200 800])
+% for area = 1:7
+%     subplot(2,4,area); hold on;
+%     plot(timeOff/4,betaAmp(area,1:5,2),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+%     plot(timeOff/2,betaAmp(area,6:10,2),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+%     plot(timeOff,betaAmp(area,11:15,2),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+%     title(areaNames(area))
+%     xlim([0 400])
+%     legend('10r','5r','2.5r','Location','Best')
+%     xlabel('ISI')
+%     ylabel('betaNormECC amplitude')
+% end
+% saveas(gcf,['figures' filesep 'onOffbeta-ISIresiduals'],'png')
+% 
+% figure;set(gcf, 'Position', [0 0 1200 800])
+% for area = 1:7
+%     subplot(2,4,area); hold on;
+%     plot(timeOn/4,betaAmp(area,1:5,2),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+%     plot(timeOn/2,betaAmp(area,6:10,2),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+%     plot(timeOn,betaAmp(area,11:15,2),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+%     title(areaNames(area))
+%     xlim([0 400])
+%     legend('10r','5r','2.5r','Location','Best')
+%     xlabel('On Time')
+%     ylabel('betaNormECC amplitude')
+% end
+
+
+% correlation signal and residuals with ratings ONLY FOR STATIC
+load('fullRatings9.mat')
+static = mean(tabStatic,3); 
+flickRating = static(2:3,:)';
+
+for type=1:2
+    figure;set(gcf, 'Position', [0 0 1000 600])
+    for area = 1:7
+        subplot(2,4,area); hold on;
+        scatter(betaAmp(area,6:15,type),(flickRating(:)), 80,'filled','MarkerEdgeColor','none');
+        R = corrcoef(betaAmp(area,6:15,type),(flickRating(:)));
+        RsqS = R(1,2).^2;
+        %     ylim([0 3]);
+        xlabel(['beta from onOff' tt{type}])
+        ylabel('motion rating')
+        title([areaNames{area} ' S=' num2str(RsqS,2)]) %only 2 digits
+        lsline
+    end
+    saveas(gcf,['figures/onOffcorrelWithBeta' tt{type}],'png')
+end
+
+
+figure;set(gcf, 'Position', [0 0 1000 600])
 for area = 1:7
     subplot(2,4,area); hold on;
-    plot(timeOn/4,betaAmp(area,1:5,2),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
-    plot(timeOn/2,betaAmp(area,6:10,2),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
-    plot(timeOn,betaAmp(area,11:15,2),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
-    title(areaNames(area))
-    xlim([0 400])
-    legend('10r','5r','2.5r','Location','Best')
-    xlabel('On Time')
-    ylabel('betaNormECC amplitude')
+    scatter(allNormAmp(area,6:15,type),(flickRating(:)), 80,'filled','MarkerEdgeColor','none');
+    R = corrcoef(allNormAmp(area,6:15,type),(flickRating(:)));
+    RsqS = R(1,2).^2;
+    %     ylim([0 3]);
+    xlabel(['beta from onOff' tt{type}])
+    ylabel('motion rating')
+    title([areaNames{area} ' S=' num2str(RsqS,2)]) %only 2 digits
+    lsline
 end
-
+saveas(gcf,['figures/onOffcorrelWithBetaNormAllFq'],'png')
