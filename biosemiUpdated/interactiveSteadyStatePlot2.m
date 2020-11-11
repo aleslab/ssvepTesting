@@ -559,26 +559,26 @@ drawInfoPane()
     end
 
 
-    function keyInput(src,evnt)
-    
-        %disabled while working on other plots. 
-        return;
-        switch(lower(evnt.Key))
-            case 'leftarrow'
-                iFr = max(iFr-1,1);
-            case 'rightarrow'
-                iFr= min(iFr+1,length(freq));
-                
-                
-        end
-        
-        
-          set(topoH,'facevertexCData',pdAmp(:,iFr))
-          caxis(topoAx,[0 max(abs(pdAmp(:,iFr)))])
-          title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])
-            
-        
-    end
+%     function keyInput(src,evnt)
+%     
+%         %disabled while working on other plots. 
+%         return;
+%         switch(lower(evnt.Key))
+%             case 'leftarrow'
+%                 iFr = max(iFr-1,1);
+%             case 'rightarrow'
+%                 iFr= min(iFr+1,length(freq));
+%                 
+%                 
+%         end
+%         
+%         
+%           set(topoH,'facevertexCData',pdAmp(:,iFr))
+%           caxis(topoAx,[0 max(abs(pdAmp(:,iFr)))])
+%           title(specAx,['Frequency: ' num2str(freq(iFr)) ' Hz'])
+%             
+%         
+%     end
 
     %Callback when user selects condition from dropdown. 
     function selCond(hObject,callbackdata,condIdx)

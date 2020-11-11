@@ -41,7 +41,7 @@ behavFiles = dir([dataDir '*.mat']);
 %     cfg.trialdef.nbTotalCycles = experimentData(1).trialData.nbTotalCycles;
 
 %%%%%% ONLY variables that are the same in ALL conditions
-    cfg.trialdef.preStimDuration = experimentData(1).condInfo.preStimDuration;
+    cfg.trialdef.preStimDuration = experimentData(1).condInfo.preStimDuration; % corresponds to multiple of 3 cycles
     cfg.trialdef.trialLength = experimentData(1).trialData.trialDuration; % full trial (including pre and post 10 s)
 %     cfg.trialdef.freqTag = experimentData(1).condInfo.stimTagFreq;
 %     cfg.trialdef.cycleLength = 1/cfg.trialdef.freqTag;

@@ -1,4 +1,5 @@
-% create new field in Axx for normalised amplitudes
+% create new field in Axx for normalised power amplitudes
+% No, not a good idea
 
 % normalise the frequency amplitudes by the amplitude of a square wave
 % the idea here is that if a square wave gives a high amplitude for low DC
@@ -11,6 +12,8 @@
 % in practice: get the sum of amplitudes for all the harmonics up to 50Hz
 % for each condition separately for the recorded data and the square
 % function. Then data./square for normalising
+% ATTENTION should sum the power (squared amplitudes) not the amplitudes!!!
+% (see simulDC2.m for comparisons)
 
 clearvars;
 % load data
@@ -38,13 +41,22 @@ for ss = 1:length(keepSbj)
     
     % sum the harmonics and normalise
     for cond = 1:length(Axx)
-        sumSq = sum(sqAllFFT(Axx(cond).harmIdx,cond));
+        sumSq = sum(sqAllFFT(Axx(cond).harmIdx,cond).^2);
         for ch=1:Axx(cond).nchan
-            sumData = sum(Axx(cond).amp(ch,Axx(cond).harmIdx));
-            Axx(cond).normFq(ch) = sumData / sumSq;
+            Axx(cond).sumHarm(ch) = sum(Axx(cond).amp(ch,Axx(cond).harmIdx).^2);
+%             Axx(cond).normFq(ch) = sumData / sumSq;
         end
     end
     
     save([dataDir listData(keepSbj(ss)).name],'Axx')
 
+end
+
+
+for ss = 1:length(keepSbj)
+    load([dataDir listData(keepSbj(ss)).name]);
+    if isfield(Axx,'normFq')
+        Axx = rmfield(Axx,'normFq');
+    end
+    save([dataDir listData(keepSbj(ss)).name],'Axx')
 end

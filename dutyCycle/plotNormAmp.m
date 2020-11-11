@@ -18,11 +18,11 @@ end
 
 for ss = 1:length(keepSbj)
     for cond = 1:22
-        normAmp(:,cond,ss) = dataSbj(cond,ss).normFq;
+        normPower(:,cond,ss) = dataSbj(cond,ss).normFq;
     end
 end
-avAmp = mean(normAmp,3);
-semAmp = std(normAmp,[],3) / sqrt(size(normAmp,3));
+avAmp = mean(normPower,3);
+semAmp = std(normPower,[],3) / sqrt(size(normPower,3));
 
 col={'b','r','g'};
 

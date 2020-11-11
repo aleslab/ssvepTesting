@@ -174,7 +174,8 @@ save('squareFFT.mat','sqAllFFT')
 
 
 %%% plot as in the experiment: sum harmonics for the 5 DC
-figure; hold on
+figure;
+subplot(2,1,1);hold on
 harm1 = determineFilterIndices( 'nf1low49', freqs, find(freqs==allfq(1)));
 plot(allDC,sum(sqAllFFT(harm1,1:5),1),'b','LineWidth',2)
 harm2 = determineFilterIndices( 'nf1low49', freqs, find(freqs==allfq(2)));
@@ -185,9 +186,14 @@ xlim([0 1])
 legend('10Hz','5Hz','2Hz')
 xlabel('duty cycle')
 ylabel('sum fq amp < 50Hz')
-title('normalisation')
-saveas(gcf,['figures' filesep 'normalisation'],'png')
+title('sum of amplitudes')
+subplot(2,1,2);hold on
+plot(allDC,sum(sqAllFFT(harm1,1:5).^2),'b','LineWidth',2)
+plot(allDC,sum(sqAllFFT(harm2,6:10).^2),'r','LineWidth',2)
+plot(allDC,sum(sqAllFFT(harm3,11:15).^2,1),'g','LineWidth',2)
+title('sum of power (squared amplitudes)')
 
+saveas(gcf,['figures' filesep 'normalisation'],'png')
 
 
 

@@ -157,12 +157,8 @@ end
 %%% create topographies from betas and model
 clear totAmp;
 for cond = 1: length(avData)
-    totCos(:,cond) = zeros(128,1);
-    totSin(:,cond) = zeros(128,1);
-    for roi=1:size(betaCos,1)
-        totCos(:,cond) = totCos(:,cond) + betaCos(roi,cond) * minModel.cos(:,roi);
-        totSin(:,cond) = totSin(:,cond) + betaSin(roi,cond) * minModel.cos(:,roi);
-    end
+    totCos(:,cond) = minModel.cos * betaCos(:,cond);
+    totSin(:,cond) = minModel.cos * betaSin(:,cond);
     totAmp(:,cond) = sqrt(totCos(:,cond).^2 + totSin(:,cond).^2); 
 end
 
@@ -301,12 +297,12 @@ for area = 1:7
     plot([12.5 50 87.5],betaAmpNoIPS(area,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)
     title(tt(area))
     xticks([0:12.5:100]);
-    ylim([0 15])
+%     ylim([0 15])
     legend('10','5','2.5','Location','Best')
     xlabel('Duty Cycle')
     ylabel('betaNormECC amplitude')
 end
-saveas(gcf,['figures' filesep 'betaAmpPerArea_v2'],'png')
+saveas(gcf,['figures' filesep 'betaAmpPerArea'],'png')
 
 
 
