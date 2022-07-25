@@ -193,7 +193,8 @@ plot(allDC,sum(sqAllFFT(harm2,6:10).^2),'r','LineWidth',2)
 plot(allDC,sum(sqAllFFT(harm3,11:15).^2,1),'g','LineWidth',2)
 title('sum of power (squared amplitudes)')
 
-saveas(gcf,['figures' filesep 'normalisation'],'png')
+saveas(gcf,['figures' filesep 'normalisationAmount'],'png')
+
 
 
 

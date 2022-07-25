@@ -44,7 +44,8 @@ else
     handle = netList;
 end
 
-set(handle,'facevertexCdata',data,'linewidth',1,'markersize',20,'marker','.');
+
+set(handle,'facevertexCdata',data,'linewidth',0.1,'markersize',10,'marker','.');
 set(handle,'userdata','plotTopo');
 
 % colormap(jmaColors('usadarkblue'));

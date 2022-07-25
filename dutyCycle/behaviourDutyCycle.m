@@ -8,8 +8,7 @@ dataDir = '/Users/marleneponcet/Documents/data/dutyCycle/originalData/';
 behavFiles = dir([dataDir '*.mat']);
 
 
-keepSBJ = 1:length(behavFiles);
-keepSBJ = [1:5 7:11 13:15]; 
+keepSBJ = [1:5 7:11 13:15 17 18 20]; % reject S7 S13 S17 (& S20 did twice)
 
 
 
@@ -19,7 +18,7 @@ for ss=1:length(keepSBJ)
     load([dataDir behavFiles(ff).name])
     
     % remove any invalid trial from the data
-    if length(experimentData) ~= 242 || ss==8 % this sbj has an invalid trial but still 242 trials (restarted many times)
+    if length(experimentData) ~= 242 || ff==8 % this sbj has an invalid trial but still 242 trials (restarted many times)
         toRemove = [];
         for ll=1:length(experimentData)
             if experimentData(ll).validTrial == 0 || isempty(experimentData(ll).trialData)
@@ -51,31 +50,27 @@ for ss=1:length(keepSBJ)
         end
     end
 %     % plot
-%     for cc=1:length(allCond)
-%         figure;hold on;
-%         imagesc(squeeze(matResponse(cc,:,:)));colorbar;
-%     end
-    figure;bar(mean(corResp,2)); ylim([0 1]);
+%     figure;bar(mean(corResp,2)); ylim([0 1]);
     behav(ss,:) = mean(corResp,2);
     
     %%% analysis across conditions
-    clear corResp response corResp
-    allCond = unique(tableData.condNumber);
-    indexCond = find(tableData.validTrial);
-    for ic = 1: length(indexCond)
-        response(ic,1) =  tableData.trialData(indexCond(ic)).nbDots;
-        response(ic,2) = tableData.trialData(indexCond(ic)).response;
-        corResp(ic) = tableData.trialData(indexCond(ic)).correct;
-    end
-    posDots = unique(response(:,1)) + 1;
-    for nbDim = 1: length(posDots)
-        trialPerCond = length(find(response(:,1) == nbDim-1));
-        for nbResp = 1: length(posDots)
-            matResponse2(nbDim,nbResp) = length(find(response(:,1) == nbDim-1 & response(:,2) == nbResp-1)) / trialPerCond *100;
-        end
-    end
+%     clear corResp response corResp
+%     allCond = unique(tableData.condNumber);
+%     indexCond = find(tableData.validTrial);
+%     for ic = 1: length(indexCond)
+%         response(ic,1) =  tableData.trialData(indexCond(ic)).nbDots;
+%         response(ic,2) = tableData.trialData(indexCond(ic)).response;
+%         corResp(ic) = tableData.trialData(indexCond(ic)).correct;
+%     end
+%     posDots = unique(response(:,1)) + 1;
+%     for nbDim = 1: length(posDots)
+%         trialPerCond = length(find(response(:,1) == nbDim-1));
+%         for nbResp = 1: length(posDots)
+%             matResponse2(nbDim,nbResp) = length(find(response(:,1) == nbDim-1 & response(:,2) == nbResp-1)) / trialPerCond *100;
+%         end
+%     end
 %     % plot
-%     figure;imagesc(matResponse);colorbar;
+%     figure;imagesc(matResponse2);colorbar;
     
 end
 
@@ -104,7 +99,7 @@ subplot(1,2,2)
 imagesc(tabMeanMot,[0 1]);colorbar;
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 1000 1200 500])
-saveas(gcf,'detectionPerf.png')
+saveas(gcf,'figures/detectionPerf.png')
 
 
 
@@ -124,14 +119,14 @@ for tt = 1:length(testedFreq)
     stimOnMov(cc) = onTime(tt)/8/testedFreq(tt);
     cc=cc+1;
 end
-imagesc(stimOn)
 
 figure;hold on;
 for pp=1:3
     scatter(stimOn(5*(pp-1)+1:5*(pp-1)+5),mean(behav(:,5*(pp-1)+1:5*(pp-1)+5)),'filled')
 end
 scatter(stimOnMov,mean(behav(:,16:22)),'g','filled')
+ylim([0 1])
 ylabel('accuracy')
-xlabel('stim On')
+xlabel('stim On time')
 legend('10','5','2','moving','Location','Best')
-saveas(gcf,'accByStimOn.png')
+saveas(gcf,'figures/accByStimOn.png')

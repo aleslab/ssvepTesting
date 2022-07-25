@@ -1,6 +1,6 @@
 %%% simulation of EEG response across harmonics for different duty cycles
 clearvars; close all;
-ff=5; % fondamental frequency
+ff=2.5; % fondamental frequency
 
 %% Generate onset/offset response (i.e. odd and even harmonics)
 nT=512; % has to be divisible by 64
@@ -17,6 +17,7 @@ wAmp(2:2:end) = wAmp(2:2:end)*1;
 wPhase = (-1*wList)+repmat([0*pi/2 0*pi/2]',nF/2,1);
 
 wAmp = cos(wPhase).*wAmp + 1i.*sin(wPhase).*wAmp;
+
 
 %% Make a fourier basis set for an easy waveform creator:
 allDC = [0.125 0.25 0.5 0.75 0.875];
@@ -58,24 +59,24 @@ for dc=1:length(allDC)
     
     wAmp2= nF*(abs(invFourier(wList+1,:)*waveForm'));
     
-    %% figures
-    %timecourse panel
-    figure(100)
-    subplot(3,2,dc)
-    plot(t,waveForm,'k');
-    xlabel('Time (seconds)')
-    ylabel('Amplitude');
-    ylim([-1.2 1.2])
-    xlim([0 wtSize])
-    title([num2str(ff) 'Hz' num2str(dutyCycle*100) '%'])
-    
     %Make spec plot
     freqs = 1.25*(0:.5:20);
     amps = 0*ones(size(freqs));
     amps(2*wList+1)=abs(wAmp2);
     
-    figure(200)
-    subplot(3,2,dc)
+    
+    %% figures
+    %timecourse panel
+    figure(100)
+    subplot(2,5,dc)
+    plot(t,waveForm,'k');
+    xlabel('Time (seconds)')
+    ylabel('Amplitude');
+    ylim([-1.2 1.2])
+    xlim([0 wtSize])
+    title([num2str(ff) 'Hz ' num2str(dutyCycle*100) '%'])
+
+    subplot(2,5,dc+5)
     if exist('pdSpecPlot')
         pdSpecPlot(freqs,amps,[]);
     else
@@ -86,5 +87,5 @@ for dc=1:length(allDC)
     ylabel('Amplitude');
     title([num2str(ff) 'Hz ' num2str(dutyCycle*100) '%'])
 end
-% saveas(100,['figures' filesep 'simulWave' num2str(ff) 'Hz'],'png')
-% saveas(200,['figures' filesep 'simulSpect' num2str(ff) 'Hz'],'png')
+set(100, 'Position', [0 0 1000 500])
+saveas(100,['figures' filesep 'simulHarmonics' num2str(ff) 'Hz'],'png')

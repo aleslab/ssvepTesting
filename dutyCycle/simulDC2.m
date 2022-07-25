@@ -1,5 +1,7 @@
 %%% simulation of EEG response across harmonics for different duty cycles
+% compare with analytical solution for FFT of square wave
 clearvars; close all;
+addpath('/Users/marleneponcet/Documents/Git/ssvepTesting/biosemiUpdated/')
 
 %%%%%%%%%%%%%%%%
 %% parameters 
@@ -49,16 +51,6 @@ for fq = 1:length(allfq)
 %         figure;plot(sqTmp)
         % then copy it multiple times to get to the 1 sec window
         squareWave(:,fq,dc) = repmat(sqTmp,1,nT/sizeCycle(fq)*repCycle);
-        
-        idx1F1 =  (nT/sizeCycle(fq)*repCycle);
-        
-        idxAll = (idx1F1:idx1F1:(repCycle*nT/2) )+1;
-        n = 1:length(idxAll);
-        A = 2;
-        d = allDC(dc);
-        squareAnalyticFFT(idxAll,fq,dc) = abs(2 * A./(n*pi) .* sin ( n*pi*d));
-        
-        
     end
 end
 
@@ -71,8 +63,13 @@ for fq = 1:length(allfq)
         % normalise the Fourier
         squareFFT(:,fq,dc) = abs(2*tmpFFT(1:length(tmpFFT)/2+1)/length(tmpFFT));
         
-        
-        
+        % compare with analytical FFT solution for square wave
+        idx1F1 =  (nT/sizeCycle(fq)*repCycle);
+        idxAll = (idx1F1:idx1F1:(repCycle*nT/2) )+1;
+        n = 1:length(idxAll);
+        A = 2;
+        d = allDC(dc);
+        squareAnalyticFFT(idxAll,fq,dc) = abs(2 * A./(n*pi) .* sin ( n*pi*d)); 
     end
 end
 
@@ -104,30 +101,24 @@ ylabel('sqrt(sum2 fq amp < 50Hz)')
 title('normalisation')
 
 
-%% Look at total  power (^2)
 
-for iFreq  = 1:3,
+
+for iFreq  = 1:3
 fq = iFreq;
 idx1F1 =  (nT/sizeCycle(fq)*repCycle);
-
-% maxFreq = 100; 
-%maxFreq = idx1F1*4+1;  %First 4 harmonics. 
-%Use all freq
 maxFreq = size(squareFFT,1); 
-
+ 
+% Look at total  power (^2)
 f1=(sum(squeeze(squareFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:).^2))); % odd harmonics
 f2 =( sum(squeeze(squareFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:).^2))); % even harmonics
 f1Analytic =( sum(squeeze(squareAnalyticFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:).^2)));
 f2Analytic = ( sum(squeeze(squareAnalyticFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:).^2)));
- 
 
 figure
-
 set(gcf,'DefaultLineLineWidth',2)
 plot(allDC,f1)
 hold on
 plot(allDC,f1Analytic,'--')
-
 
 plot(allDC,f2)
 plot(allDC,f2Analytic,'--')
@@ -136,21 +127,17 @@ plot(allDC,(f1+f2)/2)
 plot(allDC,(f1Analytic+f2Analytic)/2,'--')
 
 title (['Power (sum of amp^2)'  num2str(allfq(fq)) ' Hz'])
-
+legend('odd harm','odd analytic','even ham','even analytic','average','average analytic')
+saveas(gcf,['figures' filesep 'harmonicsSqPower' num2str(allfq(fq),'%1.f')],'png')
 
 %  Total Amplitude.  
+f1=sum((squeeze(squareFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:))));
+f2 = ( sum((squeeze(squareFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:)))));
 
-
-
-f1=sum((squeeze(squareFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:))))
-f2 = ( sum((squeeze(squareFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:)))))
-
-f1Analytic = sum((squeeze(squareAnalyticFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:))))
-f2Analytic = ( sum((squeeze(squareAnalyticFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:)))))
- 
+f1Analytic = sum((squeeze(squareAnalyticFFT([idx1F1:idx1F1*2:maxFreq]+1,fq,:))));
+f2Analytic = ( sum((squeeze(squareAnalyticFFT([idx1F1*2:idx1F1*2:maxFreq]+1,fq,:)))));
 
 figure
-title ('Power')
 set(gcf,'DefaultLineLineWidth',2)
 plot(allDC,f1)
 hold on
@@ -163,5 +150,8 @@ plot(allDC,(f1+f2)/2)
 plot(allDC,(f1Analytic+f2Analytic)/2,'--')
 
 title (['Sum of Amplitudes (sum of amp) ' num2str(allfq(fq)) ' Hz'])
+legend('odd harm','odd analytic','even ham','even analytic','average','average analytic')
+saveas(gcf,['figures' filesep 'harmonicsSqAmp' num2str(allfq(fq),'%1.f')],'png')
 
 end
+

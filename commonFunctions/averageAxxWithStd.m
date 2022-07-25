@@ -1,6 +1,6 @@
 function [groupAv,sbjProj] = averageAxxWithStd(dataSbj)
 % groupAv contains wave, sin, cos, amp average per condition
-% sbjProj contains projected freq amplitudes for each participant per condtion (can be used to calculated std of amplitudes) 
+% sbjProj contains projected freq amplitudes for each participant per condition (can be used to calculate std of amplitudes) 
 
 % copy fields 
 for cond=1:size(dataSbj,1)
