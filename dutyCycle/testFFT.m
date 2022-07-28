@@ -40,3 +40,9 @@ ampFFT = abs(otherFFT);
 ampFFTnorm = 2*ampFFT(1:length(ampFFT)/2+1)/length(ampFFT);
 figure;bar(freq,ampFFTnorm)
 
+% go back to testData from fft
+backOther = ifft(otherFFT);
+test =dftData/dft(:,1:nfr);
+
+back = ifft(complex(cos,sin));
+ampl * sin(timepoints + angle(testData))

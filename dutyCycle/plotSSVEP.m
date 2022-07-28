@@ -231,6 +231,83 @@ title('Oz bootstrapCI')
 saveas(gcf,['figures' filesep 'allFqNormAmpOz.png'])
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Correl RATINGS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+load('ratings10.mat')
+for fq=1:3
+    for dc=1:5
+        statSEM(fq,dc) = std(tabStatic(fq,dc,:))/sqrt(length(tabStatic));
+        movSEM(fq,dc) = std(tabMot(fq,dc,:))/sqrt(length(tabMot));
+    end
+end
+
+ampNorm = toPlot;
+
+figure;hold on;
+scatter(ampNorm(chan,1:5),static(1,:),80,'filled','MarkerEdgeColor','none');
+scatter(ampNorm(chan,6:10),static(2,:),80,'filled','MarkerEdgeColor','none');
+scatter(ampNorm(chan,11:15),static(3,:),80,'filled','MarkerEdgeColor','none');
+ylabel('motion rating')
+xlabel('SSVEP amplitude')
+saveas(gcf,['figures' filesep 'correlAll.png'])
+
+y = [static(2,:) static(3,:)];
+yE = [statSEM(2,:) statSEM(3,:)];
+x = ampNorm(chan,6:15);
+stdAmp = [avData.stdAmp] ./ sqrt(sumSq);
+% ciAmp = [avData.ciAmp] ./ sqrt(sumSqforCI);
+xE = stdAmp(chan,6:15);
+y2 = moving([3 5 11 15 9 8]); % do not include 10Hz
+yE2 = movSEM([3 5 11 15 9 8]);
+x2 = ampNorm(chan,[16:17 19:22]);% do not include 10Hz
+xE2 = stdAmp(chan,[16:17 19:22]);
+
+figure;hold on;
+scatter(x, y,80,'filled','MarkerEdgeColor','none');
+scatter(x2, y2,80,'filled','MarkerEdgeColor','none');
+eb(1) = errorbar(x,y,xE, 'horizontal', 'LineStyle', 'none');
+eb(2) = errorbar(x,y,yE, 'vertical', 'LineStyle', 'none');
+set(eb, 'color', 'b', 'LineWidth', 1)
+eb2(1) = errorbar(x2,y2,xE2, 'horizontal', 'LineStyle', 'none');
+eb2(2) = errorbar(x2,y2,yE2, 'vertical', 'LineStyle', 'none');
+set(eb2, 'color', 'r', 'LineWidth', 1)
+lsline
+ylim([0 3])
+legend('flickering','moving')
+ylabel('motion rating')
+xlabel('norm SSVEP amplitude')
+R = corrcoef(ampNorm(chan,6:15),[static(2,:) static(3,:)]);
+RsqS = R(1,2).^2;
+R = corrcoef(ampNorm(chan,[16:17 19:22]),moving([3 5 11 15 9 8]));
+RsqM = R(1,2).^2;
+title(['Oz S=' num2str(RsqS,2) ' M=' num2str(RsqM,2) ]) %only 2 digits
+saveas(gcf,['figures' filesep 'correlSSVEPratingsAllFqOz.png'])
+
+
+figure;
+subplot(1,3,1);hold on;
+scatter(x, y,80,'filled','MarkerEdgeColor','none');
+scatter(x2, y2,80,'filled','MarkerEdgeColor','none');
+lsline
+legend('flickering','moving')
+ylabel('(motion rating)')
+xlabel('(norm SSVEP amplitude)')
+subplot(1,3,2);hold on;
+scatter(log(x), y,80,'filled','MarkerEdgeColor','none');
+scatter(log(x2), y2,80,'filled','MarkerEdgeColor','none');
+lsline
+legend('flickering','moving')
+ylabel('log(motion rating)')
+xlabel('norm SSVEP amplitude')
+subplot(1,3,3);hold on;
+scatter(log(x), y,80,'filled','MarkerEdgeColor','none');
+scatter(log(x2), y2,80,'filled','MarkerEdgeColor','none');
+lsline
+legend('flickering','moving')
+ylabel('log(motion rating)')
+xlabel('log(norm SSVEP amplitude)')
+saveas(gcf,['figures' filesep 'correlTestLog.png'])
 
 
 %%%% norm amp
@@ -276,13 +353,67 @@ saveas(gcf,['figures' filesep 'topoMotionSumAmpNormAvgRef.png'])
 %%%%%%%% Amplitude per Area
 addpath /Users/marleneponcet/Documents/Git/eegSourceTemplateMatching
 load('biosemi128.mat');
+% do on normalised sum of amplitudes NOOOOOOO! Need cos and sin!!
+% Amplitudes (or power) are not negative!!
+[beta, betaUnscaled,lambda] = fitEEGTemplates(toPlot,biosemi128,1);
+col={'b','r','g'};
+dcVal = [12.5 25 50 75 87.5];
+figure;set(gcf, 'Position', [0 0 1600 700])
+for roi = 1:18
+    subplot(3,6,roi); hold on;
+    plot(dcVal,betaUnscaled(roi,1:5),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,betaUnscaled(roi,6:10),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,betaUnscaled(roi,11:15),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+    plot(50,betaUnscaled(roi,18),['^:' col{1}],'MarkerSize',15,'Linewidth',2)
+    plot([25 50 75],betaUnscaled(roi,[17 22 19]),['^:' col{2}],'MarkerSize',15,'Linewidth',2)
+    plot([12.5 50 87.5],betaUnscaled(roi,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)    
+%     plot(dcVal,ampNormNoise(roi,1:5),['.-'  col{1}],'MarkerSize',20,'LineWidth',1)
+%     plot(dcVal,ampNormNoise(roi,6:10),['.-'  col{2}],'MarkerSize',20,'LineWidth',1)
+%     plot(dcVal,ampNormNoise(roi,11:15),['.-'  col{3}],'MarkerSize',20,'LineWidth',1)
+%     plot(50,ampNormNoise(roi,18),['^:' col{1}],'MarkerSize',10,'Linewidth',1)
+%     plot([25 50 75],ampNormNoise(roi,[17 22 19]),['^:' col{2}],'MarkerSize',10,'Linewidth',1)
+%     plot([12.5 50 87.5],ampNormNoise(roi,[16 21 20]),['^:' col{3}],'MarkerSize',10,'Linewidth',1)    
+    xticks([0:12.5:100]);
+    title(biosemi128.listROIs(roi))
+%     ylim([min(betaUnscaled(:)) max(betaUnscaled(:))]);
+    ylabel('amplitude (a.u.)')
+end
+xlabel('Duty Cycle')
+legend('10','5','2.5','10mov','5mov','2.5mov','Location','Best')
+
+% check that I retrieve the right topographies
+retrieveAmp = biosemi128.weights * betaUnscaled;
+figure; hold on;
+colormap('hot')
+for cond=1:15
+    subplot(3,5,cond); hold on;
+    plotTopo(retrieveAmp(:,cond),cfg.layout)
+    colorbar
+%     if cond < 6
+%         caxis([0 1]);
+%     elseif cond > 5 && cond < 11
+%         caxis([0 2]);
+%     elseif cond > 10
+%         caxis([0 2.5]);
+%     end
+end
+set(gcf,'PaperPositionMode','auto')
+set(gcf, 'Position', [0 0 1500 1000])
+saveas(gcf,['figures' filesep 'topoFlickSumFqretrieved.png'])
+
+
+
 % pool cond sin and cos reg parameter SAME for all conditions
-poolData = [];
+poolData = [];poolNoise=[];
 for cond = 1:length(avData)
     poolData = [poolData avData(cond).cos(:,avData(cond).harmIdx) avData(cond).sin(:,avData(cond).harmIdx)];
+    poolNoise = [poolNoise (avData(cond).cos(:,avData(cond).harmIdx-1)+ avData(cond).cos(:,avData(cond).harmIdx+1)/2) (avData(cond).sin(:,avData(cond).harmIdx-1)+ avData(cond).sin(:,avData(cond).harmIdx+1)/2)];
 end
 % match with templates
-[beta, betaUnscaled] = fitEEGTemplates(poolData,biosemi128,1);
+[beta, betaUnscaled,lambda] = fitEEGTemplates(poolData,biosemi128,1);
+% [betaNoise, betaUnscaledNoise,lambda] = fitEEGTemplates(poolNoise,biosemi128,0,1000);
+% [beta, betaUnscaled,lambda] = fitEEGTemplates(poolData,biosemi128,0,1000);
+
 % cos and sin are stacked across conditions
 % need to get their indexes for computing power per condition
 nbHarm = arrayfun(@(x) numel([avData(x).harmIdx]),1:22);
@@ -295,6 +426,11 @@ for cond = 1:22
         + betaUnscaled(:,rangeHarm(cond)+2:2:rangeHarm(cond+1)).^2,2);% odd betas = cos, even betas = sin    
     % normalised amplitudes
     ampNorm(:,cond) = sqrt( power(:,cond) / sumSq(cond));
+%     % same for noise
+%     powerNoise(:,cond) = sum(betaUnscaledNoise(:,rangeHarm(cond)+1:2:rangeHarm(cond+1)).^2 ...
+%         + betaUnscaledNoise(:,rangeHarm(cond)+2:2:rangeHarm(cond+1)).^2,2);% odd betas = cos, even betas = sin    
+%     % normalised amplitudes
+%     ampNormNoise(:,cond) = sqrt( powerNoise(:,cond) / sumSq(cond));
 end
 
 col={'b','r','g'};
@@ -308,14 +444,20 @@ for roi = 1:18
     plot(50,ampNorm(roi,18),['^:' col{1}],'MarkerSize',15,'Linewidth',2)
     plot([25 50 75],ampNorm(roi,[17 22 19]),['^:' col{2}],'MarkerSize',15,'Linewidth',2)
     plot([12.5 50 87.5],ampNorm(roi,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)    
+%     plot(dcVal,ampNormNoise(roi,1:5),['.-'  col{1}],'MarkerSize',20,'LineWidth',1)
+%     plot(dcVal,ampNormNoise(roi,6:10),['.-'  col{2}],'MarkerSize',20,'LineWidth',1)
+%     plot(dcVal,ampNormNoise(roi,11:15),['.-'  col{3}],'MarkerSize',20,'LineWidth',1)
+%     plot(50,ampNormNoise(roi,18),['^:' col{1}],'MarkerSize',10,'Linewidth',1)
+%     plot([25 50 75],ampNormNoise(roi,[17 22 19]),['^:' col{2}],'MarkerSize',10,'Linewidth',1)
+%     plot([12.5 50 87.5],ampNormNoise(roi,[16 21 20]),['^:' col{3}],'MarkerSize',10,'Linewidth',1)    
     xticks([0:12.5:100]);
     title(biosemi128.listROIs(roi))
-%     ylim([0 max(ampNorm(:))]);
+    ylim([0 max(ampNorm(:))]);
     ylabel('amplitude (a.u.)')
 end
 xlabel('Duty Cycle')
 legend('10','5','2.5','10mov','5mov','2.5mov','Location','Best')
-saveas(gcf,'figures/betaSumFq','png')
+saveas(gcf,'figures/betaSumFqNorm','png')
 
 
 % pie chart?
@@ -335,7 +477,7 @@ position = [11 7 3 9 15 13 8];
 figure;
 for cond=16:22
 subplot(3,5,position(cond-15)); 
-pie(ampNorm(:,cond)/sum(ampNorm(:,cond)))
+pie(ampNorm(:,cond)/sum(ampNorm(:,cond)),biosemi128.listROIs)
 end
 set(gcf, 'Position', [0 0 1500 1000])
 saveas(gcf,'figures/betaSumFqmotionpie','png')
@@ -391,7 +533,7 @@ for cond = 1:length(avData)
     poolData = [avData(cond).cos(:,avData(cond).harmIdx) avData(cond).sin(:,avData(cond).harmIdx)];
     % match with templates
     [beta, betaUnscaled,lambda(cond)] = fitEEGTemplates(poolData,biosemi128,1);
-    saveas(gcf,['figures' filesep 'lambdaCond' num2str(cond) '.png'])
+%     saveas(gcf,['figures' filesep 'lambdaCond' num2str(cond) '.png'])
     % compute amplitude (power=cos^2+sin^2)
     betaPower(:,cond) = sum(betaUnscaled(:,1:2:end).^2 + betaUnscaled(:,2:2:end).^2,2); % odd betas = cos, even betas = sin
     % compute normalised amplitude 
@@ -434,6 +576,122 @@ for cond=1:15
         caxis([0 2.5]);
     end
 end
-set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Position', [0 0 1500 1000])
 saveas(gcf,['figures' filesep 'topoFlickSumFqretrieved2.png'])
+
+
+
+
+
+% try to do fitEEGtemplates per fq
+poolCond = [1:5; 6:10 ; 11:15];
+ampNorm3 = [];
+for pooling=1:3
+    poolData = [];clear beta betaUnscaled power
+    for cond=poolCond(pooling,:)
+        poolData = [poolData avData(cond).cos(:,avData(cond).harmIdx) avData(cond).sin(:,avData(cond).harmIdx)];
+    end
+    [beta, betaUnscaled,lambda(pooling)] = fitEEGTemplates(poolData,biosemi128);
+    % get the range of harmonics: cumulative sum of elements
+    rangeHarm = [0 cumsum(repmat(length(avData(cond).harmIdx),1,5)*2)]; % *2 to account for sin and cos
+    % compute amplitude (power=cos^2+sin^2)
+    for cond=1:5
+        power(:,cond) = sum(betaUnscaled(:,rangeHarm(cond)+1:2:rangeHarm(cond+1)).^2 ...
+        + betaUnscaled(:,rangeHarm(cond)+2:2:rangeHarm(cond+1)).^2,2);% odd betas = cos, even betas = sin
+    end
+    % compute normalised amplitude 
+    ampNorm3 = [ampNorm3 sqrt( power ./ sumSq(poolCond(pooling,:)))];
+%     % check that I retrieve the right topographies
+%     retrieve3 = biosemi128.weights * betaUnscaled;
+%     retrieveAmp3(:,pooling) = sqrt(sum(retrieve3(:,1:2:end).^2 + retrieve3(:,2:2:end).^2,2)); % odd betas = cos, even betas = sin
+end
+
+col={'b','r','g'};
+dcVal = [12.5 25 50 75 87.5];
+figure;set(gcf, 'Position', [0 0 1600 700])
+for roi = 1:18
+    subplot(3,6,roi); hold on;
+    plot(dcVal,ampNorm3(roi,1:5),['.-'  col{1}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,ampNorm3(roi,6:10),['.-'  col{2}],'MarkerSize',40,'LineWidth',2)
+    plot(dcVal,ampNorm3(roi,11:15),['.-'  col{3}],'MarkerSize',40,'LineWidth',2)
+%     plot(50,ampNorm3(roi,18),['^:' col{1}],'MarkerSize',15,'Linewidth',2)
+%     plot([25 50 75],ampNorm3(roi,[17 22 19]),['^:' col{2}],'MarkerSize',15,'Linewidth',2)
+%     plot([12.5 50 87.5],ampNorm3(roi,[16 21 20]),['^:' col{3}],'MarkerSize',15,'Linewidth',2)    
+    xticks([0:12.5:100]);
+    title(biosemi128.listROIs(roi))
+    ylim([0 max(ampNorm3(:))]);
+    ylabel('amplitude (a.u.)')
+end
+xlabel('Duty Cycle')
+legend('10','5','2.5','10mov','5mov','2.5mov','Location','Best')
+
+
+
+
+
+%%% Try to do fitEEGtemplates on the normalised data 
+normPower = [avData.sumPower] ./ sumSq; 
+cos = real(test);
+sin = -imag(test);
+
+% transform to complex numbers to be able to use ifft
+% power=cos^2+sin^2. 
+% cos=real=amplitude
+% sin =-imag 
+% amp = abs(dftData);
+% cos = real(dftData);
+% sin = -imag(dftData);
+% phase is angle(complex number: dftData)
+abs(complex(avData(2).cos(2,2), avData(2).sin(2,2)))
+avData(2).amp(2,2)
+pow = avData(2).cos(2,2)^2 + avData(2).sin(2,2)^2;
+cosN = sqrt(pow - avData(2).sin(2,2)^2 );
+
+% test on one condition
+testPower = (avData(5).cos.^2 + avData(5).sin.^2) ;
+cosN = sqrt(testPower - avData(5).sin.^2 ); % can be - or + !! 
+wAmp = sqrt(testPower);
+wPhase = complex(avData(5).cos,avData(5).sin);
+complexBack = cos(wPhase).*wAmp + 1i.*sin(wPhase).*wAmp;
+fftBack = fft(complexBack);
+
+nT = 577;
+fourierBasis = dftmtx(nT);
+test=avData(5).amp*avData(5).freq';
+
+invFourier  = conj(fourierBasis)./nT;
+waveForm = complexBack'.*fourierBasis;
+
+
+wPhase = (-1*wList)+repmat([0*pi/2 0*pi/2]',nF/2,1);
+wAmp = cos(wPhase).*wAmp + 1i.*sin(wPhase).*wAmp;
+waveForm = wAmp*fourierBasis;
+waveForm = real(waveForm); 
+    
+wTest = complex(avData(5).cos,avData(5).sin);
+wTest(:,2:end) = wTest(:,2:end)/2;
+wTest2 = complex(avData(5).cos,-avData(5).sin);
+wTest3 = fliplr(wTest2(:,2:end)/2);
+wTest4 = [wTest wTest3];
+soWhat = ifft(wTest4,[],2);
+check = real(soWhat);
+
+
+%%%%%%%% try fitEEGtemplates on waveforms
+whichFq = [1:5; 6:10; 11:15];
+for freq=1:size(whichFq,1)
+    clear beta betaUnscaled rangeHarm
+    [beta, betaUnscaled,lambda(freq)] = fitEEGTemplates([avData(whichFq(freq,:)).wave],biosemi128,0,158);
+    rangeHarm = [0 cumsum(repmat(size(avData(whichFq(freq,1)).wave,2),1,5))];
+    figure;
+    for roi=1:18
+        subplot(3,6,roi);hold on
+        for cond=1:5
+            plot(betaUnscaled(roi,rangeHarm(cond)+1:rangeHarm(cond+1)) )
+        end
+        title(biosemi128.listROIs(roi))
+        ylim([min(betaUnscaled(:)) max(betaUnscaled(:))]);
+    end
+    legend({'12.5' '25' '50' '75' '87.5'})
+end
+[beta, betaUnscaled,lambda2] = fitEEGTemplates([avData(:).wave],biosemi128,1);

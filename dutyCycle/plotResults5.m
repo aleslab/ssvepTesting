@@ -1,6 +1,4 @@
-% sum of power computed on sbj averaged harmonics (using averaged cos and
-% sin), which corresponds to the average data that will be run through the
-% areas model
+% sum of power computed on sbj averaged harmonics 
 % Different from sum of power per sbj then average
 clearvars
 
