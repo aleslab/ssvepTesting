@@ -147,7 +147,7 @@ for fq = 1:length(allfq)
         xlabel('Frequency (Hertz)')
         ylabel('Amplitude');
     end
-    saveas(gcf,['figures' filesep 'square' num2str(allfq(fq))],'png')
+%     saveas(gcf,['figures' filesep 'square' num2str(allfq(fq))],'png')
 end
 
 
