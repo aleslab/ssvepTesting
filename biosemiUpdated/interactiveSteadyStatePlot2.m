@@ -15,6 +15,7 @@ end
 configOptions.pValThresh = Inf;
 configOptions.lowpassHz = 49;
 configOptions.applyLowpass = false;
+configOptions.showPTopo = false;
 
 %Options for different automatic yscaling methods:
 
@@ -171,6 +172,11 @@ uicontrol('Style','togglebutton','units','normalized', ...
     'String','Apply','Value',configOptions.applyLowpass, ...
     'Position',[.95 .54 .05 .035],'FontSize',9,'Callback',@toggleLowpass);
 
+uicontrol('Style','togglebutton','units','normalized', ...
+    'String','P-value topography','Value',configOptions.showPTopo, ...
+    'Position',[.84 .48 .15 .035],'FontSize',9,'Callback',@togglePTopo, ...
+    'TooltipString','Show p-values at the selected frequency; grey means p exceeds the threshold.');
+
 infoPanelH = uipanel('Title','Info','FontSize',12,...
              'BackgroundColor','white',...
              'Position',[.82 .4 .16 .4],'visible','off');
@@ -302,6 +308,7 @@ drawInfoPane()
         colorbarH = colorbar('peer',condData(condIdx).topoAx,'WestOutside');
         
         colorbarH.Label.String = 'Microvolts';
+        condData(condIdx).topoColorbarH = colorbarH;
         
         cpos = colorbarH.Position;
         cpos(3) = 0.5*cpos(3);
@@ -457,6 +464,13 @@ drawInfoPane()
         plotData = condData(condIdx);
         
         
+        if configOptions.showPTopo
+            drawPTopo(condIdx);
+            return
+        end
+        plotData.topoColorbarH.Label.String = 'Microvolts';
+        title(plotData.topoAx,sprintf('%d: %s',plotData.iElec, ...
+            cfg.layout.label{plotData.iElec}));
         switch lower(condData(condIdx).topoMode)
             case 'amp'
         
@@ -484,6 +498,37 @@ drawInfoPane()
                 colormap(plotData.topoAx,jmaColors('arizona'));
         end
         
+    end
+
+    function togglePTopo(hObject,~)
+        configOptions.showPTopo = logical(get(hObject,'Value'));
+        drawTopo(1);
+        drawTopo(2);
+    end
+
+    function drawPTopo(condIdx)
+        % Use the same significance scale for both selected conditions.
+        maxScore = 1;
+        for side = 1:2
+            p = condData(side).pval(:,condData(side).iFr);
+            valid = isfinite(p) & p >= 0 & p <= 1;
+            scores = -log10(max(p(valid),realmin));
+            maxScore = max([maxScore; scores(:)]);
+        end
+        plotData = condData(condIdx);
+        p = plotData.pval(:,plotData.iFr);
+        coloured = isfinite(p) & p >= 0 & p <= 1 & p <= configOptions.pValThresh;
+        palette = viridisMap();
+        rgb = repmat([.65 .65 .65],numel(p),1);
+        scores = -log10(max(p(coloured),realmin));
+        colourIdx = 1+round(255*scores/maxScore);
+        rgb(coloured,:) = palette(colourIdx,:);
+        % Truecolour keeps excluded electrodes grey, outside the colour scale.
+        set(plotData.topoH,'FaceVertexCData',rgb);
+        colormap(plotData.topoAx,palette);
+        caxis(plotData.topoAx,[0 maxScore]);
+        plotData.topoColorbarH.Label.String = '-log10(p)';
+        title(plotData.topoAx,sprintf('p-values: %.2f Hz',plotData.freq(plotData.iFr)));
     end
 
     function drawWave(condIdx)
