@@ -523,9 +523,14 @@ drawInfoPane()
         scores = -log10(max(p(coloured),realmin));
         colourIdx = 1+round(255*scores/maxScore);
         rgb(coloured,:) = palette(colourIdx,:);
-        % Truecolour keeps excluded electrodes grey, outside the colour scale.
+        % Keep the exact electrode mask and show its excluded range on the
+        % colourbar too: p > threshold corresponds to lower -log10(p).
         set(plotData.topoH,'FaceVertexCData',rgb);
-        colormap(plotData.topoAx,palette);
+        colourbarPalette = palette;
+        colourbarScores = linspace(0,maxScore,size(palette,1));
+        excluded = colourbarScores < -log10(configOptions.pValThresh);
+        colourbarPalette(excluded,:) = repmat([.65 .65 .65],sum(excluded),1);
+        colormap(plotData.topoAx,colourbarPalette);
         caxis(plotData.topoAx,[0 maxScore]);
         plotData.topoColorbarH.Label.String = '-log10(p)';
         title(plotData.topoAx,sprintf('p-values: %.2f Hz',plotData.freq(plotData.iFr)));
