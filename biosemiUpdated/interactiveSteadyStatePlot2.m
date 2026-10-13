@@ -50,11 +50,13 @@ condData(1).color = [1 0 0];
 condData(2).color = [0 0 1];
 
 
-iElec = 1;
 setPlotGlobalLimits();
 
 %Initialize figure;
-figH= figure('units','normalized','outerposition',[0 1 .8 1]); %Render a new figure.
+figH= figure('WindowStyle','normal','units','normalized','Position',[.02 .05 .94 .8]); %Render a new figure.
+
+% Let MATLAB finish sizing the client area before placing normalized controls.
+drawnow;
 
 %Set the color order for this figure to mimic the condition colors.
 set(figH,'DefaultAxesColorOrder',[condData(1).color; condData(2).color]);
@@ -71,7 +73,8 @@ else
 end
 
 pValList = {'None','0.05','0.01','1e-3','1e-6'};
-filterList = {'None','nF1','nF1Odd','nF1Even','nF1Low49'};
+filterList = {'None','nF1','nF1Odd','nF1Even','nF1Low49','nF1CleanLow49', ...
+    'nF2','nF2Odd','nF2Even','nF2Low49','nF2CleanLow49'};
     
 uicontrol('Style', 'text','units','normalized',...
     'String','Red',...
@@ -87,12 +90,12 @@ uicontrol('Style', 'text','units','normalized',...
 
 selCondAPopupH = uicontrol('Style', 'popup','units','normalized',...
     'String',conditionList,'Value',configOptions.selCondIdx(1),...
-    'Position', [.9 .95 .05 .01],...
+    'Position', [.9 .93 .05 .04],...
     'Callback', {@selCond,1});
 
 selCondBPopupH = uicontrol('Style', 'popup','units','normalized',...
     'String',conditionList,'Value',configOptions.selCondIdx(2),...
-    'Position', [.95 .95 .05 .01],...
+    'Position', [.95 .93 .05 .04],...
     'Callback', {@selCond,2});
 
 
@@ -102,21 +105,21 @@ uicontrol('Style', 'text','units','normalized',...
 
 uicontrol('Style', 'popup','units','normalized',...
     'String',pValList,'Value',1,...
-    'Position', [.9 .9 .1 .02],...
+    'Position', [.9 .9 .1 .04],...
     'Callback', @selPVal);
 
 uicontrol('Style', 'text','units','normalized',...
     'String','Time Filter:',...
     'Position', [.81 .85 .06 .02]);
 
-uicontrol('Style', 'popup','units','normalized',...
+filterPopupH(1) = uicontrol('Style', 'popup','units','normalized',...
     'String',filterList,'Value',1,...
-    'Position', [.87 .85 .07 .02],'fontsize',8,...
+    'Position', [.87 .85 .07 .04],'fontsize',8,...
     'Callback', {@selFilter,1});
 
-uicontrol('Style', 'popup','units','normalized',...
+filterPopupH(2) = uicontrol('Style', 'popup','units','normalized',...
     'String',filterList,'Value',1,...
-    'Position', [.93 .85 .07 .02],'fontsize',8,...
+    'Position', [.93 .85 .07 .04],'fontsize',8,...
     'Callback', {@selFilter,2});
 
 uicontrol('Style', 'text','units','normalized',...
@@ -125,7 +128,7 @@ uicontrol('Style', 'text','units','normalized',...
 
 uicontrol('Style', 'popup','units','normalized',...
     'String',{'Global Max','Local Max','Per Condition Global'},'Value',1,...
-    'Position', [.87 .8 .1 .02],'fontsize',8,...
+    'Position', [.87 .8 .1 .04],'fontsize',8,...
     'Callback', @selYlim);
 
 uicontrol('Style', 'text','units','normalized',...
@@ -134,7 +137,7 @@ uicontrol('Style', 'text','units','normalized',...
 
 uicontrol('Style', 'popup','units','normalized',...
     'String',{'None','Butterfly'},'Value',1,...
-    'Position', [.87 .75 .1 .02],'fontsize',8,...
+    'Position', [.87 .75 .1 .04],'fontsize',8,...
     'Callback', @selUnderlay);
 
 uicontrol('Style', 'text','units','normalized',...
@@ -146,6 +149,16 @@ uicontrol('Style', 'checkbox','units','normalized',...
     'Position', [.87 .71 .1 .02],'fontsize',8,...
     'Callback', @selCompare);
 
+
+windowLabels = {'Red window:','Blue window:'};
+for k = 1:2
+    uicontrol('Style','text','units','normalized','String',windowLabels{k}, ...
+        'Position',[.81 .65-(k-1)*.05 .08 .025]);
+    wavePopupH(k) = uicontrol('Style','popup','units','normalized', ...
+        'String',condData(k).wavelabels,'Value',1, ...
+        'Position',[.89 .65-(k-1)*.05 .11 .04], ...
+        'Callback',{@selWave,k});
+end
 
 infoPanelH = uipanel('Title','Info','FontSize',12,...
              'BackgroundColor','white',...
@@ -203,10 +216,25 @@ drawInfoPane()
         
     plotData = steadyState;
     
-    %!!!!!! This is a really, really stupid line.  Just relying on stupidy
-    %being obvious on the plot if units are off by x1000
-    plotData.time = 1000*steadyState.time; %TODO: Make time units more explicit.        
-    
+    % New analyses explicitly provide ms. Older analysis output has dtms;
+    % legacy imported data without this metadata retains the seconds convention.
+    if ~isfield(plotData,'waveforms') || isempty(plotData.waveforms)
+        if isfield(plotData,'dtms') || ...
+                (isfield(plotData,'timeunit') && strcmp(plotData.timeunit,'ms'))
+            timeMs = plotData.time;
+        else
+            timeMs = 1000*plotData.time;
+        end
+        plotData.waveforms = {plotData.wave};
+        plotData.wavetimes = {timeMs};
+        plotData.wavelabels = {'Default'};
+    end
+    plotData.waveIdx = 1;
+    plotData.wave = plotData.waveforms{1};
+    plotData.time = plotData.wavetimes{1};
+    plotData.nt = size(plotData.wave,2);
+    plotData.topoMode = 'amp';
+
     if ~isfield(steadyState,'pval')
         plotData.sigFreqs = [];
     else
@@ -234,18 +262,15 @@ drawInfoPane()
 
 
     function setPlotGlobalLimits()
-        %This function sets plot limits when global scaling is used
+        %Waveform limits only; spectra always scale to their displayed data.
         
         for iCond = 1:2,
-            condIdx = configOptions.selCondIdx(iCond);
-            waveMax(iCond) = max(abs(steadyState(condIdx).wave(:)));
-            specMax(iCond) = max(abs(steadyState(condIdx).amp(:)));
+            waveMax(iCond) = max(abs(condData(iCond).wave(:)));
         end
         
         %If we want global max, replace values with global max
         if strcmpi(configOptions.yScale,'global')            
             waveMax(1:2) = max(waveMax);
-            specMax(1:2) = max(specMax);
         end
         
         for iCond = 1:2,
@@ -253,7 +278,6 @@ drawInfoPane()
             %Have to add/subtract eps for cases in which plot data is all flat
             %(e.g. ref channel
         condData(iCond).globalWaveYLims  = 1.1*[-waveMax(iCond)-eps waveMax(iCond)+eps];
-        condData(iCond).globalSpecYLims  = 1.1*[0 specMax(iCond)+eps];
         end
         
     end
@@ -277,8 +301,8 @@ drawInfoPane()
         
         axis off;
         condData(condIdx).elecVerts = get(condData(condIdx).topoH,'Vertices');
-        hold on;
-        condData(condIdx).markH = plot( condData(condIdx).elecVerts( condData(condIdx).iElec,1), ...
+        hold(condData(condIdx).topoAx,'on');
+        condData(condIdx).markH = plot(condData(condIdx).topoAx, condData(condIdx).elecVerts( condData(condIdx).iElec,1), ...
             condData(condIdx).elecVerts( condData(condIdx).iElec,2),...
             'ko','markersize',10,'linewidth',2);
                 
@@ -328,52 +352,68 @@ drawInfoPane()
        
 
     function drawSpec(condIdx)
-        
         plotData = condData(condIdx);
-        
-   
-        
-        sigFreqs =  plotData.pval(plotData.iElec,:)<=configOptions.pValThresh;
-        axes(plotData.specAx)
-        [plotData.barH plotData.sigH] = pdSpecPlot(plotData.freq,plotData.amp(plotData.iElec,:),...
-            sigFreqs);
-        title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
-        
-        %Set up the function to call when the plots are clicked on
-        set(plotData.barH,'ButtonDownFcn',{@clickedSpec, condIdx})
-        set(plotData.sigH,'ButtonDownFcn',{@clickedSpec, condIdx})
-        set(plotData.specAx,'ButtonDownFcn',{@clickedSpec, condIdx})
-
-        drawInfoPane()
+        ax = plotData.specAx;
+        % Explicitly replace all spectrum objects, including old legend keys.
+        % Never rely on the current axes or inherited hold state.
+        legend(ax,'off');
+        cla(ax);
+        hold(ax,'on');
+        amps = plotData.amp(plotData.iElec,:);
+        sigFreqs = significantBins(plotData);
+        selected = plotData.activeFreq(plotData.iElec,:) & sigFreqs(plotData.iElec,:);
+        selected(1) = false;
+        displayAmps = amps;
+        displayAmps(1) = 0; % DC remains available for selection, not y scaling.
+        % One bar series prevents grouped/overlaid bars from shifting or
+        % obscuring bins when MATLAB redraws the spectrum.
+        condData(condIdx).barH = bar(ax,plotData.freq,displayAmps,.8, ...
+            'FaceColor','flat','EdgeColor','none');
+        colourSpectrum(condIdx,selected);
+        upperHz = min(40,max(plotData.freq));
+        xlim(ax,[0 upperHz]);
+        % Spectrum scaling is independent of the Wave Scale control.
+        shown = plotData.freq > 0 & plotData.freq <= upperHz;
+        ylim(ax,[0 1.1*(max(amps(shown))+eps)]);
+        title(ax,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz']);
+        xlabel(ax,'Frequency (Hz)'); ylabel(ax,'uV');
+        set(condData(condIdx).barH,'ButtonDownFcn',{@clickedSpec,condIdx});
+        set(ax,'ButtonDownFcn',{@clickedSpec,condIdx});
+        hold(ax,'off');
     end
 
+    function mask = significantBins(plotData)
+        mask = true(size(plotData.amp));
+        if isfinite(configOptions.pValThresh)
+            if ~isfield(plotData,'pval') || isempty(plotData.pval)
+                error('interactiveSteadyStatePlot2:MissingPValues', ...
+                    'A p-value threshold requires pval in the analysis output.');
+            end
+            mask = plotData.pval <= configOptions.pValThresh;
+        end
+    end
 
     function clickedSpec(hObject,callbackdata,condIdx)
-        
-        %Get the data to plot
         plotData = condData(condIdx);
-         
-       tCurPoint = get(plotData.specAx,'CurrentPoint');
-        %set( tHline, 'XData', tCurPoint(1,[1 1]) )
-        
-        %Get the x location of the lick and find the nearest index
-        [distance plotData.iFr] = min(abs(plotData.freq-tCurPoint(1,1)));
-        
-        if plotData.iFr>=1 && plotData.iFr<=length(plotData.freq)
-
-            
-            condData(condIdx).topoMode = 'amp';
-            title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz']);            
-
-            condData(condIdx).iFr = plotData.iFr;
-                        
-            drawPhase();            
-            drawTopo(condIdx);
-            drawInfoPane()
-            
-        else
-            disp('clicked out of bounds')
+        point = get(plotData.specAx,'CurrentPoint');
+        [~,iFr] = min(abs(plotData.freq-point(1,1)));
+        setFrequencyIndex(iFr);
+        for side = 1:2
+            condData(side).topoMode = 'amp';
+            title(condData(side).specAx, ...
+                ['Frequency: ' num2str(condData(side).freq(condData(side).iFr)) ' Hz']);
+            drawTopo(side);
         end
+        drawPhase();
+        drawInfoPane();
+    end
+
+    function setFrequencyIndex(iFr)
+        % Conditions share the experiment's frequency grid. Keep one bin
+        % selected for both spectra, topographies and the phasor comparison.
+        iFr = min([iFr numel(condData(1).freq) numel(condData(2).freq)]);
+        condData(1).iFr = iFr;
+        condData(2).iFr = iFr;
     end
 
     function clickedTopo(hObject,callbackdata,condIdx)
@@ -392,11 +432,10 @@ drawInfoPane()
         if iE>=1 && iE<=size(plotData.elecVerts,1),
             
             condData(condIdx).iElec = iE;
-            iElec = iE;
             delete(condData(condIdx).markH);
-            condData(condIdx).markH = plot(plotData.elecVerts(iElec,1),plotData.elecVerts(iElec,2),'ko','markersize',15,'linewidth',2);
+            condData(condIdx).markH = plot(plotData.topoAx,plotData.elecVerts(iE,1),plotData.elecVerts(iE,2),'ko','markersize',15,'linewidth',2);
             
-            title(condData(condIdx).topoAx,[num2str(iElec) ': ' cfg.layout.label{iElec}]);
+            title(condData(condIdx).topoAx,[num2str(iE) ': ' cfg.layout.label{iE}]);
             refreshPlots();
         end
         
@@ -411,12 +450,6 @@ drawInfoPane()
             case 'amp'
         
                 maxVal = max(abs(plotData.amp(:,plotData.iFr)));
-                %                 if strcmpi(configOptions.yScale,'local') %If local use the locally deterrmined maxval
-                %                     yLims = 1.1*[0 maxVal+eps]; %Set the yLimits
-                %                 else
-                %                     yLims = plotData.globalSpecYLims;
-                %                 end
-                    
                 %Always using local scaling for AMP topo plots, makes most
                 %sense in most use cases.  So disabling user selectable
                 %scaling for now. 
@@ -454,7 +487,7 @@ drawInfoPane()
         delete(condData(condIdx).overlayLineH);
        
         selectedWave = condData(condIdx).wave(condData(condIdx).iElec,:);
-        maxVal = max(selectedWave);
+        maxVal = max(abs(selectedWave));
         
         if strcmp(configOptions.underlay,'butterfly')
             condData(condIdx).butterflyH = plot(condData(condIdx).waveAx,condData(condIdx).time,condData(condIdx).wave','-','color',[.5 .5 .5],'linewidth',.1);
@@ -536,7 +569,7 @@ drawInfoPane()
     end
 
 
-    function drawPhase(condIdx)
+    function drawPhase()
         
         
         axes(phasorAx);
@@ -555,6 +588,7 @@ drawInfoPane()
                       
         
         pdPhasePlot( phaseDataToPlot,confRadius);
+        title(phasorAx,sprintf('Phasors: %.6g Hz',condData(1).freq(condData(1).iFr)));
         
     end
 
@@ -588,17 +622,33 @@ drawInfoPane()
         
         %Update struct will take the data from steadyState and update the
         %condData. 
-        condData(condIdx) = updateStruct(condData(condIdx),steadyState(selectedCond));
+        oldLabel = condData(condIdx).wavelabels{condData(condIdx).waveIdx};
+        newData = initPlotData(steadyState(selectedCond));
+        % Keep graphics handles and filter selection while replacing data.
+        fields = fieldnames(steadyState(selectedCond));
+        for k = 1:numel(fields)
+            condData(condIdx).(fields{k}) = newData.(fields{k});
+        end
+        condData(condIdx).waveforms = newData.waveforms;
+        condData(condIdx).wavetimes = newData.wavetimes;
+        condData(condIdx).wavelabels = newData.wavelabels;
+        idx = find(strcmp(oldLabel,newData.wavelabels),1);
+        if isempty(idx), idx = 1; end
+        condData(condIdx).waveIdx = idx;
+        setFrequencyIndex(condData(condIdx).iFr);
+        condData(condIdx).iElec = min(condData(condIdx).iElec,size(newData.amp,1));
+        set(wavePopupH(condIdx),'String',newData.wavelabels,'Value',idx);
         condData(condIdx).selectedCond = selectedCond;
+        if strncmpi(condData(condIdx).filterName,'nF2',3) && ...
+                (~isfield(newData,'i1f2') || isempty(newData.i1f2))
+            condData(condIdx).filterName = 'None';
+            set(filterPopupH(condIdx),'Value',1);
+            warning('interactiveSteadyStatePlot2:FilterReset', ...
+                'This condition has no f2 tag; its time filter has been reset to None.');
+        end
         
         %Set the selected condtion. 
         configOptions.selCondIdx(condIdx) = selectedCond;
-        
-        plotData = condData(condIdx);
-        set(plotData.topoH,'facevertexCData',plotData.amp(:,plotData.iFr))
-        caxis(plotData.topoAx,[0 max(abs(plotData.amp(:,plotData.iFr)))])
-        title(plotData.specAx,['Frequency: ' num2str(plotData.freq(plotData.iFr)) ' Hz'])
-        colormap(plotData.topoAx,hot);
         
         filterWave(condIdx)
         refreshPlots();
@@ -632,10 +682,7 @@ drawInfoPane()
         filterWave(1);
         filterWave(2);
         
-        drawSpec(1);
-        drawSpec(2);
-        drawWave(1);
-        drawWave(2);
+        refreshPlots();
     end
 
     function selFilter(hObject,callbackdata,condIdx)
@@ -648,9 +695,7 @@ drawInfoPane()
         condData(condIdx).filterName = filterName;
         filterWave(condIdx);
         
-        drawSpec(condIdx);        
-        drawWave(1);
-        drawWave(2);
+        refreshPlots();
         
     end
 
@@ -702,57 +747,85 @@ drawInfoPane()
 
     function refreshPlots()
         %Refresh all the data plots.
+        setPlotGlobalLimits();
+        drawTopo(1);
+        drawTopo(2);
         
         drawSpec(1);
         drawSpec(2);
         drawWave(1);
         drawWave(2);
         drawPhase();
+        drawInfoPane();
     end
 
+
+    function selWave(hObject,~,condIdx)
+        condData(condIdx).waveIdx = get(hObject,'Value');
+        filterWave(condIdx);
+        refreshPlots();
+    end
+
+    function colourSpectrum(condIdx,selected)
+        plotData = condData(condIdx);
+        % Use exactly the same integer bins as the time filters. Nominal Hz
+        % can differ slightly from measured/resampled frequencies.
+        n = numel(plotData.freq);
+        bins = 0:n-1;
+        h1 = false(1,n); h2 = h1; im = h1;
+        h1(determineFilterIndices('nF1',plotData.freq,plotData.i1f1)) = true;
+        palette = [0 .45 .74; .85 .33 .1; .49 .18 .56];
+        labels = {'f1 harmonics'};
+        if isfield(plotData,'i1f2') && ~isempty(plotData.i1f2)
+            h2(determineFilterIndices('nF2',plotData.freq,plotData.i1f1,plotData.i1f2)) = true;
+            commonBin = gcd(plotData.i1f1-1,plotData.i1f2-1);
+            im = bins > 0 & mod(bins,commonBin)==0 & ~h1 & ~h2;
+            labels = {'f1 (including shared)','f2 only','Intermodulation only'};
+        end
+        colours = repmat([.6 .6 .6],n,1);
+        colours(h1,:) = repmat(palette(1,:),sum(h1),1);
+        onlyF2 = h2 & ~h1;
+        colours(onlyF2,:) = repmat(palette(2,:),sum(onlyF2),1);
+        colours(im,:) = repmat(palette(3,:),sum(im),1);
+        colours(~selected,:) = repmat([.85 .85 .85],sum(~selected),1);
+        set(plotData.barH,'CData',colours);
+        keys = gobjects(1,numel(labels)+1);
+        for k = 1:numel(labels)
+            keys(k) = plot(plotData.specAx,nan,nan,'s','Color',palette(k,:), ...
+                'MarkerFaceColor',palette(k,:),'HitTest','off');
+        end
+        keys(end) = plot(plotData.specAx,nan,nan,'s','Color',[.6 .6 .6], ...
+            'MarkerFaceColor',[.85 .85 .85],'HitTest','off');
+        labels{end+1} = 'Outside filter / threshold';
+        legend(plotData.specAx,keys,labels,'Location','northeast','FontSize',7);
+    end
 
     function filterWave(condIdx)
-        
-        
-        %Create a logical matrix selecting significant components.
-        sigFreqs =  condData(condIdx).pval<=configOptions.pValThresh;
-        
-        
-        %Determine what filter values to keep.
-        %This does different things if 'none' is chosen.
-        if strcmpi(condData(condIdx).filterName,'none')
-            filtIdx = 2:condData(condIdx).nfr; %Do not include DC.
-            condData(condIdx).wave = steadyState(condData(condIdx).selectedCond).wave;
+        source = steadyState(condData(condIdx).selectedCond);
+        idx = condData(condIdx).waveIdx;
+        condData(condIdx).time = condData(condIdx).wavetimes{idx};
+        condData(condIdx).wave = condData(condIdx).waveforms{idx};
+        condData(condIdx).nt = size(condData(condIdx).wave,2);
+        condData(condIdx).iT = min(condData(condIdx).iT,condData(condIdx).nt);
+        active = false(size(source.amp));
+        filterName = condData(condIdx).filterName;
+        if strcmpi(filterName,'none')
+            active(:,2:end) = true;
         else
-            filtIdx = determineFilterIndices(condData(condIdx).filterName,...
-                condData(condIdx).freq, condData(condIdx).i1f1);
+            secondIdx = [];
+            if isfield(source,'i1f2'), secondIdx = source.i1f2; end
+            filtIdx = determineFilterIndices(filterName,source.freq,source.i1f1,secondIdx);
+            active(:,filtIdx) = true;
         end
-        
-        %Create a logical matrix selecting frequency components.
-        filtMat = false(size(condData(condIdx).amp));
-        filtMat(:,filtIdx) = true;
-        
-        
-        %Combine the filter and sig vaules with a logical AND.
-        % condData(condIdx).activeFreq = (filtMat.*sigFreqs)>=1; %Store the filtered coefficients for the spec plot
-        condData(condIdx).activeFreq = (filtMat)>=1; %Store the filtered coefficients for the spec plot
-        
-
-        cfg.activeFreq =  condData(condIdx).activeFreq;
- 
-        %if 'none' is chosen don't apply any filter
-        if strcmpi(condData(condIdx).filterName,'none')
-            
-            condData(condIdx).wave = steadyState(condData(condIdx).selectedCond).wave;
-        else
-            condData(condIdx).wave = filterSteadyState(cfg,steadyState(condData(condIdx).selectedCond));
+        condData(condIdx).activeFreq = active;
+        % Unfiltered data always comes from the independently averaged waves.
+        % Only an explicit time filter invokes DFT reconstruction.
+        if ~strcmpi(filterName,'none')
+            filterCfg.activeFreq = active & significantBins(condData(condIdx));
+            source.wave = condData(condIdx).wave;
+            source.nt = condData(condIdx).nt;
+            source.time = condData(condIdx).time;
+            condData(condIdx).wave = filterSteadyState(filterCfg,source);
         end
-        
-        
-
-        
     end
-
-
-
 end

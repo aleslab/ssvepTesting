@@ -50,7 +50,6 @@ ft_preamble init              % this will reset ft_warning and show the function
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar    datain % this reads the input data in case the user specified the cfg.inputfile option
 ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -77,31 +76,38 @@ newFs    = ft_getopt(cfg, 'newFs',510); %Chosen as multiple of framerate.
 %TODO: Need info from session to ensure proper handling of different freqs
 %TODO: Add warnings for funny business.
 
-trialList = unique(cfg.trl(:,5));
+
+condList = unique(cfg.trl(:,4));
 %Warning: Beta version choosing resample number on each trial.  
 %Dangerous and not workable for future.
 %TODO: Add code to ensure consisent resample number for consistent
 %conditions. 
 time = cell(size(cfg.trl,1),1);
-for iTrial = 1:length(trialList)
+for iCond = 1:length(condList)
+
     
-    thisTrialNum = trialList(iTrial); %In case trials missing, index into true trial list
-    trialIdx = find(cfg.trl(:,5)==thisTrialNum);
-    
-    meanCycleLengthSample = mean(diff(cfg.trl(trialIdx,1))); %Count the difference between trial starts,
-    meanCycleLengthSecs = meanCycleLengthSample/datain.fsample;
-    
-    newCycleLengthSample = round(newFs*meanCycleLengthSecs); %Find new integer number of samples per cycle to be closest to requested fs
-    
-    %The +1 is needed here because we are going from cycle start to cycle
-    %start.  The start of the next cycle is also the first sample.  This
-    %comes down to the difference between intervals and samples. 
-   
-    newTimeBase = linspace(0,meanCycleLengthSecs,newCycleLengthSample+1);
-    newTimeBase = newTimeBase(1:end-1); %Trim the sample that is the start of the next cycle.
-    
-    [time{trialIdx}] = deal(newTimeBase);
+    trialList = unique(cfg.trl(:,5));
+    for iTrial = 1:length(trialList)
+
+        thisTrialNum = trialList(iTrial); %In case trials missing, index into true trial list
+        trialIdx = find((cfg.trl(:,4)==condList(iCond)) & (cfg.trl(:,5)==thisTrialNum));
+
+        meanCycleLengthSample = mean(diff(cfg.trl(trialIdx,1))); %Count the difference between trial starts,
+        meanCycleLengthSecs = meanCycleLengthSample/datain.fsample;
+
+        newCycleLengthSample = round(newFs*meanCycleLengthSecs); %Find new integer number of samples per cycle to be closest to requested fs
+
+        %The +1 is needed here because we are going from cycle start to cycle
+        %start.  The start of the next cycle is also the first sample.  This
+        %comes down to the difference between intervals and samples.
+
+        newTimeBase = linspace(0,meanCycleLengthSecs,newCycleLengthSample+1);
+        newTimeBase = newTimeBase(1:end-1); %Trim the sample that is the start of the next cycle.
+
+        [time{trialIdx}] = deal(newTimeBase);
+    end
 end
+
 resampleCfg.time = time;
 resampleCfg.method = 'linear';
 
@@ -125,7 +131,6 @@ resampleCfg.method = 'linear';
 % fieldtrip/utility/private that are able to modify the local workspace
 
 ft_postamble debug               % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig         % this converts the config object back into a struct and can report on the unused fields
 ft_postamble previous   datain   % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 ft_postamble provenance dataout  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 ft_postamble history    dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg

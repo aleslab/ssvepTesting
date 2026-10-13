@@ -68,8 +68,9 @@ for iTrial = 1:length(condEventIdx)-1,
     
      condValues  = [event(startCond:endCond).value];    
      condSamples = [event(startCond:endCond).sample];
-    
-    trial(iTrial).cycleStarts = condSamples(condValues==ssvepTagVal);
+      
+    %Neeed to check if the ssvepTag is set using bitwise flag checking
+    trial(iTrial).cycleStarts = condSamples(logical(bitand(condValues,ssvepTagVal)));
     trial(iTrial).condNum = event(condEventIdx(iTrial)).value;
     condIdx = find(trial(iTrial).condNum ==condNumList); %Find which index this condition matches
     condTrialCount(condIdx) = condTrialCount(condIdx)+1; %increment trial counter by one

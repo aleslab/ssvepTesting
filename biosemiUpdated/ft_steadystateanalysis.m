@@ -21,7 +21,15 @@ function [steadystate] = ft_steadystateanalysis(cfg, data)
 % The output has the following fields:
 %            
 %    Data fields:
-%            wave: Time domain waveform
+%            wave: Default cycle waveform (combined LCM cycle for two tags)
+%       waveforms: Cell array of chan_time waveforms, default first
+%      wavelabels: Matching GUI labels: nF1+nF2, nF1, nF2 (or nF1)
+%       wavetimes: Matching time vectors in milliseconds, endpoint excluded
+% wavefundamentals: Reciprocal cycle durations in Hz
+% wavecyclesamples: Integer sample counts of the direct cycle averages
+%        timeunit: 'ms' for time and wavetimes
+% cfg.f1hz, cfg.f2hz: Tag frequencies in Hz. f2hz is optional; dual-tag epochs
+%                   must contain integer cycles of both tags.
 %             amp: Frequency domain amplitude.
 %             sin: Frequency domain amplitude of the sin component
 %             cos: Frequency domain amplitude of the cos component
@@ -57,7 +65,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -71,6 +78,7 @@ cfg.epochdur   = ft_getopt(cfg, 'epochdur',   2); %~2s
 cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
 cfg.channel    = ft_getopt(cfg, 'channel',     'all');
 cfg.f1hz       = ft_getopt(cfg, 'f1hz',  []);
+cfg.f2hz       = ft_getopt(cfg, 'f2hz',  []);
 
 % check if the input data is valid for this function
 %data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp'}, 'hassampleinfo', 'yes');
@@ -114,6 +122,17 @@ if length(epochLengthSamp)>1 || length(cycleLengthSamp)>1
 end
 
 
+% The experiment design ensures complete, sample-aligned cycles.
+waveCycleSamples = cycleLengthSamp;
+waveLabels = {'nF1'};
+if ~isempty(cfg.f2hz)
+    tagCycles = round([cfg.f1hz cfg.f2hz]*epochLengthSecs);
+    tagSamples = epochLengthSamp./tagCycles;
+    waveCycleSamples = [lcm(tagSamples(1),tagSamples(2)) tagSamples];
+    waveLabels = {'nF1+nF2','nF1','nF2'};
+end
+waveFundamentals = data.fsample./waveCycleSamples;
+
 nTrials = length(data.trial);
 nchan  = size(data.trial{1},1);
 
@@ -144,18 +163,23 @@ for iChan = 1:nchan,
         
         %Setup the time domain representation, this is a single CYCLE, not
         %a single Epoch. 
-        steadystate.nt = cycleLengthSamp;
+        steadystate.nt = waveCycleSamples(1);
         dTSec = 1/data.fsample;
         steadystate.dtms  = dTSec*1000;
         steadystate.time = 0:steadystate.dtms:(steadystate.nt-1)*steadystate.dtms;
-        steadystate.wave = NaN(nchan,cycleLengthSamp);
+        steadystate.waveforms = cell(size(waveCycleSamples));
+        steadystate.wavetimes = cell(size(waveCycleSamples));
+        for iWave = 1:numel(waveCycleSamples)
+            steadystate.waveforms{iWave} = NaN(nchan,waveCycleSamples(iWave));
+            steadystate.wavetimes{iWave} = (0:waveCycleSamples(iWave)-1)*steadystate.dtms;
+        end
 
         
         
         steadystate.amp  = NaN(nchan,steadystate.nfr);
         steadystate.sin  = NaN(nchan,steadystate.nfr);
         steadystate.cos  = NaN(nchan,steadystate.nfr);        
-        steadystate.freq = (data.fsample/2)*linspace(0,1,steadystate.nfr);% freq values.  
+        steadystate.freq = (0:steadystate.nfr-1)*data.fsample/steadystate.ndft; % Frequency bins, including odd-length epochs.
         steadystate.dfhz = mean(diff(steadystate.freq));
         
         %TODO: Fix i1F1 spec. This just makes it up based on cycleLength or
@@ -163,7 +187,7 @@ for iChan = 1:nchan,
         if isempty(cfg.f1hz)
             steadystate.i1f1 = (steadystate.ndft/cycleLengthSamp) + 1;
         else
-            [~,steadystate.i1f1] = min(abs(cfg.f1hz-steadystate.freq).^2)
+            [~,steadystate.i1f1] = min(abs(cfg.f1hz-steadystate.freq).^2);
         end
         
         steadystate.pval   = NaN(nchan, steadystate.nfr);
@@ -231,24 +255,16 @@ for iChan = 1:nchan,
     steadystate.cos(iChan,:) = real(meanDftData);
     steadystate.sin(iChan,:) = -imag(meanDftData);
         
-    %Let's now create the time-domain representation
-    %For this we are going to make a waveform that only 1 cycle long
-    %instead of 1 whole epoch long. A single cycle represents the waveform
-    %as the most intuitive representation of the time-domain information
-    %and variabillity. 
-    
-    %First average all epochs together, then average all cycles together.
-    %This takes being very careful in how matrices are reshaped and
-    %averaged over. The exact dimension order and transpose is important.
-    aveWave=mean(thisChanData,1);
-    aveWave=reshape(aveWave,cycleLengthSamp,[])';
-    aveWave=mean(aveWave,1);
+    % Independent time-domain chain: average epochs, then average complete
+    % cycles exactly as in the original single-tag implementation. No DFT
+    % coefficients are used to construct any unfiltered waveform.
+    meanEpoch = mean(thisChanData,1);
+    for iWave = 1:numel(waveCycleSamples)
+        aveWave = reshape(meanEpoch,waveCycleSamples(iWave),[])';
+        aveWave = mean(aveWave,1);
+        steadystate.waveforms{iWave}(iChan,:) = aveWave-mean(aveWave);
+    end
 
-    %Now assign the mean cycle waveform to the time domain average:
-    %We are going to remove the mean.  We almost never want to plot it. If
-    %we need it it's available in the DC component of Cos. 
-    steadystate.wave(iChan,:)= aveWave-mean(aveWave);
-    
     %Now lets calculate statistcs
     
     %Going to loop over the frequencies to calc the pvalue for each one 
@@ -291,6 +307,25 @@ for iChan = 1:nchan,
     
 end
 
+% The first direct cycle average is the backwards-compatible default.
+steadystate.wavecyclesamples = waveCycleSamples;
+steadystate.wavelabels = waveLabels;
+steadystate.wavefundamentals = waveFundamentals;
+steadystate.wave = steadystate.waveforms{1};
+steadystate.time = steadystate.wavetimes{1};
+steadystate.nt = size(steadystate.wave,2);
+steadystate.dtms = 1000/data.fsample;
+steadystate.timeunit = 'ms';
+steadystate.f1hz = steadystate.freq(steadystate.i1f1);
+steadystate.f2hz = cfg.f2hz;
+steadystate.i1f2 = [];
+if ~isempty(cfg.f2hz)
+    steadystate.i1f1 = tagCycles(1)+1;
+    steadystate.i1f2 = tagCycles(2)+1;
+    steadystate.f1hz = steadystate.freq(steadystate.i1f1);
+    steadystate.f2hz = steadystate.freq(steadystate.i1f2);
+end
+
 %If singletrial "epoch" requested
 if (strcmp(cfg.keeptrials,'yes'))
     steadystate.singleepochfourier = singleepochfourier;
@@ -316,7 +351,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance steadystate
 ft_postamble history    steadystate
