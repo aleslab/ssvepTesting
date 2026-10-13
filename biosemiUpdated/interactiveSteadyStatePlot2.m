@@ -13,6 +13,8 @@ if length(steadyState)>=2, %If 2 or more conditions default to showing cond 2.
 end
 
 configOptions.pValThresh = Inf;
+configOptions.lowpassHz = 49;
+configOptions.applyLowpass = false;
 
 %Options for different automatic yscaling methods:
 
@@ -73,8 +75,8 @@ else
 end
 
 pValList = {'None','0.05','0.01','1e-3','1e-6'};
-filterList = {'None','nF1','nF1Odd','nF1Even','nF1Low49','nF1CleanLow49', ...
-    'nF2','nF2Odd','nF2Even','nF2Low49','nF2CleanLow49'};
+filterList = {'None','nF1','nF1Odd','nF1Even','nF1Clean', ...
+    'nF2','nF2Odd','nF2Even','nF2Clean'};
     
 uicontrol('Style', 'text','units','normalized',...
     'String','Red',...
@@ -159,6 +161,15 @@ for k = 1:2
         'Position',[.89 .65-(k-1)*.05 .11 .04], ...
         'Callback',{@selWave,k});
 end
+
+uicontrol('Style','text','units','normalized','String','Low-pass (Hz):', ...
+    'Position',[.81 .54 .09 .025]);
+lowpassEditH = uicontrol('Style','edit','units','normalized', ...
+    'String',num2str(configOptions.lowpassHz),'Position',[.90 .54 .045 .035], ...
+    'FontSize',9,'Callback',@setLowpassCutoff);
+uicontrol('Style','togglebutton','units','normalized', ...
+    'String','Apply','Value',configOptions.applyLowpass, ...
+    'Position',[.95 .54 .05 .035],'FontSize',9,'Callback',@toggleLowpass);
 
 infoPanelH = uipanel('Title','Info','FontSize',12,...
              'BackgroundColor','white',...
@@ -370,7 +381,7 @@ drawInfoPane()
         condData(condIdx).barH = bar(ax,plotData.freq,displayAmps,.8, ...
             'FaceColor','flat','EdgeColor','none');
         colourSpectrum(condIdx,selected);
-        upperHz = min(40,max(plotData.freq));
+        upperHz = min(49,max(plotData.freq));
         xlim(ax,[0 upperHz]);
         % Spectrum scaling is independent of the Wave Scale control.
         shown = plotData.freq > 0 & plotData.freq <= upperHz;
@@ -588,7 +599,12 @@ drawInfoPane()
                       
         
         pdPhasePlot( phaseDataToPlot,confRadius);
-        title(phasorAx,sprintf('Phasors: %.6g Hz',condData(1).freq(condData(1).iFr)));
+        title(phasorAx,'');
+        text(phasorAx,0,1.02,sprintf('Phasors: %.2f Hz', ...
+            condData(1).freq(condData(1).iFr)), ...
+            'Units','normalized','HorizontalAlignment','left', ...
+            'VerticalAlignment','bottom','FontSize',8,'FontWeight','normal', ...
+            'Clipping','off','HitTest','off');
         
     end
 
@@ -699,6 +715,26 @@ drawInfoPane()
         
     end
 
+
+    function setLowpassCutoff(hObject,~)
+        cutoff = str2double(get(hObject,'String'));
+        if ~isfinite(cutoff) || cutoff <= 0
+            set(lowpassEditH,'String',num2str(configOptions.lowpassHz));
+            errordlg('Enter a positive cutoff frequency in Hz.','Low-pass cutoff');
+            return
+        end
+        configOptions.lowpassHz = cutoff;
+        filterWave(1);
+        filterWave(2);
+        refreshPlots();
+    end
+
+    function toggleLowpass(hObject,~)
+        configOptions.applyLowpass = logical(get(hObject,'Value'));
+        filterWave(1);
+        filterWave(2);
+        refreshPlots();
+    end
 
     function selYlim(hObject,callbackdata)
         %Grab the selected menu item.
@@ -817,10 +853,13 @@ drawInfoPane()
             filtIdx = determineFilterIndices(filterName,source.freq,source.i1f1,secondIdx);
             active(:,filtIdx) = true;
         end
+        if configOptions.applyLowpass
+            active(:,source.freq > configOptions.lowpassHz) = false;
+        end
         condData(condIdx).activeFreq = active;
         % Unfiltered data always comes from the independently averaged waves.
-        % Only an explicit time filter invokes DFT reconstruction.
-        if ~strcmpi(filterName,'none')
+        % Either a harmonic filter or the low-pass toggle requests filtering.
+        if ~strcmpi(filterName,'none') || configOptions.applyLowpass
             filterCfg.activeFreq = active & significantBins(condData(condIdx));
             source.wave = condData(condIdx).wave;
             source.nt = condData(condIdx).nt;
